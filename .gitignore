@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# KYNZA custom
+.env
+*.env
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+*.g.dart
+*.freezed.dart
+docs/testing/TEST_ACCOUNTS.md
+.claude/settings.local.json

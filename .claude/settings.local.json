@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(Get-Item \"$env:TEMP\\\\cmdline-tools.zip\" | Select-Object Length, LastWriteTime)"
-    ]
-  }
-}
