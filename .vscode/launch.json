@@ -1,0 +1,27 @@
+﻿{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "KYNZA Dev",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=SUPABASE_URL=${env:SUPABASE_URL}",
+        "--dart-define=SUPABASE_ANON_KEY=${env:SUPABASE_ANON_KEY}",
+        "--dart-define=APP_ENV=development"
+      ]
+    },
+    {
+      "name": "KYNZA Prod",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=SUPABASE_URL=${env:SUPABASE_URL_PROD}",
+        "--dart-define=SUPABASE_ANON_KEY=${env:SUPABASE_ANON_KEY_PROD}",
+        "--dart-define=APP_ENV=production"
+      ]
+    }
+  ]
+}
