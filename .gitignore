@@ -52,4 +52,5 @@ ios/Runner/GoogleService-Info.plist
 *.g.dart
 *.freezed.dart
 docs/testing/TEST_ACCOUNTS.md
+android/.kotlin/
 .claude/settings.local.json
