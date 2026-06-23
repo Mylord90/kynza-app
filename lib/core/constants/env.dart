@@ -1,4 +1,4 @@
-﻿// KYNZA — Configuration d'environnement
+// KYNZA — Configuration d'environnement
 // Les valeurs sont chargées depuis --dart-define au build
 
 abstract class Env {
