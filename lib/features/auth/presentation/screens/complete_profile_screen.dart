@@ -99,7 +99,13 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
 
       if (!mounted) return;
       final profile = await ref.read(currentUserProfileProvider.future);
-      if (profile != null && mounted) context.go(redirectAfterAuth(profile));
+      if (profile != null && mounted) {
+        final route = await resolvePostAuthRoute(
+          ref.read(sessionServiceProvider),
+          profile,
+        );
+        if (mounted) context.go(route);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

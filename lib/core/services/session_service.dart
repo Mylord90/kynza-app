@@ -7,6 +7,7 @@ abstract class _HiveKeys {
   static const role = 'role';
   static const language = 'language';
   static const confidentialMode = 'confidential_mode';
+  static const pendingInvitationToken = 'pending_invitation_token';
 }
 
 /// Hive-based persistence for lightweight app state.
@@ -46,4 +47,16 @@ class SessionService {
 
   bool getConfidentialMode() =>
       _box.get(_HiveKeys.confidentialMode, defaultValue: false) as bool;
+
+  /// Holds a staff invitation token across the register/complete-profile
+  /// detour a brand-new staff member takes before they have a session to
+  /// call accept-invitation with — see AcceptInvitationScreen.
+  Future<void> savePendingInvitationToken(String token) =>
+      _box.put(_HiveKeys.pendingInvitationToken, token);
+
+  String? getPendingInvitationToken() =>
+      _box.get(_HiveKeys.pendingInvitationToken) as String?;
+
+  Future<void> clearPendingInvitationToken() =>
+      _box.delete(_HiveKeys.pendingInvitationToken);
 }

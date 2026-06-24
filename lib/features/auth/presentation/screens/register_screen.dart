@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/auth_redirect.dart';
@@ -52,7 +53,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ref.listen(authNotifierProvider, (previous, next) {
       next.whenData((state) {
         state.whenOrNull(
-          authenticated: (user) => context.go(redirectAfterAuth(user)),
+          authenticated: (user) async {
+            final route = await resolvePostAuthRoute(
+              ref.read(sessionServiceProvider),
+              user,
+            );
+            if (context.mounted) context.go(route);
+          },
           emailNotVerified: (email, userId) =>
               context.go(RouteNames.verifyEmail),
           profileIncomplete: (userId) => context.go(RouteNames.completeProfile),
@@ -164,7 +171,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     Center(
                       child: TextButton(
-                        onPressed: () => context.pop(),
+                        // go() (not pop()) — register is sometimes reached
+                        // via a full stack replace (e.g. AcceptInvitationScreen
+                        // redirecting an unauthenticated staff member here),
+                        // leaving nothing to pop back to.
+                        onPressed: () => context.go(RouteNames.login),
                         child: const Text('Déjà un compte ? Se connecter'),
                       ),
                     ),

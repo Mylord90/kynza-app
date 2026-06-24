@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/enums/user_role.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../../../core/services/share_service.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/staff_providers.dart';
 
 class StaffInviteScreen extends ConsumerStatefulWidget {
@@ -54,10 +55,11 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
       ref.invalidate(salonStaffProvider(widget.salonId));
 
       if (!mounted) return;
-      await Share.share(
-        "Vous êtes invité(e) à rejoindre l'équipe sur KYNZA ! "
-        'Code invitation : ${staff.invitationToken}',
-        subject: 'Invitation KYNZA',
+      final salon = await ref.read(salonByIdProvider(widget.salonId).future);
+      if (!mounted) return;
+      await ShareService.shareStaffInvitation(
+        salonName: salon?.name ?? 'KYNZA',
+        invitationToken: staff.invitationToken ?? '',
       );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {

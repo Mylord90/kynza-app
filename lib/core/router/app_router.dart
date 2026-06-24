@@ -23,6 +23,7 @@ import '../../shared/widgets/kynza_widgets.dart';
 import '../../features/salon/presentation/screens/salon_creation_wizard_screen.dart';
 import '../../features/services/presentation/screens/services_list_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
+import '../../features/staff/presentation/screens/accept_invitation_screen.dart';
 import '../../features/staff/presentation/screens/staff_list_screen.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
@@ -44,9 +45,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refreshNotifier.dispose);
 
   String? redirect(BuildContext context, GoRouterState state) {
+    // The com.kynza.app://accept-invitation deep link parses with
+    // 'accept-invitation' as the URI *host* (custom schemes have no
+    // path segment before a query string), not as a go_router path —
+    // rewrite it to the real route before any path-based matching below.
+    if (state.uri.host == 'accept-invitation' &&
+        state.matchedLocation != RouteNames.acceptInvitation) {
+      final token = state.uri.queryParameters['token'];
+      return token != null
+          ? '${RouteNames.acceptInvitation}?token=$token'
+          : RouteNames.acceptInvitation;
+    }
+
     final path = state.matchedLocation;
     final isAuthRoute = path.startsWith('/auth');
     final isSplash = path == RouteNames.splash;
+    final isAcceptInvitation = path == RouteNames.acceptInvitation;
     final isGuestRoute =
         path == RouteNames.login ||
         path == RouteNames.register ||
@@ -65,7 +79,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // The splash screen owns its own minimum-display-time transition
       // (see SplashScreen) — the generic guard never touches '/'.
       unauthenticated: () {
-        if (isAuthRoute || isSplash) return null;
+        if (isAuthRoute || isSplash || isAcceptInvitation) return null;
         return RouteNames.login;
       },
       authenticated: (user) {
@@ -114,6 +128,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _fadeRoute(
         RouteNames.callback,
         (context, state) => const AuthCallbackScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.acceptInvitation,
+        (context, state) =>
+            AcceptInvitationScreen(token: state.uri.queryParameters['token']),
       ),
       _fadeRoute(
         RouteNames.completeProfile,

@@ -7,6 +7,7 @@ abstract class RouteNames {
   static const verifyEmail = '/auth/verify-email';
   static const callback = '/auth/callback';
   static const completeProfile = '/auth/complete-profile';
+  static const acceptInvitation = '/accept-invitation';
   static const homeOwner = '/owner/dashboard';
   static const homeManager = '/manager/dashboard';
   static const homeStaff = '/staff/today';

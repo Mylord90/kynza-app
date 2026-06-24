@@ -5,6 +5,7 @@ import '../../features/auth/data/datasources/auth_supabase_datasource.dart';
 import '../../shared/widgets/kynza_loading_overlay.dart';
 import '../constants/app_colors.dart';
 import '../models/user_profile.dart';
+import '../providers/app_providers.dart';
 import '../providers/auth_providers.dart';
 import '../services/supabase_service.dart';
 import '../utils/auth_errors.dart';
@@ -47,7 +48,12 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
       ref.invalidate(currentUserProfileProvider);
       await ref.read(authNotifierProvider.notifier).refreshProfile();
       if (!mounted) return;
-      context.go(redirectAfterAuth(profile));
+      final route = await resolvePostAuthRoute(
+        ref.read(sessionServiceProvider),
+        profile,
+      );
+      if (!mounted) return;
+      context.go(route);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

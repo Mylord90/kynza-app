@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/auth_redirect.dart';
@@ -44,7 +45,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen(authNotifierProvider, (previous, next) {
       next.whenData((state) {
         state.whenOrNull(
-          authenticated: (user) => context.go(redirectAfterAuth(user)),
+          authenticated: (user) async {
+            final route = await resolvePostAuthRoute(
+              ref.read(sessionServiceProvider),
+              user,
+            );
+            if (context.mounted) context.go(route);
+          },
           emailNotVerified: (email, userId) =>
               context.go(RouteNames.verifyEmail),
           profileIncomplete: (userId) => context.go(RouteNames.completeProfile),

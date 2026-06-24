@@ -34,4 +34,20 @@ abstract class ShareService {
         'la plateforme beauté premium au Burundi.';
     await Share.share(text);
   }
+
+  /// The link opens AcceptInvitationScreen directly via the
+  /// com.kynza.app://accept-invitation intent-filter (AndroidManifest.xml) —
+  /// if KYNZA isn't installed yet the OS has nothing to hand the link to,
+  /// so the invited person still needs the invitation_token read aloud or
+  /// copy-pasted in that case.
+  static Future<void> shareStaffInvitation({
+    required String salonName,
+    required String invitationToken,
+  }) async {
+    final link = 'com.kynza.app://accept-invitation?token=$invitationToken';
+    final text =
+        "Vous êtes invité(e) à rejoindre l'équipe de $salonName sur KYNZA ! "
+        'Ouvrez ce lien pour rejoindre : $link';
+    await Share.share(text, subject: 'Invitation KYNZA');
+  }
 }
