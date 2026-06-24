@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../journey/application/providers/journey_providers.dart';
 import '../../application/providers/service_providers.dart';
 
 class ServiceFormScreen extends ConsumerStatefulWidget {
@@ -79,6 +81,11 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
         await notifier.updateService(service);
       } else {
         await notifier.create(service);
+        unawaited(
+          ref
+              .read(journeyNotifierProvider.notifier)
+              .markStep(widget.salonId, 'first_service'),
+        );
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {

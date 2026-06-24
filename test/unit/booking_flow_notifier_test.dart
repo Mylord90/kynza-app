@@ -149,35 +149,41 @@ void main() {
       expect(state.currentStep, 3);
     });
 
-    test('selectPractitioner(null) is valid ("any praticien") and advances to step 4', () {
-      final container = _makeContainer();
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'selectPractitioner(null) is valid ("any praticien") and advances to step 4',
+      () {
+        final container = _makeContainer();
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      notifier.selectPractitioner(null);
-      final state = container.read(bookingFlowProvider);
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        notifier.selectPractitioner(null);
+        final state = container.read(bookingFlowProvider);
 
-      expect(state.selectedPractitioner, isNull);
-      expect(state.currentStep, 4);
-    });
+        expect(state.selectedPractitioner, isNull);
+        expect(state.currentStep, 4);
+      },
+    );
 
-    test('selectDate clears any previously selected slot and advances to step 5', () {
-      final container = _makeContainer();
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'selectDate clears any previously selected slot and advances to step 5',
+      () {
+        final container = _makeContainer();
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      notifier.selectPractitioner(_staffA);
-      notifier.selectSlot(_slot);
-      expect(container.read(bookingFlowProvider).selectedSlot, isNotNull);
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        notifier.selectPractitioner(_staffA);
+        notifier.selectSlot(_slot);
+        expect(container.read(bookingFlowProvider).selectedSlot, isNotNull);
 
-      notifier.selectDate(DateTime(2026, 7, 1));
-      final state = container.read(bookingFlowProvider);
+        notifier.selectDate(DateTime(2026, 7, 1));
+        final state = container.read(bookingFlowProvider);
 
-      expect(state.selectedSlot, isNull);
-      expect(state.currentStep, 5);
-    });
+        expect(state.selectedSlot, isNull);
+        expect(state.currentStep, 5);
+      },
+    );
 
     test('selectSlot advances to step 6', () {
       final container = _makeContainer();
@@ -191,19 +197,26 @@ void main() {
       expect(state.currentStep, 6);
     });
 
-    test('prefillFastPass jumps straight to step 4 with service + practitioner set', () {
-      final container = _makeContainer();
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'prefillFastPass jumps straight to step 4 with service + practitioner set',
+      () {
+        final container = _makeContainer();
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.prefillFastPass(salon: _salon, service: _service, practitioner: _staffA);
-      final state = container.read(bookingFlowProvider);
+        notifier.prefillFastPass(
+          salon: _salon,
+          service: _service,
+          practitioner: _staffA,
+        );
+        final state = container.read(bookingFlowProvider);
 
-      expect(state.selectedSalon, _salon);
-      expect(state.selectedService, _service);
-      expect(state.selectedPractitioner, _staffA);
-      expect(state.currentStep, 4);
-      expect(state.selectedSlot, isNull);
-    });
+        expect(state.selectedSalon, _salon);
+        expect(state.selectedService, _service);
+        expect(state.selectedPractitioner, _staffA);
+        expect(state.currentStep, 4);
+        expect(state.selectedSlot, isNull);
+      },
+    );
 
     test('reset clears everything back to the initial state', () {
       final container = _makeContainer();
@@ -219,32 +232,37 @@ void main() {
   });
 
   group('BookingFlowNotifier.submitBooking', () {
-    test('sets an error and never calls the repository when selection is incomplete', () async {
-      final called = <BookingModel>[];
-      final container = _makeContainer(
-        profile: const UserProfile(id: 'client-1'),
-        onCreate: (draft) async {
-          called.add(draft);
-          throw StateError('should not be called');
-        },
-      );
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'sets an error and never calls the repository when selection is incomplete',
+      () async {
+        final called = <BookingModel>[];
+        final container = _makeContainer(
+          profile: const UserProfile(id: 'client-1'),
+          onCreate: (draft) async {
+            called.add(draft);
+            throw StateError('should not be called');
+          },
+        );
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      // No slot selected yet.
-      await notifier.submitBooking();
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        // No slot selected yet.
+        await notifier.submitBooking();
 
-      final state = container.read(bookingFlowProvider);
-      expect(state.error, isNotNull);
-      expect(state.isLoading, isFalse);
-      expect(called, isEmpty);
-    });
+        final state = container.read(bookingFlowProvider);
+        expect(state.error, isNotNull);
+        expect(state.isLoading, isFalse);
+        expect(called, isEmpty);
+      },
+    );
 
     test(
       'errors when neither a specific practitioner nor a merged-slot practitioner is available',
       () async {
-        final container = _makeContainer(profile: const UserProfile(id: 'client-1'));
+        final container = _makeContainer(
+          profile: const UserProfile(id: 'client-1'),
+        );
         final notifier = container.read(bookingFlowProvider.notifier);
 
         notifier.selectSalon(_salon);
@@ -260,89 +278,104 @@ void main() {
       },
     );
 
-    test('resolves the practitioner from the merged slot when "any praticien" was picked', () async {
-      BookingModel? sentDraft;
-      final container = _makeContainer(
-        profile: const UserProfile(id: 'client-1'),
-        onCreate: (draft) async {
-          sentDraft = draft;
-          return draft.copyWith(id: 'booking-1', status: BookingStatus.confirmed);
-        },
-      );
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'resolves the practitioner from the merged slot when "any praticien" was picked',
+      () async {
+        BookingModel? sentDraft;
+        final container = _makeContainer(
+          profile: const UserProfile(id: 'client-1'),
+          onCreate: (draft) async {
+            sentDraft = draft;
+            return draft.copyWith(
+              id: 'booking-1',
+              status: BookingStatus.confirmed,
+            );
+          },
+        );
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      notifier.selectPractitioner(null);
-      // This slot came out of getAvailableSlotsAnyPractitioner — it knows
-      // which staff member is actually free at this time.
-      notifier.selectSlot(_slot.copyWith(practitionerId: 'staff-merged'));
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        notifier.selectPractitioner(null);
+        // This slot came out of getAvailableSlotsAnyPractitioner — it knows
+        // which staff member is actually free at this time.
+        notifier.selectSlot(_slot.copyWith(practitionerId: 'staff-merged'));
 
-      await notifier.submitBooking();
+        await notifier.submitBooking();
 
-      expect(sentDraft?.practitionerId, 'staff-merged');
-      final state = container.read(bookingFlowProvider);
-      expect(state.createdBooking?.id, 'booking-1');
-      expect(state.currentStep, 7);
-      expect(state.isLoading, isFalse);
-      expect(state.error, isNull);
-    });
+        expect(sentDraft?.practitionerId, 'staff-merged');
+        final state = container.read(bookingFlowProvider);
+        expect(state.createdBooking?.id, 'booking-1');
+        expect(state.currentStep, 7);
+        expect(state.isLoading, isFalse);
+        expect(state.error, isNull);
+      },
+    );
 
-    test('a specific practitioner selection is used when the slot has no practitionerId', () async {
-      BookingModel? sentDraft;
-      final container = _makeContainer(
-        profile: const UserProfile(id: 'client-1'),
-        onCreate: (draft) async {
-          sentDraft = draft;
-          return draft.copyWith(id: 'booking-2');
-        },
-      );
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'a specific practitioner selection is used when the slot has no practitionerId',
+      () async {
+        BookingModel? sentDraft;
+        final container = _makeContainer(
+          profile: const UserProfile(id: 'client-1'),
+          onCreate: (draft) async {
+            sentDraft = draft;
+            return draft.copyWith(id: 'booking-2');
+          },
+        );
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      notifier.selectPractitioner(_staffA);
-      notifier.selectSlot(_slot);
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        notifier.selectPractitioner(_staffA);
+        notifier.selectSlot(_slot);
 
-      await notifier.submitBooking();
+        await notifier.submitBooking();
 
-      expect(sentDraft?.practitionerId, 'staff-a');
-    });
+        expect(sentDraft?.practitionerId, 'staff-a');
+      },
+    );
 
-    test('sets error and stops loading when the repository throws (e.g. slot_taken)', () async {
-      final container = _makeContainer(
-        profile: const UserProfile(id: 'client-1'),
-        onCreate: (draft) async => throw Exception('slot_taken'),
-      );
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'sets error and stops loading when the repository throws (e.g. slot_taken)',
+      () async {
+        final container = _makeContainer(
+          profile: const UserProfile(id: 'client-1'),
+          onCreate: (draft) async => throw Exception('slot_taken'),
+        );
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      notifier.selectPractitioner(_staffA);
-      notifier.selectSlot(_slot);
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        notifier.selectPractitioner(_staffA);
+        notifier.selectSlot(_slot);
 
-      await notifier.submitBooking();
+        await notifier.submitBooking();
 
-      final state = container.read(bookingFlowProvider);
-      expect(state.isLoading, isFalse);
-      expect(state.error, contains('slot_taken'));
-      expect(state.createdBooking, isNull);
-    });
+        final state = container.read(bookingFlowProvider);
+        expect(state.isLoading, isFalse);
+        expect(state.error, contains('slot_taken'));
+        expect(state.createdBooking, isNull);
+      },
+    );
 
-    test('returns "Session expirée." when there is no authenticated profile', () async {
-      final container = _makeContainer(profile: null);
-      final notifier = container.read(bookingFlowProvider.notifier);
+    test(
+      'returns "Session expirée." when there is no authenticated profile',
+      () async {
+        final container = _makeContainer(profile: null);
+        final notifier = container.read(bookingFlowProvider.notifier);
 
-      notifier.selectSalon(_salon);
-      notifier.selectService(_service);
-      notifier.selectPractitioner(_staffA);
-      notifier.selectSlot(_slot);
+        notifier.selectSalon(_salon);
+        notifier.selectService(_service);
+        notifier.selectPractitioner(_staffA);
+        notifier.selectSlot(_slot);
 
-      await notifier.submitBooking();
+        await notifier.submitBooking();
 
-      final state = container.read(bookingFlowProvider);
-      expect(state.error, 'Session expirée.');
-      expect(state.isLoading, isFalse);
-    });
+        final state = container.read(bookingFlowProvider);
+        expect(state.error, 'Session expirée.');
+        expect(state.isLoading, isFalse);
+      },
+    );
   });
 }

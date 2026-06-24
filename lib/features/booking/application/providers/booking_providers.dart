@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/models/booking_model.dart';
+import '../../../loyalty/application/providers/loyalty_providers.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/repositories/booking_repository.dart';
 
@@ -122,7 +123,9 @@ class BookingActionNotifier extends AsyncNotifier<void> {
     required String guestPhone,
     String? notes,
   }) {
-    return ref.read(bookingRepositoryProvider).createWalkInBooking(
+    return ref
+        .read(bookingRepositoryProvider)
+        .createWalkInBooking(
           salonId: salonId,
           serviceId: serviceId,
           practitionerId: practitionerId,
@@ -140,10 +143,27 @@ class BookingActionNotifier extends AsyncNotifier<void> {
     );
   }
 
-  Future<void> markCompleted(String bookingId) async {
+  Future<void> markCompleted(BookingModel booking) async {
     state = await AsyncValue.guard(
-      () => ref.read(bookingRepositoryProvider).markCompleted(bookingId),
+      () => ref.read(bookingRepositoryProvider).markCompleted(booking.id!),
     );
+    if (state.hasError) return;
+    await _awardLoyaltyStamp(booking);
+  }
+
+  /// Best-effort — a salon without an active loyalty program, or any
+  /// failure here, must never block the booking from being marked done.
+  Future<void> _awardLoyaltyStamp(BookingModel booking) async {
+    try {
+      final loyalty = ref.read(loyaltyRepositoryProvider);
+      final card = await loyalty.getOrCreateCard(
+        booking.salonId,
+        booking.clientId,
+      );
+      await loyalty.addStamp(card.id!, bookingId: booking.id);
+    } catch (_) {
+      // Ignored — see doc comment above.
+    }
   }
 
   Future<void> markNoShow(String bookingId) async {

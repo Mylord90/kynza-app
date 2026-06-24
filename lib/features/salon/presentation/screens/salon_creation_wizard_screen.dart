@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../../../core/models/salon_full_model.dart';
 import '../../../../core/models/salon_media_model.dart';
 import '../../../../core/models/working_hour_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../journey/application/providers/journey_providers.dart';
 import '../../application/providers/salon_providers.dart';
 import '../widgets/media_grid_widget.dart' show kMaxPortfolioItems;
 import 'salon_creation_success_screen.dart';
@@ -143,6 +145,20 @@ class _SalonCreationWizardScreenState
       await notifier.updateWorkingHours([
         for (final h in _hours) h.copyWith(salonId: created.id),
       ]);
+
+      // The wizard collects salon info and working hours together, so
+      // both journey steps complete at the same moment — best-effort,
+      // a failed markStep must never block the salon from being created.
+      unawaited(
+        ref
+            .read(journeyNotifierProvider.notifier)
+            .markStep(created.id, 'salon_info'),
+      );
+      unawaited(
+        ref
+            .read(journeyNotifierProvider.notifier)
+            .markStep(created.id, 'hours'),
+      );
 
       if (!mounted) return;
       await Navigator.of(context).push(

@@ -64,13 +64,19 @@ class BookingRepositoryImpl implements BookingRepository {
         },
       );
       if (res.status != 200) {
-        final message = (res.data is Map) ? res.data['message'] as String? : null;
+        final message = (res.data is Map)
+            ? res.data['message'] as String?
+            : null;
         throw AppException(message ?? "Ce créneau vient d'être réservé.");
       }
-      return BookingModel.fromSupabase(res.data['booking'] as Map<String, dynamic>);
+      return BookingModel.fromSupabase(
+        res.data['booking'] as Map<String, dynamic>,
+      );
     } catch (e) {
       if (e is AppException) rethrow;
-      throw const AppException('Impossible de créer ce rendez-vous. Réessayez.');
+      throw const AppException(
+        'Impossible de créer ce rendez-vous. Réessayez.',
+      );
     }
   }
 

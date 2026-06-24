@@ -52,7 +52,7 @@ class BookingDetailSheet extends ConsumerWidget {
             KynzaButton(
               label: 'Terminer + encaisser',
               onPressed: () {
-                notifier.markCompleted(booking.id!);
+                notifier.markCompleted(booking);
                 Navigator.of(context).pop();
               },
             ),

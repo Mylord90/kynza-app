@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../journey/application/providers/journey_providers.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/staff_providers.dart';
 import '../widgets/staff_card.dart';
@@ -71,19 +72,38 @@ class _StaffBody extends ConsumerWidget {
       ),
       data: (staff) {
         if (staff.isEmpty) {
-          return KynzaEmptyState(
-            icon: Icons.groups_outlined,
-            title: 'Aucun membre',
-            subtitle:
-                'Invitez votre équipe pour commencer à organiser le planning.',
-            ctaLabel: 'Inviter un membre',
-            onCta: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => StaffInviteScreen(salonId: salonId),
+          return Column(
+            children: [
+              Expanded(
+                child: KynzaEmptyState(
+                  icon: Icons.groups_outlined,
+                  title: 'Aucun membre',
+                  subtitle:
+                      'Invitez votre équipe pour commencer à organiser le '
+                      'planning, ou travaillez seul pour commencer.',
+                  ctaLabel: 'Inviter un membre',
+                  onCta: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => StaffInviteScreen(salonId: salonId),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                child: TextButton(
+                  onPressed: () => ref
+                      .read(journeyNotifierProvider.notifier)
+                      .markStep(salonId, 'team'),
+                  child: const Text('Je travaille seul →'),
+                ),
+              ),
+            ],
           );
         }
+        // Staff already exists — the "team" journey step is implicitly
+        // satisfied; idempotent, so safe to call on every rebuild.
+        ref.read(journeyNotifierProvider.notifier).markStep(salonId, 'team');
         return ListView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
           itemCount: staff.length,

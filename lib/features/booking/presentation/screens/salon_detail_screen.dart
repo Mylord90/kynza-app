@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../reviews/presentation/widgets/salon_reviews_tab.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../../services/application/providers/service_providers.dart';
 import '../../application/providers/booking_flow_provider.dart';
@@ -118,14 +119,7 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
                   children: [
                     _ServicesTab(salon: salon),
                     _InfoTab(salon: salon),
-                    const KynzaEmptyState(
-                      icon: Icons.star_outline,
-                      title: 'Pas encore d\'avis',
-                      subtitle:
-                          'Les avis clients arrivent dans une prochaine mise à jour.',
-                      ctaLabel: 'Retour',
-                      onCta: _noop,
-                    ),
+                    SalonReviewsTab(salonId: salon.id),
                   ],
                 ),
               ),

@@ -34,6 +34,22 @@ abstract class StorageService {
     String ext,
   ) => _upload(salonId, 'portfolio', bytes, ext);
 
+  static Future<String> uploadUserAvatar(
+    String userId,
+    Uint8List bytes,
+    String ext,
+  ) async {
+    try {
+      final path = 'user/$userId/avatar/${_uuid.v4()}.$ext';
+      await SupabaseService.client.storage
+          .from(_bucket)
+          .uploadBinary(path, bytes);
+      return SupabaseService.client.storage.from(_bucket).getPublicUrl(path);
+    } catch (_) {
+      throw const AppException("Échec de l'envoi de la photo. Réessayez.");
+    }
+  }
+
   static Future<void> deleteMedia(String path) async {
     try {
       await SupabaseService.client.storage.from(_bucket).remove([path]);

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../core/services/freemium_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
 import '../../../booking/presentation/widgets/walkin_booking_sheet.dart';
+import '../../../marketing/presentation/screens/marketing_dashboard_screen.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../../salon/presentation/screens/salon_creation_wizard_screen.dart';
 import '../../../services/application/providers/service_providers.dart';
@@ -18,6 +20,7 @@ import '../../../services/presentation/screens/services_list_screen.dart';
 import '../../../staff/application/providers/staff_providers.dart';
 import '../../../staff/presentation/screens/staff_invite_screen.dart';
 import '../../../notifications/presentation/widgets/unread_count_badge.dart';
+import '../../../journey/presentation/widgets/journey_progress_card.dart';
 import '../../../dashboard/application/providers/dashboard_providers.dart';
 import '../../../dashboard/presentation/widgets/kynza_kpi_card.dart';
 import '../../../dashboard/presentation/widgets/kynza_period_selector.dart';
@@ -58,6 +61,11 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
               onPressed: () =>
                   ref.read(confidentialModeProvider.notifier).toggle(),
             ),
+          if (_tabIndex == 3)
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              onPressed: () => context.go(RouteNames.ownerShare),
+            ),
           const UnreadCountBadge(),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.lg),
@@ -76,7 +84,7 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
               0 => _CalendarTab(salonId: salon.id),
               1 => _DashboardTab(salonId: salon.id),
               2 => _ClientsTab(salonId: salon.id),
-              3 => _MarketingTab(salonId: salon.id),
+              3 => MarketingDashboardBody(salonId: salon.id),
               _ => const _ProfileTab(),
             },
       bottomNavigationBar: BottomNavigationBar(
@@ -273,6 +281,7 @@ class _DashboardTab extends ConsumerWidget {
         children: [
           const KynzaOfflineBanner(),
           const SizedBox(height: AppSpacing.sm),
+          JourneyProgressCard(salonId: salonId),
           KynzaPeriodSelector(
             selected: period,
             onChanged: (r) =>
@@ -594,63 +603,6 @@ class _ClientsTab extends ConsumerWidget {
 
 void _noop() {}
 
-class _MarketingTab extends ConsumerWidget {
-  const _MarketingTab({required this.salonId});
-
-  final String salonId;
-
-  Future<void> _fillMyDay(BuildContext context, WidgetRef ref) async {
-    try {
-      final allowed = await SupabaseService.client.rpc(
-        'check_and_increment_promo_quota',
-        params: {'p_salon_id': salonId},
-      );
-      if (allowed != true) {
-        if (context.mounted) {
-          showKynzaToast(
-            context,
-            message: 'Limite de 2 promotions par semaine atteinte.',
-            level: ToastLevel.warning,
-          );
-        }
-        return;
-      }
-      await Share.share(
-        '🔥 Des créneaux se sont libérés aujourd\'hui ! Réservez vite via KYNZA.',
-      );
-    } catch (_) {
-      if (context.mounted) {
-        showKynzaToast(
-          context,
-          message: "Échec de l'envoi.",
-          level: ToastLevel.error,
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        const Text('Remplir ma journée', style: AppTypography.h2),
-        const SizedBox(height: AppSpacing.sm),
-        const Text(
-          'Des créneaux libres aujourd\'hui ou demain ? Partagez une promotion '
-          'à vos contacts personnels (max 2 par semaine).',
-          style: AppTypography.body,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        KynzaButton(
-          label: 'Partager une promo →',
-          onPressed: () => _fillMyDay(context, ref),
-        ),
-      ],
-    );
-  }
-}
-
 class _ProfileTab extends ConsumerWidget {
   const _ProfileTab();
 
@@ -681,6 +633,18 @@ class _ProfileTab extends ConsumerWidget {
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        KynzaCard(
+          onTap: () => context.go(RouteNames.ownerReviews),
+          child: const Row(
+            children: [
+              Icon(Icons.star_outline, color: AppColors.primary),
+              SizedBox(width: AppSpacing.md),
+              Expanded(child: Text('Mes Avis', style: AppTypography.h3)),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),

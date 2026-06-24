@@ -25,7 +25,10 @@ void main() {
       );
       final marked = AvailabilityService.markRareIfFew(slots);
       expect(marked, hasLength(4));
-      expect(marked.every((s) => s.availability == SlotAvailability.normal), isTrue);
+      expect(
+        marked.every((s) => s.availability == SlotAvailability.normal),
+        isTrue,
+      );
     });
 
     test('flags every slot as rare once 2 or fewer remain', () {
@@ -48,7 +51,11 @@ void main() {
   });
 
   group('AvailabilityService.generateSlots', () {
-    final farFuture = DateTime(2026, 1, 1); // "now" well before every window below
+    final farFuture = DateTime(
+      2026,
+      1,
+      1,
+    ); // "now" well before every window below
 
     test('steps a full day by duration_min with no buffer', () {
       final slots = AvailabilityService.generateSlots(
@@ -87,7 +94,9 @@ void main() {
         dayEnd: DateTime(2026, 7, 1, 11),
         durationMin: 60,
         bufferMin: 0,
-        occupied: [(start: DateTime(2026, 7, 1, 9), bufferEnd: DateTime(2026, 7, 1, 10))],
+        occupied: [
+          (start: DateTime(2026, 7, 1, 9), bufferEnd: DateTime(2026, 7, 1, 10)),
+        ],
         now: farFuture,
       );
       expect(slots.map((s) => s.startTime), [
@@ -96,24 +105,32 @@ void main() {
       ]);
     });
 
-    test('buffer_min after a booking blocks the immediately following slot too', () {
-      // 09:00-10:00 booking + 15min buffer occupies the practitioner until
-      // 10:15, so the 10:00 slot must also be excluded (kynza-booking-engine
-      // §5 — buffer_end_time blocks planning even though it's invisible to
-      // the client, R18).
-      final slots = AvailabilityService.generateSlots(
-        dayStart: DateTime(2026, 7, 1, 8),
-        dayEnd: DateTime(2026, 7, 1, 12),
-        durationMin: 60,
-        bufferMin: 0,
-        occupied: [(start: DateTime(2026, 7, 1, 9), bufferEnd: DateTime(2026, 7, 1, 10, 15))],
-        now: farFuture,
-      );
-      expect(slots.map((s) => s.startTime), [
-        DateTime(2026, 7, 1, 8),
-        DateTime(2026, 7, 1, 11),
-      ]);
-    });
+    test(
+      'buffer_min after a booking blocks the immediately following slot too',
+      () {
+        // 09:00-10:00 booking + 15min buffer occupies the practitioner until
+        // 10:15, so the 10:00 slot must also be excluded (kynza-booking-engine
+        // §5 — buffer_end_time blocks planning even though it's invisible to
+        // the client, R18).
+        final slots = AvailabilityService.generateSlots(
+          dayStart: DateTime(2026, 7, 1, 8),
+          dayEnd: DateTime(2026, 7, 1, 12),
+          durationMin: 60,
+          bufferMin: 0,
+          occupied: [
+            (
+              start: DateTime(2026, 7, 1, 9),
+              bufferEnd: DateTime(2026, 7, 1, 10, 15),
+            ),
+          ],
+          now: farFuture,
+        );
+        expect(slots.map((s) => s.startTime), [
+          DateTime(2026, 7, 1, 8),
+          DateTime(2026, 7, 1, 11),
+        ]);
+      },
+    );
 
     test('candidate slots are independent of each other — only confirmed '
         'bookings (via the occupied list) exclude a slot, not other '

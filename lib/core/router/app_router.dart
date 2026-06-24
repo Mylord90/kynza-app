@@ -19,6 +19,16 @@ import '../../features/availability/presentation/screens/staff_hours_screen.dart
 import '../../features/availability/presentation/screens/staff_picker_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/notifications/presentation/screens/notification_settings_screen.dart';
+import '../../features/marketing/presentation/screens/invite_clients_screen.dart';
+import '../../features/marketing/presentation/screens/loyalty_setup_screen.dart';
+import '../../features/marketing/presentation/screens/marketing_dashboard_screen.dart';
+import '../../features/marketing/presentation/screens/promotion_center_screen.dart';
+import '../../features/marketing/presentation/screens/social_share_center_screen.dart';
+import '../../features/home_client/presentation/screens/client_bookings_screen.dart';
+import '../../features/home_client/presentation/screens/client_profile_screen.dart';
+import '../../features/loyalty/presentation/screens/client_loyalty_screen.dart';
+import '../../features/reviews/presentation/screens/leave_review_screen.dart';
+import '../../features/reviews/presentation/screens/owner_reviews_screen.dart';
 import '../../features/staff/application/providers/staff_providers.dart';
 import '../../features/booking/application/providers/booking_flow_provider.dart';
 import '../../features/booking/application/providers/booking_providers.dart';
@@ -265,6 +275,90 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => const _RoleGuard(
           role: UserRole.staff,
           child: _StaffOwnHoursLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerMarketing,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerMarketingLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerMarketingClients,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerInviteClientsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerMarketingPromotions,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerPromotionsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerMarketingLoyalty,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerLoyaltySetupLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerShare,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerShareLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.clientLoyalty,
+        (context, state) => _RoleGuard(
+          role: UserRole.client,
+          child: Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(title: const Text('Mes Fidélités')),
+            body: const ClientLoyaltyScreen(),
+          ),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.clientBookings,
+        (context, state) => _RoleGuard(
+          role: UserRole.client,
+          child: Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(title: const Text('Mes RDV')),
+            body: const ClientBookingsScreen(),
+          ),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.clientProfile,
+        (context, state) => _RoleGuard(
+          role: UserRole.client,
+          child: Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(title: const Text('Mon Profil')),
+            body: const ClientProfileScreen(),
+          ),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.clientReview,
+        (context, state) => _RoleGuard(
+          role: UserRole.client,
+          child: LeaveReviewScreen(
+            bookingId: state.pathParameters['bookingId']!,
+          ),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerReviews,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerReviewsLoader(),
         ),
       ),
     ],
@@ -548,5 +642,103 @@ class _StaffOwnHoursLoader extends ConsumerWidget {
             )
           : StaffHoursScreen(staffId: staff.id!, salonId: staff.salonId),
     );
+  }
+}
+
+/// Phase 3A owner/manager deep links all share the same "resolve the
+/// owner's salon first" shape as the availability loaders above.
+class _OwnerMarketingLoader extends ConsumerWidget {
+  const _OwnerMarketingLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return MarketingDashboardScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerInviteClientsLoader extends ConsumerWidget {
+  const _OwnerInviteClientsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return InviteClientsScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerPromotionsLoader extends ConsumerWidget {
+  const _OwnerPromotionsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return PromotionCenterScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerLoyaltySetupLoader extends ConsumerWidget {
+  const _OwnerLoyaltySetupLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return LoyaltySetupScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerShareLoader extends ConsumerWidget {
+  const _OwnerShareLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return SocialShareCenterScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerReviewsLoader extends ConsumerWidget {
+  const _OwnerReviewsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return OwnerReviewsScreen(salonId: salon.id);
   }
 }

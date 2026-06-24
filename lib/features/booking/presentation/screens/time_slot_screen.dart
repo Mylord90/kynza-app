@@ -52,51 +52,51 @@ class TimeSlotScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Choisir un horaire')),
       body: slotsAsync.when(
-              loading: () => GridView.builder(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: AppSpacing.sm,
-                  mainAxisSpacing: AppSpacing.sm,
-                  childAspectRatio: 2.4,
-                ),
-                itemCount: 6,
-                itemBuilder: (_, __) => const KynzaSkeleton(height: 48),
+        loading: () => GridView.builder(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: 2.4,
+          ),
+          itemCount: 6,
+          itemBuilder: (_, __) => const KynzaSkeleton(height: 48),
+        ),
+        error: (_, __) => KynzaErrorState(
+          message: 'Impossible de charger les créneaux.',
+          onRetry: () => ref.invalidate(_slotsForFlowProvider),
+        ),
+        data: (slots) {
+          if (slots.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: KynzaEmptyState(
+                icon: Icons.event_busy_outlined,
+                title: 'Aucun créneau disponible',
+                subtitle: 'Essayez une autre date.',
+                ctaLabel: 'Choisir une autre date',
+                onCta: _noop,
               ),
-              error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger les créneaux.',
-                onRetry: () => ref.invalidate(_slotsForFlowProvider),
-              ),
-              data: (slots) {
-                if (slots.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(AppSpacing.lg),
-                    child: KynzaEmptyState(
-                      icon: Icons.event_busy_outlined,
-                      title: 'Aucun créneau disponible',
-                      subtitle: 'Essayez une autre date.',
-                      ctaLabel: 'Choisir une autre date',
-                      onCta: _noop,
-                    ),
-                  );
-                }
-                return Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: TimeSlotGrid(
-                    slots: slots,
-                    selected: flowState.selectedSlot,
-                    onSelected: (slot) {
-                      ref.read(bookingFlowProvider.notifier).selectSlot(slot);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BookingSummaryScreen(),
-                        ),
-                      );
-                    },
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: TimeSlotGrid(
+              slots: slots,
+              selected: flowState.selectedSlot,
+              onSelected: (slot) {
+                ref.read(bookingFlowProvider.notifier).selectSlot(slot);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const BookingSummaryScreen(),
                   ),
                 );
               },
             ),
+          );
+        },
+      ),
     );
   }
 }

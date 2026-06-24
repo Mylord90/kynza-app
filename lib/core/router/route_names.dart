@@ -47,4 +47,19 @@ abstract class RouteNames {
   static const clientBookingConfirm = '/client/booking/confirm';
 
   static String clientSalonDetailPath(String id) => '/client/salon/$id';
+
+  // Phase 3A — Loyalty + Reviews + Owner Journey + Marketing
+  static const ownerMarketing = '/owner/marketing';
+  static const ownerMarketingClients = '/owner/marketing/clients';
+  static const ownerMarketingPromotions = '/owner/marketing/promotions';
+  static const ownerMarketingLoyalty = '/owner/marketing/loyalty';
+  static const ownerShare = '/owner/share';
+  static const ownerReviews = '/owner/reviews';
+  static const clientLoyalty = '/client/loyalty';
+  static const clientBookings = '/client/bookings';
+  static const clientProfile = '/client/profile';
+  static const clientReview = '/client/review/:bookingId';
+
+  static String clientReviewPath(String bookingId) =>
+      '/client/review/$bookingId';
 }

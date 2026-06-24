@@ -11,6 +11,7 @@ class TimeSlot with _$TimeSlot {
     required DateTime bufferEndTime,
     @Default(true) bool isAvailable,
     @Default(SlotAvailability.normal) SlotAvailability availability,
+
     /// Set only when this slot came from the "any practitioner" merge
     /// (kynza-booking-engine.md has no concept of a practitioner-less
     /// booking — bookings.practitioner_id is NOT NULL) — records which

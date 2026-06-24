@@ -21,3 +21,7 @@ enum PlanStatus { active, gracePeriod, expired }
 enum AuthProvider { email, google, facebook, apple }
 
 enum SyncStatus { synced, syncing, pending, failed }
+
+enum LoyaltyAction { earned, redeemed, expired }
+
+enum DiscountType { percent, fixedBif }

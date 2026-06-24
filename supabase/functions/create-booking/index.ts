@@ -176,6 +176,28 @@ Deno.serve(async (req) => {
       new_values: { bookingId: booking.id },
     });
 
+    // Owner Success Journey — "first_booking" step. Best-effort: a missed
+    // update here must never fail the booking itself.
+    try {
+      const { count } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("salon_id", salonId)
+        .neq("status", "cancelled");
+      if (count === 1) {
+        await supabase
+          .from("owner_journey_progress")
+          .update({
+            step_first_booking_done: true,
+            step_first_booking_done_at: new Date().toISOString(),
+          })
+          .eq("salon_id", salonId)
+          .eq("step_first_booking_done", false);
+      }
+    } catch (_e) {
+      // ignored — see comment above.
+    }
+
     // Best-effort — never blocks the booking response on a notification
     // failure (kynza-notifications-whatsapp.md §1).
     supabase.functions.invoke("send-notification", {

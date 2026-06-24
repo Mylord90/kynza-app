@@ -47,16 +47,28 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_service == null || _practitioner == null) {
-      showKynzaToast(context, message: 'Service et praticien requis.', level: ToastLevel.warning);
+      showKynzaToast(
+        context,
+        message: 'Service et praticien requis.',
+        level: ToastLevel.warning,
+      );
       return;
     }
 
     setState(() => _isSaving = true);
     final now = DateTime.now();
-    final startTime = DateTime(now.year, now.month, now.day, _time.hour, _time.minute);
+    final startTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      _time.hour,
+      _time.minute,
+    );
 
     try {
-      await ref.read(bookingActionNotifierProvider.notifier).createWalkIn(
+      await ref
+          .read(bookingActionNotifierProvider.notifier)
+          .createWalkIn(
             salonId: widget.salonId,
             serviceId: _service!.id!,
             practitionerId: _practitioner!.id!,
@@ -99,11 +111,15 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
               validator: (v) => Validators.required(v, 'Prénom'),
             ),
             const SizedBox(height: AppSpacing.md),
-            KynzaPhoneField(controller: _phoneCtrl, validator: Validators.phone),
+            KynzaPhoneField(
+              controller: _phoneCtrl,
+              validator: Validators.phone,
+            ),
             const SizedBox(height: AppSpacing.md),
             servicesAsync.when(
               loading: () => const KynzaSkeleton(height: 52),
-              error: (_, __) => const Text('Impossible de charger les services.'),
+              error: (_, __) =>
+                  const Text('Impossible de charger les services.'),
               data: (services) {
                 final active = services.where((s) => s.isActive).toList();
                 return KynzaDropdown<ServiceModel>(
@@ -120,7 +136,9 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
               loading: () => const KynzaSkeleton(height: 52),
               error: (_, __) => const Text("Impossible de charger l'équipe."),
               data: (staff) {
-                final active = staff.where((s) => s.isActive && !s.isPending).toList();
+                final active = staff
+                    .where((s) => s.isActive && !s.isPending)
+                    .toList();
                 return KynzaDropdown<StaffProfileModel>(
                   label: 'Praticien *',
                   value: _practitioner,

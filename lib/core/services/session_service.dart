@@ -8,6 +8,7 @@ abstract class _HiveKeys {
   static const language = 'language';
   static const confidentialMode = 'confidential_mode';
   static const pendingInvitationToken = 'pending_invitation_token';
+  static const journeyDismissedSalonId = 'journey_dismissed_salon_id';
 }
 
 /// Hive-based persistence for lightweight app state.
@@ -59,4 +60,12 @@ class SessionService {
 
   Future<void> clearPendingInvitationToken() =>
       _box.delete(_HiveKeys.pendingInvitationToken);
+
+  /// Once dismissed at 100%, the owner journey card never resurfaces for
+  /// that salon — only one salon is ever dismissed at a time in V1.
+  Future<void> dismissJourneyCard(String salonId) =>
+      _box.put(_HiveKeys.journeyDismissedSalonId, salonId);
+
+  bool isJourneyCardDismissed(String salonId) =>
+      _box.get(_HiveKeys.journeyDismissedSalonId) == salonId;
 }

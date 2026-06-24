@@ -22,7 +22,10 @@ void main() {
     });
 
     test('millions get two thousands separators', () {
-      expect(CurrencyFormatter.formatBif(1000000), '1${_nbsp}000${_nbsp}000 FBu');
+      expect(
+        CurrencyFormatter.formatBif(1000000),
+        '1${_nbsp}000${_nbsp}000 FBu',
+      );
     });
 
     test('a large real-world amount (e.g. a Premium plan invoice)', () {
@@ -43,11 +46,14 @@ void main() {
       expect(CurrencyFormatter.parseBif('0 FBu'), 0);
     });
 
-    test('tolerates a plain ASCII space instead of the narrow no-break space', () {
-      // formatBif emits U+202F; a user re-typing the amount would use a
-      // regular space — parseBif must not silently break on that input.
-      expect(CurrencyFormatter.parseBif('45 000 FBu'), 45000);
-    });
+    test(
+      'tolerates a plain ASCII space instead of the narrow no-break space',
+      () {
+        // formatBif emits U+202F; a user re-typing the amount would use a
+        // regular space — parseBif must not silently break on that input.
+        expect(CurrencyFormatter.parseBif('45 000 FBu'), 45000);
+      },
+    );
 
     test('round-trips every formatBif boundary value', () {
       for (final amount in [0, 1, 999, 1000, 45000, 999999, 1000000, 125000]) {
@@ -60,22 +66,25 @@ void main() {
     });
   });
 
-  group('CurrencyFormatter.format — multi-currency (V2-ready, BIF-only in V1 UI)', () {
-    test('formats USD with its symbol and 2 decimal digits', () {
-      final result = CurrencyFormatter.format(45.5, CurrencyCode.usd);
-      expect(result, contains(r'$'));
-      expect(result, contains('45.50'));
-    });
+  group(
+    'CurrencyFormatter.format — multi-currency (V2-ready, BIF-only in V1 UI)',
+    () {
+      test('formats USD with its symbol and 2 decimal digits', () {
+        final result = CurrencyFormatter.format(45.5, CurrencyCode.usd);
+        expect(result, contains(r'$'));
+        expect(result, contains('45.50'));
+      });
 
-    test('formats EUR with its symbol', () {
-      final result = CurrencyFormatter.format(10, CurrencyCode.eur);
-      expect(result, contains('€'));
-    });
+      test('formats EUR with its symbol', () {
+        final result = CurrencyFormatter.format(10, CurrencyCode.eur);
+        expect(result, contains('€'));
+      });
 
-    test('BIF has zero decimal digits (no fractional FBu in practice)', () {
-      expect(CurrencyCode.bif.decimalDigits, 0);
-    });
-  });
+      test('BIF has zero decimal digits (no fractional FBu in practice)', () {
+        expect(CurrencyCode.bif.decimalDigits, 0);
+      });
+    },
+  );
 
   group('CurrencyFormatter.confidential', () {
     test('always returns the masked placeholder regardless of any amount', () {
