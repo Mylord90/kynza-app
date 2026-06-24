@@ -11,4 +11,25 @@ abstract class RouteNames {
   static const homeManager = '/manager/dashboard';
   static const homeStaff = '/staff/today';
   static const homeClient = '/client/home';
+
+  // Phase 2 — Subphase A
+  static const ownerSalonCreate = '/owner/salon/create';
+
+  // Phase 2 — Subphase B
+  static const ownerServices = '/owner/services';
+
+  // Phase 2 — Subphase C
+  static const ownerStaff = '/owner/staff';
+
+  // Phase 2 — Subphase D
+  static const ownerAvailability = '/owner/availability';
+
+  // Phase 2 — Subphase F/G
+  static const clientDiscover = '/client/discover';
+  static const clientSalonDetail = '/client/salon/:id';
+  static const clientBooking = '/client/booking';
+  static const clientPayment = '/client/payment/:id';
+  static const clientBookingConfirm = '/client/booking/confirm';
+
+  static String clientSalonDetailPath(String id) => '/client/salon/$id';
 }

@@ -1,11 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/connectivity_service.dart';
+import '../services/notification_service.dart';
 import '../services/session_service.dart';
 import '../services/supabase_service.dart';
 
 final supabaseClientProvider = Provider<SupabaseClient>(
   (ref) => SupabaseService.client,
+);
+
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService(),
 );
 
 final sessionServiceProvider = Provider<SessionService>(
@@ -31,6 +36,8 @@ class ConfidentialModeNotifier extends Notifier<bool> {
     );
     return ref.watch(sessionServiceProvider).getConfidentialMode();
   }
+
+  void toggle() => state = !state;
 }
 
 final confidentialModeProvider =

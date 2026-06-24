@@ -48,6 +48,16 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
     return AuthUiState.authenticated(profile);
   }
 
+  /// Re-derives state from the current session/profile row. Callers that
+  /// mutate `public.users` directly (e.g. CompleteProfileScreen) must call
+  /// this before navigating — otherwise the router's redirect guard keeps
+  /// reading the stale cached state (refreshSession() only fires a
+  /// tokenRefreshed auth event, which _handleAuthStateChange ignores) and
+  /// immediately bounces the navigation back.
+  Future<void> refreshProfile() async {
+    state = AsyncData(await _loadCurrentSessionState());
+  }
+
   void _handleAuthStateChange(AuthState authState) {
     if (authState.event == AuthChangeEvent.signedOut) {
       state = const AsyncData(AuthUiState.unauthenticated());
@@ -63,6 +73,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
         fullName,
       );
       await ref.read(sessionServiceProvider).persistSession();
+      ref.invalidate(currentUserProfileProvider);
       state = AsyncData(_guard(profile));
     } catch (e) {
       state = AsyncData(AuthUiState.error(getAuthErrorMessage(e)));
@@ -74,6 +85,12 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
     try {
       final profile = await _repository.signInWithEmail(email, password);
       await ref.read(sessionServiceProvider).persistSession();
+      // Without this, screens reading currentUserProfileProvider (e.g.
+      // ownerSalonProvider) keep serving whichever account was cached
+      // before this sign-in — a real bug hit when switching accounts
+      // (sign out then back in as someone else) without a full app
+      // restart.
+      ref.invalidate(currentUserProfileProvider);
       state = AsyncData(_guard(profile));
     } catch (e) {
       state = AsyncData(AuthUiState.error(getAuthErrorMessage(e)));
@@ -85,6 +102,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
     try {
       final profile = await _repository.signInWithGoogle();
       await ref.read(sessionServiceProvider).persistSession();
+      ref.invalidate(currentUserProfileProvider);
       state = AsyncData(_guard(profile));
     } catch (e) {
       state = AsyncData(AuthUiState.error(getAuthErrorMessage(e)));
@@ -125,6 +143,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
   Future<void> signOut() async {
     await _repository.signOut();
     await ref.read(sessionServiceProvider).clearSession();
+    ref.invalidate(currentUserProfileProvider);
     state = const AsyncData(AuthUiState.unauthenticated());
   }
 }

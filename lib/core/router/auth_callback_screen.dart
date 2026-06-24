@@ -5,6 +5,7 @@ import '../../features/auth/data/datasources/auth_supabase_datasource.dart';
 import '../../shared/widgets/kynza_loading_overlay.dart';
 import '../constants/app_colors.dart';
 import '../models/user_profile.dart';
+import '../providers/auth_providers.dart';
 import '../services/supabase_service.dart';
 import '../utils/auth_errors.dart';
 import '../utils/auth_redirect.dart';
@@ -35,6 +36,16 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
       if (userId == null) throw const AuthCallbackError('no_session');
 
       final profile = await _fetchOrCreateProfile(userId);
+      // Without this, authNotifierProvider's cache still says
+      // "unauthenticated" and the router's redirect guard bounces the
+      // very next navigation straight back to /auth/login. Also
+      // invalidate currentUserProfileProvider itself — refreshProfile()
+      // only updates authNotifierProvider's own cache, and other
+      // screens (e.g. ownerSalonProvider) read the separate
+      // currentUserProfileProvider, which would otherwise keep serving
+      // whichever account was cached before this OAuth sign-in.
+      ref.invalidate(currentUserProfileProvider);
+      await ref.read(authNotifierProvider.notifier).refreshProfile();
       if (!mounted) return;
       context.go(redirectAfterAuth(profile));
     } catch (e) {

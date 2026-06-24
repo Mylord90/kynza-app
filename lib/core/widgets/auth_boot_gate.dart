@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../providers/app_providers.dart';
 import '../providers/auth_providers.dart';
+import '../router/app_router.dart';
+import '../../features/auth/domain/states/auth_ui_state.dart';
+import '../../shared/widgets/kynza_notification_banner.dart';
 import '../../shared/widgets/kynza_skeleton.dart';
 
 /// Blocks rendering of the router until the very first auth/session check
@@ -14,6 +19,33 @@ class AuthBootGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(authNotifierProvider, (previous, next) {
+      final wasAuthenticated = previous?.valueOrNull is AuthAuthenticated;
+      final isAuthenticated = next.valueOrNull is AuthAuthenticated;
+      if (isAuthenticated && !wasAuthenticated) {
+        final service = ref.read(notificationServiceProvider);
+        service.initialize();
+        service.onForegroundMessage = (message) {
+          final ctx = rootNavigatorKey.currentContext;
+          if (ctx == null) return;
+          showKynzaNotificationBanner(
+            ctx,
+            title: message.notification?.title ?? 'KYNZA',
+            subtitle: message.notification?.body ?? '',
+            onTap: () {
+              final deepLink = message.data['deepLink'] as String?;
+              if (deepLink != null) ctx.go(deepLink);
+            },
+          );
+        };
+        service.tapHandler = (message) {
+          final deepLink = message.data['deepLink'] as String?;
+          final ctx = rootNavigatorKey.currentContext;
+          if (deepLink != null && ctx != null) ctx.go(deepLink);
+        };
+      }
+    });
+
     final auth = ref.watch(authNotifierProvider);
     return auth.when(
       loading: () => const _SplashLoader(),

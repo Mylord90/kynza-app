@@ -95,6 +95,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
 
       await client.auth.refreshSession();
       ref.invalidate(currentUserProfileProvider);
+      await ref.read(authNotifierProvider.notifier).refreshProfile();
 
       if (!mounted) return;
       final profile = await ref.read(currentUserProfileProvider.future);
