@@ -7,6 +7,74 @@
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
+const BUJUMBURA_OFFSET_MS = 2 * 3600_000; // Africa/Bujumbura, UTC+2, no DST
+
+// Bujumbura-local calendar date ("YYYY-MM-DD") and day_of_week (0=Mon..6=Sun,
+// matching every day_of_week column in this schema) for an absolute instant —
+// never the server's own UTC date, which can be off by one near midnight.
+function bujumburaDateParts(instant: Date): { dateStr: string; dayOfWeek: number } {
+  const shifted = new Date(instant.getTime() + BUJUMBURA_OFFSET_MS);
+  const dateStr = shifted.toISOString().substring(0, 10);
+  const dayOfWeek = (shifted.getUTCDay() + 6) % 7;
+  return { dateStr, dayOfWeek };
+}
+
+// Module 3.I — defense-in-depth checks beyond the UNIQUE(practitioner_id,
+// start_time) race-condition guard already enforced at INSERT time: a slot
+// the client-side picker considered free can still have been closed via an
+// exception or recurring break between page load and submission.
+async function checkAdvancedAvailability(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  salonId: string,
+  practitionerId: string,
+  start: Date,
+  end: Date,
+): Promise<string | null> {
+  const { dateStr, dayOfWeek } = bujumburaDateParts(start);
+
+  const { data: exceptions } = await supabase
+    .from("availability_exceptions")
+    .select("staff_id, is_closed")
+    .eq("salon_id", salonId)
+    .lte("start_date", dateStr)
+    .gte("end_date", dateStr)
+    .is("deleted_at", null)
+    .or(`staff_id.eq.${practitionerId},staff_id.is.null`);
+
+  const blocking = (exceptions ?? []).find(
+    (e: { staff_id: string | null; is_closed: boolean }) => e.is_closed,
+  );
+  if (blocking) {
+    return "Ce salon ou ce praticien est indisponible à cette date.";
+  }
+
+  const { data: breaks } = await supabase
+    .from("staff_breaks")
+    .select("start_time, end_time")
+    .eq("staff_id", practitionerId)
+    .eq("day_of_week", dayOfWeek)
+    .is("deleted_at", null);
+
+  // Bujumbura wall-clock minutes-since-midnight for start/end, comparable
+  // with the HH:MM:SS TIME columns below (also Bujumbura wall-clock).
+  const shiftedStart = new Date(start.getTime() + BUJUMBURA_OFFSET_MS);
+  const shiftedEnd = new Date(end.getTime() + BUJUMBURA_OFFSET_MS);
+  const startMinutes = shiftedStart.getUTCHours() * 60 + shiftedStart.getUTCMinutes();
+  const endMinutes = shiftedEnd.getUTCHours() * 60 + shiftedEnd.getUTCMinutes();
+  for (const b of breaks ?? []) {
+    const [bStartH, bStartM] = (b.start_time as string).split(":").map(Number);
+    const [bEndH, bEndM] = (b.end_time as string).split(":").map(Number);
+    const bStart = bStartH * 60 + bStartM;
+    const bEnd = bEndH * 60 + bEndM;
+    if (startMinutes < bEnd && endMinutes > bStart) {
+      return "Ce créneau tombe pendant une pause du praticien.";
+    }
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
@@ -53,6 +121,17 @@ Deno.serve(async (req) => {
     const end = new Date(start.getTime() + service.duration_min * 60000);
     const bufferEnd = new Date(end.getTime() + service.buffer_min * 60000);
 
+    const availabilityError = await checkAdvancedAvailability(
+      supabase,
+      salonId,
+      practitionerId,
+      start,
+      end,
+    );
+    if (availabilityError) {
+      return jsonResponse({ error: "slot_unavailable", message: availabilityError }, 409);
+    }
+
     const { data: booking, error: insertError } = await supabase
       .from("bookings")
       .insert({
@@ -96,6 +175,12 @@ Deno.serve(async (req) => {
       type_action: "booking_created",
       new_values: { bookingId: booking.id },
     });
+
+    // Best-effort — never blocks the booking response on a notification
+    // failure (kynza-notifications-whatsapp.md §1).
+    supabase.functions.invoke("send-notification", {
+      body: { bookingId: booking.id, event: "booking_created" },
+    }).catch(() => {});
 
     return jsonResponse({ booking }, 200);
   } catch (e) {

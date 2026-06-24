@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     const { data: staffProfile, error: lookupError } = await supabase
       .from("staff_profiles")
-      .select("id, salon_id, role, invitation_accepted_at, deleted_at")
+      .select("id, salon_id, role, display_name, invited_by, invitation_accepted_at, deleted_at")
       .eq("invitation_token", invitationToken)
       .maybeSingle();
 
@@ -76,6 +76,18 @@ Deno.serve(async (req) => {
       type_action: "staff_invitation_accepted",
       new_values: { staffProfileId: staffProfile.id },
     });
+
+    // Best-effort: notify whoever sent the invitation that it was accepted.
+    if (staffProfile.invited_by) {
+      supabase.functions.invoke("send-notification", {
+        body: {
+          userId: staffProfile.invited_by,
+          salonId: updated.salon_id,
+          event: "staff_joined",
+          data: { staff_name: staffProfile.display_name ?? "" },
+        },
+      }).catch(() => {});
+    }
 
     return jsonResponse(
       { success: true, salon_id: updated.salon_id, role: updated.role },

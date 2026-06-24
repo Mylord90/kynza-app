@@ -25,6 +25,20 @@ abstract class RouteNames {
   // Phase 2 — Subphase D
   static const ownerAvailability = '/owner/availability';
 
+  // Phase 2.2 — Module 1: Notifications
+  static const notifications = '/notifications';
+  static const notificationSettings = '/notifications/settings';
+
+  // Phase 2.2 — Module 3: Advanced availability
+  static const ownerAvailabilitySalon = '/owner/availability/salon';
+  static const ownerAvailabilityStaff = '/owner/availability/staff/:staffId';
+  static const ownerAvailabilityBreaks = '/owner/availability/breaks';
+  static const ownerAvailabilityExceptions = '/owner/availability/exceptions';
+  static const staffAvailability = '/staff/availability';
+
+  static String ownerAvailabilityStaffPath(String staffId) =>
+      '/owner/availability/staff/$staffId';
+
   // Phase 2 — Subphase F/G
   static const clientDiscover = '/client/discover';
   static const clientSalonDetail = '/client/salon/:id';

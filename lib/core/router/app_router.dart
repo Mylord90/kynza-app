@@ -12,6 +12,14 @@ import '../../features/home_manager/presentation/screens/home_manager_screen.dar
 import '../../features/home_owner/presentation/screens/home_owner_screen.dart';
 import '../../features/home_staff/presentation/screens/home_staff_screen.dart';
 import '../../features/availability/presentation/screens/availability_management_screen.dart';
+import '../../features/availability/presentation/screens/breaks_management_screen.dart';
+import '../../features/availability/presentation/screens/exceptions_calendar_screen.dart';
+import '../../features/availability/presentation/screens/salon_hours_screen.dart';
+import '../../features/availability/presentation/screens/staff_hours_screen.dart';
+import '../../features/availability/presentation/screens/staff_picker_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/notifications/presentation/screens/notification_settings_screen.dart';
+import '../../features/staff/application/providers/staff_providers.dart';
 import '../../features/booking/application/providers/booking_flow_provider.dart';
 import '../../features/booking/application/providers/booking_providers.dart';
 import '../../features/booking/presentation/screens/salon_detail_screen.dart';
@@ -214,6 +222,51 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: _PaymentDeepLinkLoader(bookingId: state.pathParameters['id']!),
         ),
       ),
+      _fadeRoute(
+        RouteNames.notifications,
+        (context, state) => const NotificationsScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.notificationSettings,
+        (context, state) => const NotificationSettingsScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAvailabilitySalon,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: SalonHoursScreen(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAvailabilityStaff,
+        (context, state) => _RoleGuard.anyOf(
+          roles: const {UserRole.owner, UserRole.manager},
+          child: _OwnerStaffHoursLoader(
+            staffId: state.pathParameters['staffId']!,
+          ),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAvailabilityBreaks,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerBreaksPickerLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAvailabilityExceptions,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager},
+          child: _OwnerExceptionsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.staffAvailability,
+        (context, state) => const _RoleGuard(
+          role: UserRole.staff,
+          child: _StaffOwnHoursLoader(),
+        ),
+      ),
     ],
   );
 });
@@ -382,5 +435,118 @@ class _OwnerOnboardingGuard extends ConsumerWidget {
       );
     }
     return child;
+  }
+}
+
+/// `/owner/availability/staff/:staffId` deep link — resolves the owner's
+/// salon and the staff member's display name before handing off, since
+/// [StaffHoursScreen] needs both, not just the path's staffId.
+class _OwnerStaffHoursLoader extends ConsumerWidget {
+  const _OwnerStaffHoursLoader({required this.staffId});
+
+  final String staffId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    final staff = ref.watch(salonStaffProvider(salon.id)).valueOrNull;
+    final member = staff?.where((s) => s.id == staffId).firstOrNull;
+    return StaffHoursScreen(
+      staffId: staffId,
+      salonId: salon.id,
+      staffName: member?.displayName,
+    );
+  }
+}
+
+/// `/owner/availability/breaks` deep link — lands on the staff picker;
+/// selecting one pushes [BreaksManagementScreen] via Navigator, same as
+/// the in-app hub navigation (kynza-flutter-architecture.md — no
+/// duplicated routing logic between deep links and in-app taps).
+class _OwnerBreaksPickerLoader extends ConsumerWidget {
+  const _OwnerBreaksPickerLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return StaffPickerScreen(
+      salonId: salon.id,
+      title: 'Pauses & absences',
+      onSelect: (member) => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BreaksManagementScreen(
+            staffId: member.id!,
+            salonId: salon.id,
+            staffName: member.displayName,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OwnerExceptionsLoader extends ConsumerWidget {
+  const _OwnerExceptionsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return ExceptionsCalendarScreen(salonId: salon.id);
+  }
+}
+
+/// `/staff/availability` — a staff member's own self-service hours
+/// screen, resolved from their own staff_profiles row (never a path
+/// param — a staff session must only ever reach their own staffId).
+class _StaffOwnHoursLoader extends ConsumerWidget {
+  const _StaffOwnHoursLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final staffAsync = ref.watch(myStaffProfileProvider);
+    return staffAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      ),
+      error: (_, __) => Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: TextButton(
+            onPressed: () => context.go(RouteNames.homeStaff),
+            child: const Text('Profil introuvable — retour à l\'accueil'),
+          ),
+        ),
+      ),
+      data: (staff) => staff == null
+          ? Scaffold(
+              backgroundColor: AppColors.background,
+              body: Center(
+                child: TextButton(
+                  onPressed: () => context.go(RouteNames.homeStaff),
+                  child: const Text('Profil introuvable — retour à l\'accueil'),
+                ),
+              ),
+            )
+          : StaffHoursScreen(staffId: staff.id!, salonId: staff.salonId),
+    );
   }
 }

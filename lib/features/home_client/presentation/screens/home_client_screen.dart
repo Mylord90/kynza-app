@@ -10,6 +10,7 @@ import '../../../booking/presentation/screens/salon_detail_screen.dart';
 import '../../../booking/presentation/screens/salon_discovery_screen.dart';
 import '../../../booking/presentation/widgets/booking_list_card.dart';
 import '../../../salon/application/providers/salon_providers.dart';
+import '../../../notifications/presentation/widgets/unread_count_badge.dart';
 
 class HomeClientScreen extends ConsumerStatefulWidget {
   const HomeClientScreen({super.key});
@@ -30,6 +31,7 @@ class _HomeClientScreenState extends ConsumerState<HomeClientScreen> {
       appBar: AppBar(
         title: Text(_titleFor(_tabIndex, profile?.firstName)),
         actions: [
+          const UnreadCountBadge(),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.lg),
             child: KynzaAvatar(

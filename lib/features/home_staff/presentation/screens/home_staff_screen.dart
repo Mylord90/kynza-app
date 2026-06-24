@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/models/booking_model.dart';
@@ -9,6 +11,7 @@ import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
 import '../../../booking/presentation/widgets/booking_list_card.dart';
 import '../../../staff/application/providers/staff_providers.dart';
+import '../../../notifications/presentation/widgets/unread_count_badge.dart';
 import '../widgets/staff_featured_card.dart';
 
 final _todayBookingsWithJoinsProvider =
@@ -44,7 +47,17 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(_titleFor(_tabIndex))),
+      appBar: AppBar(
+        title: Text(_titleFor(_tabIndex)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.schedule_outlined),
+            tooltip: 'Mes disponibilités',
+            onPressed: () => context.push(RouteNames.staffAvailability),
+          ),
+          const UnreadCountBadge(),
+        ],
+      ),
       body: staffAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AppSpacing.lg),

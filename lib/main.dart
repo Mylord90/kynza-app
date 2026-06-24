@@ -10,11 +10,14 @@ import 'core/constants/kynza_constants.dart';
 import 'core/router/app_router.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/session_service.dart';
+import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/auth_boot_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  TimeZoneService.init();
 
   await Hive.initFlutter();
   await Hive.openBox(SessionService.boxName);
