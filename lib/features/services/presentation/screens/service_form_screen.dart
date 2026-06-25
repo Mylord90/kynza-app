@@ -84,7 +84,8 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
         unawaited(
           ref
               .read(journeyNotifierProvider.notifier)
-              .markStep(widget.salonId, 'first_service'),
+              .markStep(widget.salonId, 'first_service')
+              .catchError((_) {}),
         );
       }
       if (mounted) Navigator.of(context).pop();

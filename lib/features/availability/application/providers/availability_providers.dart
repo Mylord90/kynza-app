@@ -55,17 +55,27 @@ class AvailabilityNotifier extends AsyncNotifier<void> {
 
   Future<void> save(AvailabilityOverrideModel override) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(availabilityRepositoryProvider).upsertOverride(override),
-    );
-    ref.invalidate(salonOverridesProvider(override.salonId));
+    try {
+      await ref.read(availabilityRepositoryProvider).upsertOverride(override);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonOverridesProvider(override.salonId));
+    }
   }
 
   Future<void> delete(String id, String salonId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(availabilityRepositoryProvider).deleteOverride(id),
-    );
-    ref.invalidate(salonOverridesProvider(salonId));
+    try {
+      await ref.read(availabilityRepositoryProvider).deleteOverride(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonOverridesProvider(salonId));
+    }
   }
 
   Future<void> saveStaffHours(
@@ -74,51 +84,81 @@ class AvailabilityNotifier extends AsyncNotifier<void> {
     List<StaffWorkingHourModel> hours,
   ) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref
+    try {
+      await ref
           .read(availabilityRepositoryProvider)
-          .updateStaffWorkingHours(staffId, salonId, hours),
-    );
-    ref.invalidate(staffWorkingHoursProvider((staffId, salonId)));
+          .updateStaffWorkingHours(staffId, salonId, hours);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(staffWorkingHoursProvider((staffId, salonId)));
+    }
   }
 
   Future<void> useSalonHours(String staffId, String salonId) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref
+    try {
+      await ref
           .read(availabilityRepositoryProvider)
-          .clearStaffWorkingHours(staffId),
-    );
-    ref.invalidate(staffWorkingHoursProvider((staffId, salonId)));
+          .clearStaffWorkingHours(staffId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(staffWorkingHoursProvider((staffId, salonId)));
+    }
   }
 
   Future<void> saveBreak(StaffBreakModel draft) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(availabilityRepositoryProvider).addBreak(draft),
-    );
-    ref.invalidate(staffBreaksProvider(draft.staffId));
+    try {
+      await ref.read(availabilityRepositoryProvider).addBreak(draft);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(staffBreaksProvider(draft.staffId));
+    }
   }
 
   Future<void> deleteBreak(String id, String staffId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(availabilityRepositoryProvider).removeBreak(id),
-    );
-    ref.invalidate(staffBreaksProvider(staffId));
+    try {
+      await ref.read(availabilityRepositoryProvider).removeBreak(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(staffBreaksProvider(staffId));
+    }
   }
 
   Future<void> saveException(AvailabilityExceptionModel draft) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(availabilityRepositoryProvider).addException(draft),
-    );
-    ref.invalidate(salonExceptionsProvider(draft.salonId));
+    try {
+      await ref.read(availabilityRepositoryProvider).addException(draft);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonExceptionsProvider(draft.salonId));
+    }
   }
 
   Future<void> deleteException(String id, String salonId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(availabilityRepositoryProvider).removeException(id),
-    );
-    ref.invalidate(salonExceptionsProvider(salonId));
+    try {
+      await ref.read(availabilityRepositoryProvider).removeException(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonExceptionsProvider(salonId));
+    }
   }
 }

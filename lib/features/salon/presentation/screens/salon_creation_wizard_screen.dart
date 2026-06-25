@@ -152,12 +152,14 @@ class _SalonCreationWizardScreenState
       unawaited(
         ref
             .read(journeyNotifierProvider.notifier)
-            .markStep(created.id, 'salon_info'),
+            .markStep(created.id, 'salon_info')
+            .catchError((_) {}),
       );
       unawaited(
         ref
             .read(journeyNotifierProvider.notifier)
-            .markStep(created.id, 'hours'),
+            .markStep(created.id, 'hours')
+            .catchError((_) {}),
       );
 
       if (!mounted) return;

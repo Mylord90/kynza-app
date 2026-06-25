@@ -34,12 +34,17 @@ class ReviewNotifier extends AsyncNotifier<void> {
 
   Future<void> createReview(ReviewModel review) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(reviewRepositoryProvider).createReview(review),
-    );
-    ref.invalidate(salonReviewsProvider(review.salonId));
-    ref.invalidate(salonRatingProvider(review.salonId));
-    ref.invalidate(canReviewProvider(review.bookingId));
+    try {
+      await ref.read(reviewRepositoryProvider).createReview(review);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonReviewsProvider(review.salonId));
+      ref.invalidate(salonRatingProvider(review.salonId));
+      ref.invalidate(canReviewProvider(review.bookingId));
+    }
   }
 
   Future<void> updateReview(
@@ -49,26 +54,40 @@ class ReviewNotifier extends AsyncNotifier<void> {
     String? comment,
   ) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () =>
-          ref.read(reviewRepositoryProvider).updateReview(id, rating, comment),
-    );
-    ref.invalidate(salonReviewsProvider(salonId));
-    ref.invalidate(salonRatingProvider(salonId));
+    try {
+      await ref.read(reviewRepositoryProvider).updateReview(id, rating, comment);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonReviewsProvider(salonId));
+      ref.invalidate(salonRatingProvider(salonId));
+    }
   }
 
   Future<void> replyToReview(String salonId, String id, String reply) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(reviewRepositoryProvider).replyToReview(id, reply),
-    );
-    ref.invalidate(salonReviewsProvider(salonId));
+    try {
+      await ref.read(reviewRepositoryProvider).replyToReview(id, reply);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonReviewsProvider(salonId));
+    }
   }
 
   Future<void> flagReview(String salonId, String id) async {
-    state = await AsyncValue.guard(
-      () => ref.read(reviewRepositoryProvider).flagReview(id),
-    );
-    ref.invalidate(salonReviewsProvider(salonId));
+    try {
+      await ref.read(reviewRepositoryProvider).flagReview(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonReviewsProvider(salonId));
+    }
   }
 }

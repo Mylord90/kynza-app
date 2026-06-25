@@ -102,9 +102,19 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
       confirmLabel: 'Signaler',
     );
     if (!confirmed) return;
-    await ref
-        .read(reviewNotifierProvider.notifier)
-        .flagReview(widget.salonId, review.id!);
+    try {
+      await ref
+          .read(reviewNotifierProvider.notifier)
+          .flagReview(widget.salonId, review.id!);
+    } catch (e) {
+      if (mounted) {
+        showKynzaToast(
+          context,
+          message: e is AppException ? e.message : 'Échec du signalement.',
+          level: ToastLevel.error,
+        );
+      }
+    }
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
 
@@ -78,10 +79,21 @@ class BlockedSlotsScreen extends ConsumerWidget {
                                 'Ce jour redeviendra ouvert selon vos horaires habituels.',
                             isDestructive: false,
                           );
-                          if (confirmed) {
+                          if (!confirmed) return;
+                          try {
                             await ref
                                 .read(availabilityNotifierProvider.notifier)
                                 .delete(o.id!, salonId);
+                          } catch (e) {
+                            if (context.mounted) {
+                              showKynzaToast(
+                                context,
+                                message: e is AppException
+                                    ? e.message
+                                    : 'Échec du déblocage.',
+                                level: ToastLevel.error,
+                              );
+                            }
                           }
                         },
                       ),

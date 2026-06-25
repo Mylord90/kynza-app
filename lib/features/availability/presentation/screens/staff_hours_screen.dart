@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/staff_working_hour_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
@@ -112,24 +113,36 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
                   final notifier = ref.read(
                     availabilityNotifierProvider.notifier,
                   );
-                  if (_useSalonHours!) {
-                    await notifier.useSalonHours(
-                      widget.staffId,
-                      widget.salonId,
-                    );
-                  } else {
-                    await notifier.saveStaffHours(
-                      widget.staffId,
-                      widget.salonId,
-                      _draft!,
-                    );
-                  }
-                  if (context.mounted) {
-                    showKynzaToast(
-                      context,
-                      message: 'Horaires enregistrés.',
-                      level: ToastLevel.success,
-                    );
+                  try {
+                    if (_useSalonHours!) {
+                      await notifier.useSalonHours(
+                        widget.staffId,
+                        widget.salonId,
+                      );
+                    } else {
+                      await notifier.saveStaffHours(
+                        widget.staffId,
+                        widget.salonId,
+                        _draft!,
+                      );
+                    }
+                    if (context.mounted) {
+                      showKynzaToast(
+                        context,
+                        message: 'Horaires enregistrés.',
+                        level: ToastLevel.success,
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      showKynzaToast(
+                        context,
+                        message: e is AppException
+                            ? e.message
+                            : "Échec de l'enregistrement.",
+                        level: ToastLevel.error,
+                      );
+                    }
                   }
                 },
               ),

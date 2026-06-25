@@ -34,7 +34,10 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
     final id = service.id!;
     setState(() {});
     _pendingDeletes[id] = Timer(const Duration(seconds: 3), () {
-      ref.read(serviceNotifierProvider.notifier).softDelete(id);
+      ref
+          .read(serviceNotifierProvider.notifier)
+          .softDelete(id)
+          .catchError((_) {});
       _pendingDeletes.remove(id);
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -188,7 +191,8 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
                         ),
                         onToggleActive: (active) => ref
                             .read(serviceNotifierProvider.notifier)
-                            .toggleActive(service.id!, active),
+                            .toggleActive(service.id!, active)
+                            .catchError((_) {}),
                       ),
                     ),
                   );

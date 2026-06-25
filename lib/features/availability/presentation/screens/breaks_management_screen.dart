@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/staff_break_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
@@ -44,9 +45,23 @@ class BreaksManagementScreen extends ConsumerWidget {
           builder: (_) => BreakEditorWidget(
             staffId: staffId,
             salonId: salonId,
-            onSave: (draft) => ref
-                .read(availabilityNotifierProvider.notifier)
-                .saveBreak(draft),
+            onSave: (draft) async {
+              try {
+                await ref
+                    .read(availabilityNotifierProvider.notifier)
+                    .saveBreak(draft);
+              } catch (e) {
+                if (context.mounted) {
+                  showKynzaToast(
+                    context,
+                    message: e is AppException
+                        ? e.message
+                        : "Échec de l'enregistrement.",
+                    level: ToastLevel.error,
+                  );
+                }
+              }
+            },
           ),
         ),
         child: const Icon(Icons.add, color: AppColors.background),
@@ -76,9 +91,23 @@ class BreaksManagementScreen extends ConsumerWidget {
                 builder: (_) => BreakEditorWidget(
                   staffId: staffId,
                   salonId: salonId,
-                  onSave: (draft) => ref
-                      .read(availabilityNotifierProvider.notifier)
-                      .saveBreak(draft),
+                  onSave: (draft) async {
+                    try {
+                      await ref
+                          .read(availabilityNotifierProvider.notifier)
+                          .saveBreak(draft);
+                    } catch (e) {
+                      if (context.mounted) {
+                        showKynzaToast(
+                          context,
+                          message: e is AppException
+                              ? e.message
+                              : "Échec de l'enregistrement.",
+                          level: ToastLevel.error,
+                        );
+                      }
+                    }
+                  },
                 ),
               ),
             );
@@ -105,9 +134,23 @@ class BreaksManagementScreen extends ConsumerWidget {
                       color: AppColors.error,
                     ),
                   ),
-                  onDismissed: (_) => ref
-                      .read(availabilityNotifierProvider.notifier)
-                      .deleteBreak(b.id!, staffId),
+                  onDismissed: (_) async {
+                    try {
+                      await ref
+                          .read(availabilityNotifierProvider.notifier)
+                          .deleteBreak(b.id!, staffId);
+                    } catch (e) {
+                      if (context.mounted) {
+                        showKynzaToast(
+                          context,
+                          message: e is AppException
+                              ? e.message
+                              : 'Échec de la suppression.',
+                          level: ToastLevel.error,
+                        );
+                      }
+                    }
+                  },
                   child: KynzaCard(
                     child: Row(
                       children: [

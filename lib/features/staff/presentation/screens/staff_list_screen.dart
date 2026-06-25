@@ -94,7 +94,8 @@ class _StaffBody extends ConsumerWidget {
                 child: TextButton(
                   onPressed: () => ref
                       .read(journeyNotifierProvider.notifier)
-                      .markStep(salonId, 'team'),
+                      .markStep(salonId, 'team')
+                      .catchError((_) {}),
                   child: const Text('Je travaille seul →'),
                 ),
               ),
@@ -103,7 +104,10 @@ class _StaffBody extends ConsumerWidget {
         }
         // Staff already exists — the "team" journey step is implicitly
         // satisfied; idempotent, so safe to call on every rebuild.
-        ref.read(journeyNotifierProvider.notifier).markStep(salonId, 'team');
+        ref
+            .read(journeyNotifierProvider.notifier)
+            .markStep(salonId, 'team')
+            .catchError((_) {});
         return ListView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
           itemCount: staff.length,
@@ -120,7 +124,8 @@ class _StaffBody extends ConsumerWidget {
                 ),
                 onToggleActive: (active) => ref
                     .read(staffNotifierProvider.notifier)
-                    .toggleActive(member.id!, active),
+                    .toggleActive(member.id!, active)
+                    .catchError((_) {}),
               ),
             );
           },

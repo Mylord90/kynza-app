@@ -34,37 +34,57 @@ class NotificationNotifier extends AsyncNotifier<void> {
   void build() {}
 
   Future<void> markRead(String notifId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(notificationRepositoryProvider).markAsRead(notifId),
-    );
+    try {
+      await ref.read(notificationRepositoryProvider).markAsRead(notifId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> markAllRead(String userId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(notificationRepositoryProvider).markAllAsRead(userId),
-    );
+    try {
+      await ref.read(notificationRepositoryProvider).markAllAsRead(userId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> delete(String notifId) async {
-    state = await AsyncValue.guard(
-      () =>
-          ref.read(notificationRepositoryProvider).deleteNotification(notifId),
-    );
+    try {
+      await ref.read(notificationRepositoryProvider).deleteNotification(notifId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> updatePrefs(NotificationPreferencesModel prefs) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(notificationRepositoryProvider).updatePreferences(prefs),
-    );
-    ref.invalidate(notificationPrefsProvider);
+    try {
+      await ref.read(notificationRepositoryProvider).updatePreferences(prefs);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(notificationPrefsProvider);
+    }
   }
 
   Future<void> updateWhatsappPhone(String userId, String phone) async {
-    state = await AsyncValue.guard(
-      () => ref
+    try {
+      await ref
           .read(notificationRepositoryProvider)
-          .updateWhatsappPhone(userId, phone),
-    );
+          .updateWhatsappPhone(userId, phone);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }

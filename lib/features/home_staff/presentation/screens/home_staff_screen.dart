@@ -173,7 +173,8 @@ class _TodayTab extends ConsumerWidget {
               booking: next,
               onConfirmArrival: () => ref
                   .read(bookingActionNotifierProvider.notifier)
-                  .markInProgress(next.id!),
+                  .markInProgress(next.id!)
+                  .catchError((_) {}),
             ),
             if (rest.isNotEmpty)
               Padding(

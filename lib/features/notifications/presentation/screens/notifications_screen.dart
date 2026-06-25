@@ -33,7 +33,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   void _swipeDelete(String notifId, String title) {
     setState(() {});
     _pendingDeletes[notifId] = Timer(const Duration(seconds: 3), () {
-      ref.read(notificationNotifierProvider.notifier).delete(notifId);
+      ref
+          .read(notificationNotifierProvider.notifier)
+          .delete(notifId)
+          .catchError((_) {});
       _pendingDeletes.remove(notifId);
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +70,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 ? null
                 : () => ref
                       .read(notificationNotifierProvider.notifier)
-                      .markAllRead(profile.id),
+                      .markAllRead(profile.id)
+                      .catchError((_) {}),
             child: const Text(
               'Tout marquer lu',
               style: TextStyle(color: AppColors.primary),
@@ -144,7 +148,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             // alert rather than risk a dead navigation (R04).
                             onTap: () => ref
                                 .read(notificationNotifierProvider.notifier)
-                                .markRead(notif.id!),
+                                .markRead(notif.id!)
+                                .catchError((_) {}),
                           ),
                         ),
                       );

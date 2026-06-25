@@ -46,9 +46,19 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
       confirmLabel: 'Désactiver',
     );
     if (!confirmed) return;
-    await ref
-        .read(marketingNotifierProvider.notifier)
-        .deactivatePromotion(promo.id!);
+    try {
+      await ref
+          .read(marketingNotifierProvider.notifier)
+          .deactivatePromotion(promo.id!);
+    } catch (e) {
+      if (mounted) {
+        showKynzaToast(
+          context,
+          message: e is AppException ? e.message : 'Échec de la désactivation.',
+          level: ToastLevel.error,
+        );
+      }
+    }
   }
 
   Future<void> _share(PromotionModel promo) async {

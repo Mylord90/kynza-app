@@ -43,7 +43,12 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
   void _scheduleDelete(ClientContactModel contact) {
     setState(() => _hiddenIds.add(contact.id!));
     final timer = Timer(const Duration(seconds: 4), () {
-      ref.read(marketingNotifierProvider.notifier).deleteContact(contact.id!);
+      ref
+          .read(marketingNotifierProvider.notifier)
+          .deleteContact(contact.id!)
+          // Already shown as removed via _hiddenIds — there's no UI left
+          // to surface a failure to at this point in the undo flow.
+          .catchError((_) {});
       _pendingTimers.remove(contact.id);
     });
     _pendingTimers[contact.id!] = timer;
@@ -66,20 +71,29 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
 
   Future<void> _importFromBookings() async {
     setState(() => _importing = true);
-    final count = await ref
-        .read(marketingNotifierProvider.notifier)
-        .importFromBookings(widget.salonId);
-    if (mounted) setState(() => _importing = false);
-    if (!mounted) return;
-    showKynzaToast(
-      context,
-      message: count == null
-          ? "Échec de l'import."
-          : count == 0
-          ? 'Aucun nouveau client à importer.'
-          : '$count client(s) importé(s).',
-      level: count == null ? ToastLevel.error : ToastLevel.success,
-    );
+    try {
+      final count = await ref
+          .read(marketingNotifierProvider.notifier)
+          .importFromBookings(widget.salonId);
+      if (!mounted) return;
+      showKynzaToast(
+        context,
+        message: count == 0
+            ? 'Aucun nouveau client à importer.'
+            : '$count client(s) importé(s).',
+        level: ToastLevel.success,
+      );
+    } catch (e) {
+      if (mounted) {
+        showKynzaToast(
+          context,
+          message: e is AppException ? e.message : "Échec de l'import.",
+          level: ToastLevel.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
   }
 
   Future<void> _shareInvite(ClientContactModel contact) async {

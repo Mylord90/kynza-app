@@ -7,6 +7,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/models/user_profile.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/validators.dart';
@@ -82,9 +83,23 @@ class ClientProfileScreen extends ConsumerWidget {
                 height: 80,
                 previewUrl: profile.avatarUrl,
                 isLoading: ref.watch(clientProfileNotifierProvider).isLoading,
-                onPicked: (bytes, ext) => ref
-                    .read(clientProfileNotifierProvider.notifier)
-                    .uploadAvatar(bytes, ext),
+                onPicked: (bytes, ext) async {
+                  try {
+                    await ref
+                        .read(clientProfileNotifierProvider.notifier)
+                        .uploadAvatar(bytes, ext);
+                  } catch (e) {
+                    if (context.mounted) {
+                      showKynzaToast(
+                        context,
+                        message: e is AppException
+                            ? e.message
+                            : "Échec de l'envoi de la photo.",
+                        level: ToastLevel.error,
+                      );
+                    }
+                  }
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               Text(profile.fullName, style: AppTypography.h2),
@@ -316,14 +331,32 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
-    await ref
-        .read(clientProfileNotifierProvider.notifier)
-        .updateProfile(
-          fullName: _nameCtrl.text.trim(),
-          phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-          email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
+    try {
+      await ref
+          .read(clientProfileNotifierProvider.notifier)
+          .updateProfile(
+            fullName: _nameCtrl.text.trim(),
+            phone: _phoneCtrl.text.trim().isEmpty
+                ? null
+                : _phoneCtrl.text.trim(),
+            email: _emailCtrl.text.trim().isEmpty
+                ? null
+                : _emailCtrl.text.trim(),
+          );
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        showKynzaToast(
+          context,
+          message: e is AppException
+              ? e.message
+              : 'Impossible de mettre à jour votre profil.',
+          level: ToastLevel.error,
         );
-    if (mounted) Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override

@@ -180,7 +180,7 @@ class _PastBookingActions extends ConsumerWidget {
               label: 'Laisser un avis',
               height: 36,
               onPressed: () =>
-                  context.go(RouteNames.clientReviewPath(booking.id!)),
+                  context.push(RouteNames.clientReviewPath(booking.id!)),
             ),
           KynzaButton(
             label: 'Réserver à nouveau',

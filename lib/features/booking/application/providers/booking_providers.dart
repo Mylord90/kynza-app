@@ -100,16 +100,23 @@ class BookingActionNotifier extends AsyncNotifier<void> {
   void build() {}
 
   Future<void> updateStatus(String bookingId, BookingStatus status) async {
-    state = await AsyncValue.guard(
-      () => ref.read(bookingRepositoryProvider).updateStatus(bookingId, status),
-    );
+    try {
+      await ref.read(bookingRepositoryProvider).updateStatus(bookingId, status);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> cancel(String bookingId, String reason) async {
-    state = await AsyncValue.guard(
-      () =>
-          ref.read(bookingRepositoryProvider).cancelBooking(bookingId, reason),
-    );
+    try {
+      await ref.read(bookingRepositoryProvider).cancelBooking(bookingId, reason);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   /// Throws [AppException] on failure — callers show it directly rather
@@ -138,16 +145,23 @@ class BookingActionNotifier extends AsyncNotifier<void> {
 
   /// R10 — no confirmation dialog ever wraps this call.
   Future<void> markInProgress(String bookingId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(bookingRepositoryProvider).markInProgress(bookingId),
-    );
+    try {
+      await ref.read(bookingRepositoryProvider).markInProgress(bookingId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> markCompleted(BookingModel booking) async {
-    state = await AsyncValue.guard(
-      () => ref.read(bookingRepositoryProvider).markCompleted(booking.id!),
-    );
-    if (state.hasError) return;
+    try {
+      await ref.read(bookingRepositoryProvider).markCompleted(booking.id!);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
     await _awardLoyaltyStamp(booking);
   }
 
@@ -167,8 +181,12 @@ class BookingActionNotifier extends AsyncNotifier<void> {
   }
 
   Future<void> markNoShow(String bookingId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(bookingRepositoryProvider).markNoShow(bookingId),
-    );
+    try {
+      await ref.read(bookingRepositoryProvider).markNoShow(bookingId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }

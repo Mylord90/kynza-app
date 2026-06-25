@@ -59,86 +59,95 @@ class _JourneyCardBody extends ConsumerWidget {
         borderRadius: AppRadius.xl_,
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            width: 4,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.horizontal(
-                left: Radius.circular(AppRadius.xl),
+      // IntrinsicHeight gives the Row a bounded height to stretch its
+      // children into — without it, the Row sits inside AnimatedSize with
+      // an unbounded height and CrossAxisAlignment.stretch throws
+      // "BoxConstraints forces an infinite height", so the card never
+      // paints even once real data arrives.
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              width: 4,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(AppRadius.xl),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          '🚀 Lancez votre salon',
-                          style: AppTypography.h3,
-                        ),
-                      ),
-                      Text(
-                        '${journey.completionPct}%',
-                        style: AppTypography.amountMd,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _ProgressBar(pct: journey.completionPct),
-                  const SizedBox(height: AppSpacing.lg),
-                  for (final step in OwnerJourneyModelX.steps) ...[
-                    if (step.index > 0)
-                      const Divider(height: 1, color: AppColors.border),
-                    _StepRow(step: step, done: journey.isStepDone(step.key)),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                  if (journey.isComplete)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Row(
                       children: [
                         const Expanded(
                           child: Text(
-                            '🎉 Votre salon est prêt !',
-                            style: TextStyle(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            '🚀 Lancez votre salon',
+                            style: AppTypography.h3,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => ref
-                              .read(journeyDismissedProvider(salonId).notifier)
-                              .dismiss(salonId),
-                          child: const Text('Fermer'),
+                        Text(
+                          '${journey.completionPct}%',
+                          style: AppTypography.amountMd,
                         ),
                       ],
-                    )
-                  else
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        onPressed: () {
-                          final next = OwnerJourneyModelX.steps.firstWhere(
-                            (s) => !journey.isStepDone(s.key),
-                            orElse: () => OwnerJourneyModelX.steps.first,
-                          );
-                          context.go(next.route);
-                        },
-                        child: const Text('Continuer la configuration →'),
-                      ),
                     ),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    _ProgressBar(pct: journey.completionPct),
+                    const SizedBox(height: AppSpacing.lg),
+                    for (final step in OwnerJourneyModelX.steps) ...[
+                      if (step.index > 0)
+                        const Divider(height: 1, color: AppColors.border),
+                      _StepRow(step: step, done: journey.isStepDone(step.key)),
+                    ],
+                    const SizedBox(height: AppSpacing.sm),
+                    if (journey.isComplete)
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              '🎉 Votre salon est prêt !',
+                              style: TextStyle(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => ref
+                                .read(
+                                  journeyDismissedProvider(salonId).notifier,
+                                )
+                                .dismiss(salonId),
+                            child: const Text('Fermer'),
+                          ),
+                        ],
+                      )
+                    else
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () {
+                            final next = OwnerJourneyModelX.steps.firstWhere(
+                              (s) => !journey.isStepDone(s.key),
+                              orElse: () => OwnerJourneyModelX.steps.first,
+                            );
+                            context.go(next.route);
+                          },
+                          child: const Text('Continuer la configuration →'),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

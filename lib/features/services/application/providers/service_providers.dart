@@ -38,33 +38,53 @@ class ServiceNotifier extends AsyncNotifier<void> {
 
   Future<void> create(ServiceModel service) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(serviceRepositoryProvider).create(service),
-    );
+    try {
+      await ref.read(serviceRepositoryProvider).create(service);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> updateService(ServiceModel service) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(serviceRepositoryProvider).update(service),
-    );
+    try {
+      await ref.read(serviceRepositoryProvider).update(service);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> softDelete(String id) async {
-    state = await AsyncValue.guard(
-      () => ref.read(serviceRepositoryProvider).softDelete(id),
-    );
+    try {
+      await ref.read(serviceRepositoryProvider).softDelete(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> toggleActive(String id, bool isActive) async {
-    state = await AsyncValue.guard(
-      () => ref.read(serviceRepositoryProvider).toggleActive(id, isActive),
-    );
+    try {
+      await ref.read(serviceRepositoryProvider).toggleActive(id, isActive);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> reorder(String salonId, List<String> orderedIds) async {
-    state = await AsyncValue.guard(
-      () => ref.read(serviceRepositoryProvider).reorder(salonId, orderedIds),
-    );
+    try {
+      await ref.read(serviceRepositoryProvider).reorder(salonId, orderedIds);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/notification_preferences_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -154,20 +155,32 @@ class _NotificationSettingsScreenState
                 isLoading: saving,
                 onPressed: () async {
                   final phone = _phoneCtrl.text.trim();
-                  await ref
-                      .read(notificationNotifierProvider.notifier)
-                      .updatePrefs(draft.copyWith(userId: profile.id));
-                  if (phone.isNotEmpty) {
+                  try {
                     await ref
                         .read(notificationNotifierProvider.notifier)
-                        .updateWhatsappPhone(profile.id, phone);
-                  }
-                  if (context.mounted) {
-                    showKynzaToast(
-                      context,
-                      message: 'Préférences enregistrées.',
-                      level: ToastLevel.success,
-                    );
+                        .updatePrefs(draft.copyWith(userId: profile.id));
+                    if (phone.isNotEmpty) {
+                      await ref
+                          .read(notificationNotifierProvider.notifier)
+                          .updateWhatsappPhone(profile.id, phone);
+                    }
+                    if (context.mounted) {
+                      showKynzaToast(
+                        context,
+                        message: 'Préférences enregistrées.',
+                        level: ToastLevel.success,
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      showKynzaToast(
+                        context,
+                        message: e is AppException
+                            ? e.message
+                            : "Échec de l'enregistrement.",
+                        level: ToastLevel.error,
+                      );
+                    }
                   }
                 },
               ),

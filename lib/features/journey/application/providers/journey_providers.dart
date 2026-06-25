@@ -9,10 +9,15 @@ final journeyRepositoryProvider = Provider<JourneyRepository>(
 );
 
 final ownerJourneyProvider = StreamProvider.autoDispose
-    .family<OwnerJourneyModel?, String>(
-      (ref, salonId) =>
-          ref.watch(journeyRepositoryProvider).watchJourney(salonId),
-    );
+    .family<OwnerJourneyModel?, String>((ref, salonId) async* {
+      final repo = ref.watch(journeyRepositoryProvider);
+      // watchJourney() depends on owner_journey_progress being part of the
+      // supabase_realtime publication. Fetch once up front so the card
+      // still renders even if Realtime is ever unavailable, then follow
+      // live updates.
+      yield await repo.getJourney(salonId);
+      yield* repo.watchJourney(salonId);
+    });
 
 final journeyNotifierProvider = AsyncNotifierProvider<JourneyNotifier, void>(
   JourneyNotifier.new,
@@ -23,9 +28,13 @@ class JourneyNotifier extends AsyncNotifier<void> {
   void build() {}
 
   Future<void> markStep(String salonId, String stepKey) async {
-    state = await AsyncValue.guard(
-      () => ref.read(journeyRepositoryProvider).markStep(salonId, stepKey),
-    );
+    try {
+      await ref.read(journeyRepositoryProvider).markStep(salonId, stepKey);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }
 

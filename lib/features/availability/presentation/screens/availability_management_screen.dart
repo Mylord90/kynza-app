@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/availability_providers.dart';
@@ -167,8 +168,23 @@ class _OverridesStrip extends ConsumerWidget {
             date: date,
             salonId: salonId,
             existing: existing,
-            onSave: (override) =>
-                ref.read(availabilityNotifierProvider.notifier).save(override),
+            onSave: (override) async {
+              try {
+                await ref
+                    .read(availabilityNotifierProvider.notifier)
+                    .save(override);
+              } catch (e) {
+                if (context.mounted) {
+                  showKynzaToast(
+                    context,
+                    message: e is AppException
+                        ? e.message
+                        : "Échec de l'enregistrement.",
+                    level: ToastLevel.error,
+                  );
+                }
+              }
+            },
           ),
         ),
       ),

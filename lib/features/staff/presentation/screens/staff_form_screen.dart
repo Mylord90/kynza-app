@@ -101,9 +101,11 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
     });
     final notifier = ref.read(staffNotifierProvider.notifier);
     if (assigned) {
-      notifier.assignService(widget.staff.id!, serviceId, widget.staff.salonId);
+      notifier
+          .assignService(widget.staff.id!, serviceId, widget.staff.salonId)
+          .catchError((_) {});
     } else {
-      notifier.removeService(widget.staff.id!, serviceId);
+      notifier.removeService(widget.staff.id!, serviceId).catchError((_) {});
     }
   }
 

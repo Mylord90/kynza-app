@@ -45,10 +45,15 @@ class LoyaltyNotifier extends AsyncNotifier<void> {
 
   Future<void> setupProgram(LoyaltyProgramModel program) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(loyaltyRepositoryProvider).upsertProgram(program),
-    );
-    ref.invalidate(loyaltyProgramProvider(program.salonId));
+    try {
+      await ref.read(loyaltyRepositoryProvider).upsertProgram(program);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(loyaltyProgramProvider(program.salonId));
+    }
   }
 
   Future<void> addStamp(
@@ -56,18 +61,28 @@ class LoyaltyNotifier extends AsyncNotifier<void> {
     String cardId, {
     String? bookingId,
   }) async {
-    state = await AsyncValue.guard(
-      () => ref
+    try {
+      await ref
           .read(loyaltyRepositoryProvider)
-          .addStamp(cardId, bookingId: bookingId),
-    );
-    ref.invalidate(salonLoyaltyCardsProvider(salonId));
+          .addStamp(cardId, bookingId: bookingId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonLoyaltyCardsProvider(salonId));
+    }
   }
 
   Future<void> redeemReward(String salonId, String cardId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(loyaltyRepositoryProvider).redeemReward(cardId),
-    );
-    ref.invalidate(salonLoyaltyCardsProvider(salonId));
+    try {
+      await ref.read(loyaltyRepositoryProvider).redeemReward(cardId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(salonLoyaltyCardsProvider(salonId));
+    }
   }
 }

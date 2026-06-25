@@ -55,8 +55,8 @@ class StaffNotifier extends AsyncNotifier<void> {
     required String callerRole,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref
+    try {
+      await ref
           .read(staffRepositoryProvider)
           .inviteStaff(
             salonId: salonId,
@@ -64,27 +64,43 @@ class StaffNotifier extends AsyncNotifier<void> {
             phone: phone,
             role: role,
             callerRole: callerRole,
-          ),
-    );
+          );
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> updateStaff(StaffProfileModel staff) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(staffRepositoryProvider).updateStaff(staff),
-    );
+    try {
+      await ref.read(staffRepositoryProvider).updateStaff(staff);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> toggleActive(String id, bool isActive) async {
-    state = await AsyncValue.guard(
-      () => ref.read(staffRepositoryProvider).toggleActive(id, isActive),
-    );
+    try {
+      await ref.read(staffRepositoryProvider).toggleActive(id, isActive);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> remove(String id) async {
-    state = await AsyncValue.guard(
-      () => ref.read(staffRepositoryProvider).removeStaff(id),
-    );
+    try {
+      await ref.read(staffRepositoryProvider).removeStaff(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> assignService(
@@ -92,16 +108,24 @@ class StaffNotifier extends AsyncNotifier<void> {
     String serviceId,
     String salonId,
   ) async {
-    state = await AsyncValue.guard(
-      () => ref
+    try {
+      await ref
           .read(staffRepositoryProvider)
-          .assignService(staffId, serviceId, salonId),
-    );
+          .assignService(staffId, serviceId, salonId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> removeService(String staffId, String serviceId) async {
-    state = await AsyncValue.guard(
-      () => ref.read(staffRepositoryProvider).removeService(staffId, serviceId),
-    );
+    try {
+      await ref.read(staffRepositoryProvider).removeService(staffId, serviceId);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }

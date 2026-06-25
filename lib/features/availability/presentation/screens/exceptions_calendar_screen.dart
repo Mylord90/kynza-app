@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
 import '../widgets/exception_form_widget.dart';
@@ -30,9 +31,23 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
           context,
           builder: (_) => ExceptionFormWidget(
             salonId: salonId,
-            onSave: (draft) => ref
-                .read(availabilityNotifierProvider.notifier)
-                .saveException(draft),
+            onSave: (draft) async {
+              try {
+                await ref
+                    .read(availabilityNotifierProvider.notifier)
+                    .saveException(draft);
+              } catch (e) {
+                if (context.mounted) {
+                  showKynzaToast(
+                    context,
+                    message: e is AppException
+                        ? e.message
+                        : "Échec de l'enregistrement.",
+                    level: ToastLevel.error,
+                  );
+                }
+              }
+            },
           ),
         ),
         child: const Icon(Icons.add, color: AppColors.background),
@@ -57,9 +72,23 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
                     context,
                     builder: (_) => ExceptionFormWidget(
                       salonId: salonId,
-                      onSave: (draft) => ref
-                          .read(availabilityNotifierProvider.notifier)
-                          .saveException(draft),
+                      onSave: (draft) async {
+                        try {
+                          await ref
+                              .read(availabilityNotifierProvider.notifier)
+                              .saveException(draft);
+                        } catch (e) {
+                          if (context.mounted) {
+                            showKynzaToast(
+                              context,
+                              message: e is AppException
+                                  ? e.message
+                                  : "Échec de l'enregistrement.",
+                              level: ToastLevel.error,
+                            );
+                          }
+                        }
+                      },
                     ),
                   ),
                 );
@@ -71,9 +100,23 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
                       child: ExceptionListTile(
                         exception: exception,
-                        onDelete: () => ref
-                            .read(availabilityNotifierProvider.notifier)
-                            .deleteException(exception.id!, salonId),
+                        onDelete: () async {
+                          try {
+                            await ref
+                                .read(availabilityNotifierProvider.notifier)
+                                .deleteException(exception.id!, salonId);
+                          } catch (e) {
+                            if (context.mounted) {
+                              showKynzaToast(
+                                context,
+                                message: e is AppException
+                                    ? e.message
+                                    : 'Échec de la suppression.',
+                                level: ToastLevel.error,
+                              );
+                            }
+                          }
+                        },
                       ),
                     ),
                 ],

@@ -7,7 +7,6 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/review/review_model.dart';
 import '../../../../core/providers/auth_providers.dart';
-import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
@@ -71,7 +70,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
           message: 'Avis publié ! Merci 💛',
           level: ToastLevel.success,
         );
-        context.go(RouteNames.clientBookings);
+        context.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -109,7 +108,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                   'Cette réservation a déjà reçu un avis ou ne peut pas '
                   'encore être notée.',
               ctaLabel: 'Retour à mes RDV',
-              onCta: () => context.go(RouteNames.clientBookings),
+              onCta: () => context.pop(),
             );
           }
           return bookingAsync.when(
@@ -166,7 +165,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                   const SizedBox(height: AppSpacing.md),
                   Center(
                     child: TextButton(
-                      onPressed: () => context.go(RouteNames.clientBookings),
+                      onPressed: () => context.pop(),
                       child: const Text('Passer'),
                     ),
                   ),

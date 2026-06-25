@@ -36,45 +36,68 @@ class MarketingNotifier extends AsyncNotifier<void> {
 
   Future<void> addContact(ClientContactModel contact) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(marketingRepositoryProvider).addContact(contact),
-    );
+    try {
+      await ref.read(marketingRepositoryProvider).addContact(contact);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
-  Future<int?> importFromBookings(String salonId) async {
+  Future<int> importFromBookings(String salonId) async {
     state = const AsyncLoading();
-    var imported = 0;
-    state = await AsyncValue.guard(() async {
-      imported = await ref
+    try {
+      final imported = await ref
           .read(marketingRepositoryProvider)
           .importFromBookings(salonId);
-    });
-    return state.hasError ? null : imported;
+      state = const AsyncData(null);
+      return imported;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> deleteContact(String id) async {
-    state = await AsyncValue.guard(
-      () => ref.read(marketingRepositoryProvider).deleteContact(id),
-    );
+    try {
+      await ref.read(marketingRepositoryProvider).deleteContact(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> createPromotion(PromotionModel promotion) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(marketingRepositoryProvider).createPromotion(promotion),
-    );
+    try {
+      await ref.read(marketingRepositoryProvider).createPromotion(promotion);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> updatePromotion(PromotionModel promotion) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(marketingRepositoryProvider).updatePromotion(promotion),
-    );
+    try {
+      await ref.read(marketingRepositoryProvider).updatePromotion(promotion);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> deactivatePromotion(String id) async {
-    state = await AsyncValue.guard(
-      () => ref.read(marketingRepositoryProvider).deactivatePromotion(id),
-    );
+    try {
+      await ref.read(marketingRepositoryProvider).deactivatePromotion(id);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }

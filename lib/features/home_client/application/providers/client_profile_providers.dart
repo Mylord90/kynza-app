@@ -22,7 +22,7 @@ class ClientProfileNotifier extends AsyncNotifier<void> {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       try {
         await SupabaseService.from('users')
             .update({'full_name': fullName, 'phone': phone, 'email': email})
@@ -30,20 +30,30 @@ class ClientProfileNotifier extends AsyncNotifier<void> {
       } catch (_) {
         throw const AppException('Impossible de mettre à jour votre profil.');
       }
-    });
-    ref.invalidate(currentUserProfileProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(currentUserProfileProvider);
+    }
   }
 
   Future<void> uploadAvatar(Uint8List bytes, String ext) async {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       final url = await StorageService.uploadUserAvatar(userId, bytes, ext);
       await SupabaseService.from(
         'users',
       ).update({'avatar_url': url}).eq('id', userId);
-    });
-    ref.invalidate(currentUserProfileProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    } finally {
+      ref.invalidate(currentUserProfileProvider);
+    }
   }
 }
