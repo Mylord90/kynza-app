@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/services/share_service.dart';
+import '../../../../core/utils/csv_exporter.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/audit_log_providers.dart';
 import '../widgets/audit_log_tile.dart';
@@ -64,6 +66,16 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       appBar: AppBar(
         title: const Text("Journal d'activité"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share_outlined),
+            tooltip: 'Exporter (CSV)',
+            onPressed: filtered == null || filtered.isEmpty
+                ? null
+                : () => ShareService.shareCsv(
+                    CsvExporter.auditLogsToCsv(filtered),
+                    'kynza-audit-${widget.salonId}.csv',
+                  ),
+          ),
           IconButton(
             icon: const Icon(Icons.date_range_outlined),
             onPressed: _pickDateRange,

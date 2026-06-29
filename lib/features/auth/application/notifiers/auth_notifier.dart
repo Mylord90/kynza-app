@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/audit/audit_logger.dart';
 import '../../../../core/models/user_profile.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
@@ -66,6 +67,14 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
     }
   }
 
+  /// CLIENT-role users have no `salon_id` and the activity_logs RLS
+  /// policy requires one matching the caller's own row — a salon-less
+  /// login is a deliberate no-op in AuditLogger, not a gap (see its
+  /// class doc).
+  void _logLogin(UserProfile profile) {
+    if (profile.salonId != null) AuditLogger.authLogin(profile.salonId!);
+  }
+
   Future<void> signUp(String email, String password, String fullName) async {
     state = const AsyncLoading();
     try {
@@ -77,6 +86,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
       await ref.read(sessionServiceProvider).persistSession();
       ref.invalidate(currentUserProfileProvider);
       state = AsyncData(_guard(profile));
+      _logLogin(profile);
     } catch (e) {
       state = AsyncData(AuthUiState.error(getAuthErrorMessage(e)));
     }
@@ -94,6 +104,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
       // restart.
       ref.invalidate(currentUserProfileProvider);
       state = AsyncData(_guard(profile));
+      _logLogin(profile);
     } catch (e) {
       state = AsyncData(AuthUiState.error(getAuthErrorMessage(e)));
     }
@@ -106,6 +117,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
       await ref.read(sessionServiceProvider).persistSession();
       ref.invalidate(currentUserProfileProvider);
       state = AsyncData(_guard(profile));
+      _logLogin(profile);
     } catch (e) {
       state = AsyncData(AuthUiState.error(getAuthErrorMessage(e)));
     }
@@ -143,6 +155,11 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
   }
 
   Future<void> signOut() async {
+    // Must log before signOut() invalidates the session — activity_logs'
+    // RLS policy needs auth.uid() to still resolve to this user.
+    final salonId = ref.read(currentUserProfileProvider).valueOrNull?.salonId;
+    if (salonId != null) await AuditLogger.authLogout(salonId);
+
     await _repository.signOut();
     await ref.read(sessionServiceProvider).clearSession();
     ref.invalidate(currentUserProfileProvider);

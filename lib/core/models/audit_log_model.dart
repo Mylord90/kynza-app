@@ -13,6 +13,10 @@ class AuditLogModel with _$AuditLogModel {
     required String typeAction,
     Map<String, dynamic>? oldValues,
     Map<String, dynamic>? newValues,
+    String? tableName,
+    String? recordId,
+    @Default('info') String severity,
+    @Default(false) bool isSensitive,
     DateTime? createdAt,
   }) = _AuditLogModel;
 

@@ -116,6 +116,8 @@ lib/
 │   ├── services/        # Supabase client, Session, Connectivity
 │   ├── permissions/     # PermissionService/PermissionGuard (RBAC additive,
 │   │                    # Phase 1.1 — cache Hive 15min miroir SQL)
+│   ├── audit/           # AuditLogger (Phase 1.2 — ne crash jamais,
+│   │                    # écrit dans activity_logs existant)
 │   ├── utils/           # formatBif(), validators, haptics (KynzaHaptics)
 │   └── enums/           # UserRole, BookingStatus, PaymentStatus
 ├── shared/
@@ -188,8 +190,18 @@ loyalty_cards (
 
 activity_logs (   -- APPEND-ONLY, jamais d'UPDATE/DELETE
   id UUID PK, salon_id, user_id, type_action, old_values JSONB,
-  new_values JSONB, ip_address, created_at TIMESTAMPTZ
+  new_values JSONB, ip_address, created_at TIMESTAMPTZ,
+  -- Phase 1.2 : table_name, record_id, severity (debug/info/warning/
+  -- error/critical), is_sensitive BOOL, device_info JSONB, platform,
+  -- app_version, screen_name, session_id, request_id, duration_ms
+  -- (les 5 derniers existent en colonnes mais non encore alimentés —
+  -- aucune dépendance package_info_plus/device_info_plus dans l'app)
 )
+-- mv_audit_stats : vue matérialisée (salon_id, day, type_action, severity)
+-- rafraîchie par pg_cron toutes les heures (refresh_audit_stats(),
+-- CONCURRENTLY). Interne uniquement — pas de RLS possible sur une vue
+-- matérialisée, donc pas de GRANT à `authenticated` tant qu'aucun écran
+-- ne la consomme via une vue wrapper security_invoker scopée au salon.
 ```
 
 ### RLS — résumé des policies critiques
@@ -407,6 +419,7 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - `KynzaLoyaltyCardSkeleton` (Phase A) non branché sur `loyalty_card_widget.dart`/`client_loyalty_screen.dart` — le skeleton générique en place (`height: 220`) correspond à la hauteur réelle de la carte ; le variant nommé est plus court et introduirait un saut de layout. Vérifier la hauteur réelle avant de basculer.
 - Recherche avancée (`advanced_search_screen.dart`) : résultats toujours sur skeleton générique — aucun des 7 variants nommés (Phase A) ne correspond à la disposition avatar+titre+sous-titre+trailing.
 - RBAC (Phase 1.1) : pas d'écran dédié pour les overrides par utilisateur (`user_permission_overrides`) — la table et `check_permission()` les gèrent, seule l'assignation à un groupe a une UI. Pas d'écran "audit des permissions" (qui a accès à quoi, vue transverse). L'entrée "Permissions & Équipe" vit dans l'onglet Profil de l'Owner faute d'écran Settings dédié — à déplacer quand la Phase 1.4 (Centre de Configuration) en créera un.
+- Audit (Phase 1.2) : `mv_audit_stats` n'a aucun consommateur (pas d'écran de stats dessus). Pas de collecte device_info/app_version/screen_name (colonnes présentes, non alimentées — nécessiterait `package_info_plus`/`device_info_plus`, pas encore une dépendance du projet). Pas d'export PDF du journal (CSV seulement). Le logging des changements de `salon_settings` est différé à la Phase 1.4 (la table n'existe pas encore).
 
 ---
 

@@ -11,8 +11,15 @@ IconData _iconFor(String typeAction) {
     return Icons.payments_outlined;
   }
   if (typeAction.startsWith('staff_')) return Icons.people_outline;
+  if (typeAction.startsWith('permission_')) return Icons.shield_outlined;
   return Icons.settings_outlined;
 }
+
+Color _severityColor(String severity) => switch (severity) {
+  'critical' || 'error' => AppColors.error,
+  'warning' => AppColors.warning,
+  _ => AppColors.textMuted,
+};
 
 String _descriptionFor(AuditLogModel log) {
   const labels = {
@@ -38,6 +45,11 @@ String _descriptionFor(AuditLogModel log) {
     'loyalty_stamp_added': 'Tampon fidélité ajouté',
     'loyalty_reward_redeemed': 'Récompense fidélité validée',
     'referral_claimed': 'Parrainage utilisé',
+    'permission_group_created': 'Groupe de permissions créé',
+    'permission_group_deleted': 'Groupe de permissions supprimé',
+    'permission_group_permission_changed': 'Permission modifiée',
+    'permission_group_member_added': 'Membre ajouté à un groupe',
+    'permission_group_member_removed': "Membre retiré d'un groupe",
   };
   return labels[log.typeAction] ?? log.typeAction;
 }
@@ -54,18 +66,46 @@ class AuditLogTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.md_,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: log.severity == 'info'
+              ? AppColors.border
+              : _severityColor(log.severity).withValues(alpha: 0.4),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(_iconFor(log.typeAction), color: AppColors.primary, size: 20),
+          Icon(
+            _iconFor(log.typeAction),
+            color: _severityColor(log.severity) == AppColors.textMuted
+                ? AppColors.primary
+                : _severityColor(log.severity),
+            size: 20,
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_descriptionFor(log), style: AppTypography.body),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _descriptionFor(log),
+                        style: AppTypography.body,
+                      ),
+                    ),
+                    if (log.isSensitive)
+                      const Padding(
+                        padding: EdgeInsets.only(left: AppSpacing.xs),
+                        child: Icon(
+                          Icons.lock_outline,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                  ],
+                ),
                 if (log.userName != null) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(log.userName!, style: AppTypography.bodySmall),

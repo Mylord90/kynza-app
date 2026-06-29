@@ -2,6 +2,7 @@ import 'package:csv/csv.dart';
 import '../models/analytics/client_ltv_model.dart';
 import '../models/analytics/revenue_point_model.dart';
 import '../models/analytics/staff_monthly_performance_model.dart';
+import '../models/audit_log_model.dart';
 import '../models/booking_model.dart';
 
 abstract class CsvExporter {
@@ -55,6 +56,21 @@ abstract class CsvExporter {
           c.lastVisitAt == null
               ? ''
               : '${c.lastVisitAt!.day}/${c.lastVisitAt!.month}/${c.lastVisitAt!.year}',
+        ],
+    ];
+    return const ListToCsvConverter().convert(rows);
+  }
+
+  static String auditLogsToCsv(List<AuditLogModel> logs) {
+    final rows = [
+      ['Date', 'Action', 'Utilisateur', 'Sévérité', 'Sensible'],
+      for (final l in logs)
+        [
+          l.createdAt == null ? '' : l.createdAt!.toIso8601String(),
+          l.typeAction,
+          l.userName ?? l.userId ?? '',
+          l.severity,
+          l.isSensitive ? 'oui' : 'non',
         ],
     ];
     return const ListToCsvConverter().convert(rows);

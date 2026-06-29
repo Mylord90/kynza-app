@@ -54,7 +54,11 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
                 if (!confirmed) return;
                 await ref
                     .read(permissionGroupNotifierProvider.notifier)
-                    .deleteGroup(salonId: salonId, groupId: groupId);
+                    .deleteGroup(
+                      salonId: salonId,
+                      groupId: groupId,
+                      groupName: group.name,
+                    );
                 if (context.mounted) Navigator.of(context).pop();
               },
             ),
@@ -88,7 +92,7 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xl),
                     const Text('Permissions', style: AppTypography.h2),
                     const SizedBox(height: AppSpacing.sm),
-                    _PermissionsSection(groupId: groupId),
+                    _PermissionsSection(salonId: salonId, groupId: groupId),
                   ],
                 );
               },
@@ -103,8 +107,9 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
 void _noop() {}
 
 class _PermissionsSection extends ConsumerWidget {
-  const _PermissionsSection({required this.groupId});
+  const _PermissionsSection({required this.salonId, required this.groupId});
 
+  final String salonId;
   final String groupId;
 
   @override
@@ -161,6 +166,7 @@ class _PermissionsSection extends ConsumerWidget {
                 onChanged: (value) => ref
                     .read(permissionGroupNotifierProvider.notifier)
                     .setGroupPermission(
+                      salonId: salonId,
                       groupId: groupId,
                       permissionId: permission.id,
                       granted: value,
@@ -268,7 +274,11 @@ class _MembersSection extends ConsumerWidget {
                 ),
                 onPressed: () => ref
                     .read(permissionGroupNotifierProvider.notifier)
-                    .removeMember(groupId: groupId, userId: userId),
+                    .removeMember(
+                      salonId: salonId,
+                      groupId: groupId,
+                      userId: userId,
+                    ),
               ),
             ],
           ),

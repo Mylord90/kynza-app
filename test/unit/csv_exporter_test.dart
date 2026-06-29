@@ -2,9 +2,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kynza/core/models/analytics/client_ltv_model.dart';
 import 'package:kynza/core/models/analytics/revenue_point_model.dart';
 import 'package:kynza/core/models/analytics/staff_monthly_performance_model.dart';
+import 'package:kynza/core/models/audit_log_model.dart';
 import 'package:kynza/core/utils/csv_exporter.dart';
 
 void main() {
+  group('CsvExporter.auditLogsToCsv', () {
+    test('includes severity and sensitive-flag columns', () {
+      final csv = CsvExporter.auditLogsToCsv([
+        const AuditLogModel(
+          id: 'log-1',
+          typeAction: 'permission_group_created',
+          userName: 'Alice',
+          severity: 'warning',
+          isSensitive: true,
+        ),
+      ]);
+      expect(csv, contains('Sévérité'));
+      expect(csv, contains('warning'));
+      expect(csv, contains('oui'));
+      expect(csv, contains('Alice'));
+    });
+  });
+
   group('CsvExporter.staffPerformanceToCsv', () {
     test('includes the header row and one row per staff member', () {
       final csv = CsvExporter.staffPerformanceToCsv([
