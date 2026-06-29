@@ -20,7 +20,7 @@ void main() {
         const settings = SalonSettingsModel(id: 's1', salonId: 'salon-1');
         final json = settings.toJson();
         expect(json['booking_advance_days'], 30);
-        expect(json['notif_reminder_hours_before_2'], 1);
+        expect(json['notif_reminder_hours_before2'], 1);
         expect(json['advanced_overbooking_limit'], 0);
       },
     );

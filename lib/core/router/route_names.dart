@@ -106,4 +106,7 @@ abstract class RouteNames {
 
   // Enterprise Foundation V2 — Phase 1.4: Centre de Configuration
   static const ownerSettings = '/owner/settings';
+
+  // Enterprise Foundation V2 — Phase 2: Automation Platform
+  static const ownerAutomation = '/owner/automation';
 }

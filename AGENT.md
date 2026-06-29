@@ -135,8 +135,10 @@ lib/
     ├── subscription/    # Plans, Upgrade, Billing
     ├── permissions/     # Permission groups (Phase 1.1 RBAC — owner-only,
     │                    # additive to the base role system below)
-    └── settings/        # SettingsHomeScreen + generic SettingsCategoryScreen
-                          # (Phase 1.4 — salon_settings)
+    ├── settings/        # SettingsHomeScreen + generic SettingsCategoryScreen
+    │                    # (Phase 1.4 — salon_settings)
+    └── automation/      # Workflow builder/list/execution-log (Phase 2 —
+                          # Trigger → Conditions → Actions)
 ```
 
 Toute nouvelle feature respecte ce découpage : pas de logique transverse hors `core/`, pas de widget partagé dupliqué hors `shared/widgets/`.
@@ -308,6 +310,18 @@ salons déjà existants). Politique booking/notifications/marketing/staff/
 fidélité/avis/paiements/avancé — distinct de `notification_preferences`
 (par utilisateur). Voir `docs/PHASE_1_4_SUMMARY.md`.
 
+**Automation Platform (Phase 2)** — moteur générique Trigger → Conditions
+→ Actions (`automation_workflows`/`automation_conditions`/
+`automation_actions`), exécuté par l'Edge Function `execute-workflow`
+(appelée via `supabase.functions.invoke()` depuis `create-booking`,
+`leapa-webhook`, `mark-no-show`). Les actions à délai ou en échec passent
+par la queue `automation_action_runs`, traitée toutes les 5 min par
+`run-scheduled-actions` (pg_cron) — backoff 2/4/8 min, 3 tentatives max.
+4 templates KYNZA (`is_system = TRUE`, non modifiables au niveau RLS) sont
+auto-créés par salon. Tous les types de trigger/action ne sont pas câblés
+— voir la colonne `wired`/`implemented` des catalogues et
+`docs/PHASE_2_SUMMARY.md` pour le détail de ce qui fonctionne réellement.
+
 ---
 
 ## SECTION 11 — TESTING & CI
@@ -435,6 +449,7 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Audit (Phase 1.2) : `mv_audit_stats` n'a aucun consommateur (pas d'écran de stats dessus). Pas de collecte device_info/app_version/screen_name (colonnes présentes, non alimentées — nécessiterait `package_info_plus`/`device_info_plus`, pas encore une dépendance du projet). Pas d'export PDF du journal (CSV seulement). Le logging des changements de `salon_settings` est différé à la Phase 1.4 (la table n'existe pas encore).
 - Versioning (Phase 1.3) : `entity_versions` n'a aucun consommateur Flutter (pas d'écran d'historique, pas de `compare()`/`restore()`) — mécanisme backend vérifié fonctionnel uniquement. `restore()` nécessiterait du SQL dynamique par `entity_type` ou de la logique Dart par entité ; pas construit avant qu'un écran en ait réellement besoin.
 - Settings (Phase 1.4) : pas de `PermissionGuard` sur les écrans de catégorie au-delà du `_RoleGuard` owner-only de la route — suffisant tant que seul l'Owner atteint `/owner/settings`. Pas de validation des champs entier/texte au-delà de `int.tryParse` (aucune borne min/max appliquée côté UI).
+- Automation (Phase 2) : 4 des 8 types de trigger ne sont câblés nulle part (`booking.completed`/`booking.cancelled` passent par des `.update()` Flutter directs, pas d'Edge Function à brancher ; `review.submitted` idem ; `loyalty.card_full` n'est délibérément pas branché dans `validate-qr`, qui gère déjà ce cas pour éviter une double notification). 3 des 8 types d'action ne sont pas implémentés (`send_email` — interdit par R14 et aucune infra —, `create_invoice` — schéma `invoices.plan_key` incompatible —, `update_stats` — aucune cible avant la Phase 3). L'éditeur de conditions/actions Flutter est fonctionnel mais basique (champs texte libres, pas d'autocomplétion sur `available_context`, pas de réordonnancement par glisser-déposer).
 
 ---
 

@@ -208,6 +208,21 @@ Deno.serve(async (req) => {
       body: { bookingId: booking.id, event: "booking_created" },
     }).catch(() => {});
 
+    // Best-effort — a missed workflow firing must never fail the booking.
+    supabase.functions.invoke("execute-workflow", {
+      body: {
+        trigger_type: "booking.created",
+        salon_id: salonId,
+        context: {
+          booking_id: booking.id,
+          client_id: user.id,
+          service_id: serviceId,
+          staff_id: practitionerId,
+          amount: service.price_bif,
+        },
+      },
+    }).catch(() => {});
+
     return jsonResponse({ booking }, 200);
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown_error";

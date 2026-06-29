@@ -18,14 +18,7 @@ class SalonSettingsModel with _$SalonSettingsModel {
     @Default(false) bool notifWhatsappEnabled,
     @Default(true) bool notifPushEnabled,
     @Default(24) int notifReminderHoursBefore,
-    // json_serializable's snake_case codegen drops the underscore before
-    // a trailing digit ('...before2', not '...before_2') — force the
-    // name to match the actual DB column. invalid_annotation_target is a
-    // known Freezed false-positive for @JsonKey on constructor params.
-    // ignore: invalid_annotation_target
-    @JsonKey(name: 'notif_reminder_hours_before_2')
-    @Default(1)
-    int notifReminderHoursBefore2,
+    @Default(1) int notifReminderHoursBefore2,
     @Default(true) bool marketingAutoReviewRequest,
     @Default(2) int marketingReviewRequestHoursAfter,
     @Default(true) bool marketingLoyaltyAutoStamp,

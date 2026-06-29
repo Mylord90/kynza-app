@@ -71,7 +71,7 @@ const notificationSalonSettingFields = [
     type: SettingFieldType.integer,
   ),
   SettingField(
-    key: 'notif_reminder_hours_before_2',
+    key: 'notif_reminder_hours_before2',
     label: 'Second rappel avant RDV (heures)',
     type: SettingFieldType.integer,
   ),

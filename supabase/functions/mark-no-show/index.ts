@@ -50,6 +50,15 @@ Deno.serve(async (req) => {
       no_show_at: new Date().toISOString(),
     }).eq("id", bookingId);
 
+    // Best-effort — a missed workflow firing must never fail the no-show.
+    supabase.functions.invoke("execute-workflow", {
+      body: {
+        trigger_type: "booking.no_show",
+        salon_id: booking.salon_id,
+        context: { booking_id: booking.id, client_id: booking.client_id },
+      },
+    }).catch(() => {});
+
     const { data: client } = await supabase
       .from("users")
       .select("reliability_score")

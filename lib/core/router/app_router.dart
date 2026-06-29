@@ -31,6 +31,7 @@ import '../../features/dashboard/presentation/screens/audit_log_screen.dart';
 import '../../features/permissions/presentation/screens/permission_group_detail_screen.dart';
 import '../../features/permissions/presentation/screens/permission_groups_screen.dart';
 import '../../features/settings/presentation/screens/settings_home_screen.dart';
+import '../../features/automation/presentation/screens/automation_list_screen.dart';
 import '../../features/loyalty/presentation/screens/client_loyalty_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_qr_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_scan_screen.dart';
@@ -452,6 +453,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => const _RoleGuard(
           role: UserRole.owner,
           child: _OwnerSettingsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAutomation,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerAutomationLoader(),
         ),
       ),
       _fadeRoute(
@@ -1000,6 +1008,22 @@ class _OwnerSettingsLoader extends ConsumerWidget {
       );
     }
     return SettingsHomeScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerAutomationLoader extends ConsumerWidget {
+  const _OwnerAutomationLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return AutomationListScreen(salonId: salon.id);
   }
 }
 

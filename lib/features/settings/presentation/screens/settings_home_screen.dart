@@ -44,6 +44,12 @@ class SettingsHomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
+            icon: Icons.bolt_outlined,
+            label: 'Automatisations',
+            onTap: () => context.push(RouteNames.ownerAutomation),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsTile(
             icon: Icons.calendar_today_outlined,
             label: 'Réservations',
             onTap: () =>

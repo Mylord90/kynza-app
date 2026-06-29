@@ -51,10 +51,15 @@ Deno.serve(async (req) => {
       .update({ status: "confirmed", payment_status: "completed", payment_method: payload.method ?? null })
       .eq("id", existing.booking_id);
 
+    const { data: confirmedBooking } = await supabase
+      .from("bookings")
+      .select("client_id")
+      .eq("id", existing.booking_id)
+      .single();
+
     await supabase.from("activity_logs").insert({
       salon_id: existing.salon_id,
-      user_id: (await supabase.from("bookings").select("client_id").eq("id", existing.booking_id).single())
-        .data?.client_id,
+      user_id: confirmedBooking?.client_id,
       type_action: "payment_completed",
       new_values: { bookingId: existing.booking_id, idempotency_key },
     });
@@ -62,6 +67,15 @@ Deno.serve(async (req) => {
     await supabase.functions.invoke("send-notification", {
       body: { bookingId: existing.booking_id, event: "booking_confirmed" },
     });
+
+    // Best-effort — a missed workflow firing must never fail the webhook.
+    supabase.functions.invoke("execute-workflow", {
+      body: {
+        trigger_type: "booking.confirmed",
+        salon_id: existing.salon_id,
+        context: { booking_id: existing.booking_id, client_id: confirmedBooking?.client_id },
+      },
+    }).catch(() => {});
   } else if (status === "failed" || status === "expired") {
     await supabase
       .from("bookings")
