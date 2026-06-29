@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/haptics.dart';
 
 class ServiceCategoryChip extends StatelessWidget {
   const ServiceCategoryChip({
@@ -19,7 +20,10 @@ class ServiceCategoryChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (_) => onTap(),
+      onSelected: (_) {
+        KynzaHaptics.selection();
+        onTap();
+      },
       labelStyle: AppTypography.body.copyWith(
         color: isSelected ? AppColors.background : AppColors.textPrimary,
       ),

@@ -6,4 +6,5 @@ abstract class AppDurations {
   static const rich = Duration(milliseconds: 400);
   static const spring = Duration(milliseconds: 500);
   static const shimmer = Duration(milliseconds: 1500);
+  static const pageTransition = Duration(milliseconds: 320);
 }

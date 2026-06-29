@@ -172,7 +172,15 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           reviewsAsync.when(
-            loading: () => const KynzaSkeleton(height: 110, count: 3),
+            loading: () => const Column(
+              children: [
+                KynzaReviewCardSkeleton(),
+                SizedBox(height: AppSpacing.sm),
+                KynzaReviewCardSkeleton(),
+                SizedBox(height: AppSpacing.sm),
+                KynzaReviewCardSkeleton(),
+              ],
+            ),
             error: (_, __) => KynzaErrorState(
               message: 'Impossible de charger vos avis.',
               onRetry: () =>

@@ -81,197 +81,207 @@ class MyPerformanceScreen extends ConsumerWidget {
       now.day - (now.weekday - 1),
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        monthlyAsync.when(
-          loading: () => const KynzaSkeleton(height: 90),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (bookings) {
-            final thisWeek = bookings.where(
-              (b) =>
-                  !b.startTime.isBefore(weekStart) &&
-                  b.startTime.isBefore(weekStart.add(const Duration(days: 7))),
-            );
-            final completed = thisWeek
-                .where((b) => b.status.name == 'completed')
-                .toList();
-            final revenue = completed.fold(0, (sum, b) => sum + b.amountBif);
-            return Row(
-              children: [
-                Expanded(
-                  child: KynzaCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Mes RDV', style: AppTypography.bodySmall),
-                        Text(
-                          '${completed.length}',
-                          style: AppTypography.amountMd,
-                        ),
-                      ],
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(_staffWeekRankProvider(staffId));
+        ref.invalidate(_staffMonthlyBookingsProvider(staffId));
+        ref.invalidate(_staffReviewsProvider(staffId));
+        ref.invalidate(staffCommissionsProvider(staffId));
+      },
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          monthlyAsync.when(
+            loading: () => const KynzaSkeleton(height: 90),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (bookings) {
+              final thisWeek = bookings.where(
+                (b) =>
+                    !b.startTime.isBefore(weekStart) &&
+                    b.startTime.isBefore(
+                      weekStart.add(const Duration(days: 7)),
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: KynzaCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Mon CA', style: AppTypography.bodySmall),
-                        KynzaAmountWidget(
-                          amountBif: revenue,
-                          style: AppTypography.amountMd,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        rankAsync.when(
-          loading: () => const KynzaSkeleton(height: 56),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (result) {
-            final (rank, teamSize) = result;
-            if (rank == 0) return const SizedBox.shrink();
-            return KynzaCard(
-              child: Text(
-                '$rank${_ordinalSuffix(rank)} sur $teamSize cette semaine',
-                style: AppTypography.h3,
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        const Text('Mes RDV ce mois', style: AppTypography.h3),
-        const SizedBox(height: AppSpacing.md),
-        monthlyAsync.when(
-          loading: () => const KynzaSkeleton(height: 180),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (bookings) {
-            final byDay = <int, int>{};
-            for (final b in bookings) {
-              if (b.status.name != 'completed') continue;
-              byDay[b.startTime.day] = (byDay[b.startTime.day] ?? 0) + 1;
-            }
-            final days = byDay.keys.toList()..sort();
-            if (days.isEmpty) {
-              return const Text(
-                'Aucun RDV terminé ce mois.',
-                style: AppTypography.bodySmall,
               );
-            }
-            return KynzaBarChartFl(
-              title: '',
-              bars: [
-                for (final d in days) BarData(label: '$d', value: byDay[d]!),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        const Text('Mes avis récents', style: AppTypography.h3),
-        const SizedBox(height: AppSpacing.md),
-        reviewsAsync.when(
-          loading: () => const KynzaSkeleton(height: 56, count: 3),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (reviews) {
-            if (reviews.isEmpty) {
-              return const Text(
-                'Aucun avis pour le moment.',
-                style: AppTypography.bodySmall,
-              );
-            }
-            final avg =
-                reviews.fold(0, (sum, r) => sum + r.rating) / reviews.length;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '⭐ ${avg.toStringAsFixed(1)} / 5',
-                  style: AppTypography.h2,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                for (final r in reviews)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              final completed = thisWeek
+                  .where((b) => b.status.name == 'completed')
+                  .toList();
+              final revenue = completed.fold(0, (sum, b) => sum + b.amountBif);
+              return Row(
+                children: [
+                  Expanded(
                     child: KynzaCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const Text('Mes RDV', style: AppTypography.bodySmall),
                           Text(
-                            '★' * r.rating + '☆' * (5 - r.rating),
-                            style: const TextStyle(color: AppColors.primary),
+                            '${completed.length}',
+                            style: AppTypography.amountMd,
                           ),
-                          if (r.comment != null && r.comment!.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(r.comment!, style: AppTypography.bodySmall),
-                          ],
                         ],
                       ),
                     ),
                   ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        const Text('Mes commissions ce mois', style: AppTypography.h3),
-        const SizedBox(height: AppSpacing.md),
-        commissionsAsync.when(
-          loading: () => const KynzaSkeleton(height: 56),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (commissions) {
-            final paid = commissions
-                .where((c) => c.isPaid)
-                .fold(0, (sum, c) => sum + c.amountBif);
-            final pending = commissions
-                .where((c) => !c.isPaid)
-                .fold(0, (sum, c) => sum + c.amountBif);
-            return Row(
-              children: [
-                Expanded(
-                  child: KynzaCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Payé', style: AppTypography.bodySmall),
-                        KynzaAmountWidget(
-                          amountBif: paid,
-                          style: AppTypography.amountMd,
-                        ),
-                      ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: KynzaCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Mon CA', style: AppTypography.bodySmall),
+                          KynzaAmountWidget(
+                            amountBif: revenue,
+                            style: AppTypography.amountMd,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          rankAsync.when(
+            loading: () => const KynzaSkeleton(height: 56),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (result) {
+              final (rank, teamSize) = result;
+              if (rank == 0) return const SizedBox.shrink();
+              return KynzaCard(
+                child: Text(
+                  '$rank${_ordinalSuffix(rank)} sur $teamSize cette semaine',
+                  style: AppTypography.h3,
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: KynzaCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'En attente',
-                          style: AppTypography.bodySmall,
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Text('Mes RDV ce mois', style: AppTypography.h3),
+          const SizedBox(height: AppSpacing.md),
+          monthlyAsync.when(
+            loading: () => const KynzaSkeleton(height: 180),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (bookings) {
+              final byDay = <int, int>{};
+              for (final b in bookings) {
+                if (b.status.name != 'completed') continue;
+                byDay[b.startTime.day] = (byDay[b.startTime.day] ?? 0) + 1;
+              }
+              final days = byDay.keys.toList()..sort();
+              if (days.isEmpty) {
+                return const Text(
+                  'Aucun RDV terminé ce mois.',
+                  style: AppTypography.bodySmall,
+                );
+              }
+              return KynzaBarChartFl(
+                title: '',
+                bars: [
+                  for (final d in days) BarData(label: '$d', value: byDay[d]!),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Text('Mes avis récents', style: AppTypography.h3),
+          const SizedBox(height: AppSpacing.md),
+          reviewsAsync.when(
+            loading: () => const KynzaSkeleton(height: 56, count: 3),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (reviews) {
+              if (reviews.isEmpty) {
+                return const Text(
+                  'Aucun avis pour le moment.',
+                  style: AppTypography.bodySmall,
+                );
+              }
+              final avg =
+                  reviews.fold(0, (sum, r) => sum + r.rating) / reviews.length;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '⭐ ${avg.toStringAsFixed(1)} / 5',
+                    style: AppTypography.h2,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  for (final r in reviews)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: KynzaCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '★' * r.rating + '☆' * (5 - r.rating),
+                              style: const TextStyle(color: AppColors.primary),
+                            ),
+                            if (r.comment != null && r.comment!.isNotEmpty) ...[
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(r.comment!, style: AppTypography.bodySmall),
+                            ],
+                          ],
                         ),
-                        KynzaAmountWidget(
-                          amountBif: pending,
-                          style: AppTypography.amountMd,
-                        ),
-                      ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Text('Mes commissions ce mois', style: AppTypography.h3),
+          const SizedBox(height: AppSpacing.md),
+          commissionsAsync.when(
+            loading: () => const KynzaSkeleton(height: 56),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (commissions) {
+              final paid = commissions
+                  .where((c) => c.isPaid)
+                  .fold(0, (sum, c) => sum + c.amountBif);
+              final pending = commissions
+                  .where((c) => !c.isPaid)
+                  .fold(0, (sum, c) => sum + c.amountBif);
+              return Row(
+                children: [
+                  Expanded(
+                    child: KynzaCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Payé', style: AppTypography.bodySmall),
+                          KynzaAmountWidget(
+                            amountBif: paid,
+                            style: AppTypography.amountMd,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-        ),
-      ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: KynzaCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'En attente',
+                            style: AppTypography.bodySmall,
+                          ),
+                          KynzaAmountWidget(
+                            amountBif: pending,
+                            style: AppTypography.amountMd,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

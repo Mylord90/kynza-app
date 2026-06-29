@@ -53,7 +53,15 @@ class SalonReviewsTab extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           reviewsAsync.when(
-            loading: () => const KynzaSkeleton(height: 100, count: 3),
+            loading: () => const Column(
+              children: [
+                KynzaReviewCardSkeleton(),
+                SizedBox(height: AppSpacing.sm),
+                KynzaReviewCardSkeleton(),
+                SizedBox(height: AppSpacing.sm),
+                KynzaReviewCardSkeleton(),
+              ],
+            ),
             error: (_, __) => KynzaErrorState(
               message: 'Impossible de charger les avis.',
               onRetry: () => ref.invalidate(salonReviewsProvider(salonId)),

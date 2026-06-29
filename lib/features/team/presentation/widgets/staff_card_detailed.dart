@@ -55,9 +55,12 @@ class StaffCardDetailed extends ConsumerWidget {
         children: [
           Stack(
             children: [
-              KynzaAvatar(
-                fullName: staff.displayName,
-                avatarUrl: staff.avatarUrl,
+              Hero(
+                tag: 'staff-avatar-${staff.id}',
+                child: KynzaAvatar(
+                  fullName: staff.displayName,
+                  avatarUrl: staff.avatarUrl,
+                ),
               ),
               Positioned(
                 right: 0,

@@ -106,18 +106,21 @@ Interdictions absolues, sans exception, pour tout agent IA :
 ```
 lib/
 ├── core/
-│   ├── constants/       # AppColors, AppTypography, AppSpacing
+│   ├── constants/       # AppColors, AppTypography, AppSpacing,
+│   │                    # AppDurations, AppCurves
+│   ├── animations/      # KynzaAnimations (fadeSlideIn/scaleIn/shimmerPulse)
 │   ├── theme/           # ThemeData dark-first
 │   ├── router/          # GoRouter, routes, guards par rôle
 │   ├── providers/       # Providers globaux Riverpod
 │   ├── models/          # Modèles partagés (freezed)
 │   ├── services/        # Supabase client, Session, Connectivity
-│   ├── utils/           # formatBif(), validators, haptics
+│   ├── utils/           # formatBif(), validators, haptics (KynzaHaptics)
 │   └── enums/           # UserRole, BookingStatus, PaymentStatus
 ├── shared/
 │   └── widgets/         # KynzaButton, KynzaCard, KynzaSkeleton,
-│                        # KynzaToast, KynzaEmptyState,
-│                        # KynzaOfflineBanner, KynzaAmountWidget
+│                        # KynzaCardSkeletons (named variants), KynzaToast,
+│                        # KynzaEmptyState, KynzaOfflineBanner,
+│                        # KynzaAmountWidget, KynzaBottomSheet
 └── features/
     ├── auth/            # Login, Register, OTP, CompleteProfile
     ├── home_owner/      # Dashboard, Calendar, Clients, Marketing
@@ -377,6 +380,20 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - **Anti-spam WhatsApp** — max 2 promos/semaine/salon, max 50 messages/heure. Opt-out automatique et immédiat sur réponse `STOP`/`ARRET`.
 - **Score de fiabilité** — visible Owner + Staff uniquement, jamais exposé au Client (R18).
 - **Analytics Staff** — classement = position uniquement ; les montants des collègues ne sont jamais exposés, même indirectement (R11).
+
+---
+
+## SECTION 17 — DETTE TECHNIQUE
+
+À tenir à jour à chaque phase. Ne pas corriger hors-scope sans instruction explicite.
+
+- Pas de `ShellRoute` GoRouter — bottom nav en state local par `Home*Screen`. À corriger avant Play Store (voir mémoire `shellrouter_refactor_backlog`).
+- ~100 screens non migrés vers `AppLocalizations` (infra i18n FR/EN posée en Phase Advanced, adoption partielle).
+- Coordonnées bancaires (`KynzaConstants.bankTransferInstructions`) = placeholders, à remplacer avant toute vraie demande d'upgrade client.
+- Keystore Android debug (pas de signing release configuré).
+- Leapa API non live (compte en attente) — paiements mobile money non fonctionnels en prod.
+- `KynzaLoyaltyCardSkeleton` (Phase A) non branché sur `loyalty_card_widget.dart`/`client_loyalty_screen.dart` — le skeleton générique en place (`height: 220`) correspond à la hauteur réelle de la carte ; le variant nommé est plus court et introduirait un saut de layout. Vérifier la hauteur réelle avant de basculer.
+- Recherche avancée (`advanced_search_screen.dart`) : résultats toujours sur skeleton générique — aucun des 7 variants nommés (Phase A) ne correspond à la disposition avatar+titre+sous-titre+trailing.
 
 ---
 

@@ -74,198 +74,233 @@ class StaffDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+      body: Column(
         children: [
-          Center(
-            child: Column(
-              children: [
-                KynzaAvatar(
-                  fullName: staff.displayName,
-                  avatarUrl: staff.avatarUrl,
-                  size: AvatarSize.xl,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(staff.displayName, style: AppTypography.h2),
-                Text(
-                  staff.role == 'manager' ? 'Manager' : 'Staff',
-                  style: AppTypography.bodySmall,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          const Text('Performance ce mois', style: AppTypography.h3),
-          const SizedBox(height: AppSpacing.md),
-          monthlyAsync.when(
-            loading: () => const KynzaSkeleton(height: 180),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (bookings) {
-              final byDay = <int, int>{};
-              for (final b in bookings) {
-                if (b.status.name != 'completed') continue;
-                byDay[b.startTime.day] = (byDay[b.startTime.day] ?? 0) + 1;
-              }
-              final days = byDay.keys.toList()..sort();
-              return KynzaBarChartFl(
-                title: '',
-                bars: [
-                  for (final d in days) BarData(label: '$d', value: byDay[d]!),
-                ],
-              );
-            },
-          ),
-          if (isOwner) ...[
-            const SizedBox(height: AppSpacing.xl),
-            const Text('Commissions ce mois', style: AppTypography.h3),
-            const SizedBox(height: AppSpacing.md),
-            commissionsAsync!.when(
-              loading: () => const KynzaSkeleton(height: 56),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (commissions) {
-                final paid = commissions
-                    .where((c) => c.isPaid)
-                    .fold(0, (sum, c) => sum + c.amountBif);
-                final pending = commissions
-                    .where((c) => !c.isPaid)
-                    .fold(0, (sum, c) => sum + c.amountBif);
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _StatTile(
-                        label: 'Gagné',
-                        amountBif: paid + pending,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _StatTile(label: 'Payé', amountBif: paid),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _StatTile(label: 'En attente', amountBif: pending),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-          const SizedBox(height: AppSpacing.xl),
-          const Text('Services proposés', style: AppTypography.h3),
-          const SizedBox(height: AppSpacing.sm),
-          staff.specialties.isEmpty
-              ? const Text('Aucune spécialité.', style: AppTypography.bodySmall)
-              : Wrap(
-                  spacing: AppSpacing.xs,
-                  children: [
-                    for (final s in staff.specialties) KynzaBadge(label: s),
-                  ],
-                ),
-          const SizedBox(height: AppSpacing.xl),
-          KynzaCard(
-            onTap: () =>
-                context.push(RouteNames.ownerAvailabilityStaffPath(staff.id!)),
-            child: const Row(
-              children: [
-                Icon(Icons.schedule_outlined, color: AppColors.primary),
-                SizedBox(width: AppSpacing.md),
-                Expanded(child: Text('Horaires', style: AppTypography.h3)),
-                Icon(Icons.chevron_right, color: AppColors.textMuted),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          const Text('Derniers RDV', style: AppTypography.h3),
-          const SizedBox(height: AppSpacing.sm),
-          recentAsync.when(
-            loading: () => const KynzaSkeleton(height: 48, count: 3),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (bookings) => bookings.isEmpty
-                ? const Text(
-                    'Aucun RDV pour le moment.',
-                    style: AppTypography.bodySmall,
-                  )
-                : Column(
-                    children: [
-                      for (final b in bookings)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: KynzaCard(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    '${b.startTime.day}/${b.startTime.month}/${b.startTime.year}',
-                                    style: AppTypography.body,
-                                  ),
-                                ),
-                                Text(
-                                  b.status.name,
-                                  style: AppTypography.bodySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-          ),
-          if (isOwner) ...[
-            const SizedBox(height: AppSpacing.xl),
-            KynzaButton(
-              label: staff.isActive ? 'Désactiver' : 'Réactiver',
-              variant: KynzaButtonVariant.secondary,
-              onPressed: () => ref
-                  .read(staffNotifierProvider.notifier)
-                  .toggleActive(staff.id!, !staff.isActive)
-                  .catchError((_) {}),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            KynzaButton(
-              label: staff.role == 'manager'
-                  ? 'Rétrograder en staff'
-                  : 'Promouvoir manager',
-              variant: KynzaButtonVariant.secondary,
-              onPressed: () => ref
-                  .read(staffNotifierProvider.notifier)
-                  .updateStaff(
-                    staff.copyWith(
-                      role: staff.role == 'manager' ? 'staff' : 'manager',
-                    ),
-                  )
-                  .catchError((_) {}),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            KynzaButton(
-              label: 'Retirer du salon',
-              variant: KynzaButtonVariant.destructive,
-              onPressed: () async {
-                final confirmed = await showKynzaConfirmDialog(
-                  context,
-                  title: 'Retirer ce membre ?',
-                  message:
-                      '${staff.displayName} ne pourra plus accéder à ce salon.',
-                );
-                if (!confirmed) return;
-                try {
-                  await ref
-                      .read(staffNotifierProvider.notifier)
-                      .remove(staff.id!);
-                  if (context.mounted) Navigator.of(context).pop();
-                } catch (e) {
-                  if (context.mounted) {
-                    showKynzaToast(
-                      context,
-                      message: e is AppException
-                          ? e.message
-                          : 'Une erreur est survenue.',
-                      level: ToastLevel.error,
-                    );
-                  }
+          const KynzaOfflineBanner(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(_staffMonthlyBookingsProvider(staff.id!));
+                ref.invalidate(_staffRecentBookingsProvider(staff.id!));
+                if (isOwner) {
+                  ref.invalidate(staffCommissionsProvider(staff.id!));
                 }
               },
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        Hero(
+                          tag: 'staff-avatar-${staff.id}',
+                          child: KynzaAvatar(
+                            fullName: staff.displayName,
+                            avatarUrl: staff.avatarUrl,
+                            size: AvatarSize.xl,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(staff.displayName, style: AppTypography.h2),
+                        Text(
+                          staff.role == 'manager' ? 'Manager' : 'Staff',
+                          style: AppTypography.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const Text('Performance ce mois', style: AppTypography.h3),
+                  const SizedBox(height: AppSpacing.md),
+                  monthlyAsync.when(
+                    loading: () => const KynzaSkeleton(height: 180),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (bookings) {
+                      final byDay = <int, int>{};
+                      for (final b in bookings) {
+                        if (b.status.name != 'completed') continue;
+                        byDay[b.startTime.day] =
+                            (byDay[b.startTime.day] ?? 0) + 1;
+                      }
+                      final days = byDay.keys.toList()..sort();
+                      return KynzaBarChartFl(
+                        title: '',
+                        bars: [
+                          for (final d in days)
+                            BarData(label: '$d', value: byDay[d]!),
+                        ],
+                      );
+                    },
+                  ),
+                  if (isOwner) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    const Text('Commissions ce mois', style: AppTypography.h3),
+                    const SizedBox(height: AppSpacing.md),
+                    commissionsAsync!.when(
+                      loading: () => const KynzaSkeleton(height: 56),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (commissions) {
+                        final paid = commissions
+                            .where((c) => c.isPaid)
+                            .fold(0, (sum, c) => sum + c.amountBif);
+                        final pending = commissions
+                            .where((c) => !c.isPaid)
+                            .fold(0, (sum, c) => sum + c.amountBif);
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _StatTile(
+                                label: 'Gagné',
+                                amountBif: paid + pending,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _StatTile(label: 'Payé', amountBif: paid),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _StatTile(
+                                label: 'En attente',
+                                amountBif: pending,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.xl),
+                  const Text('Services proposés', style: AppTypography.h3),
+                  const SizedBox(height: AppSpacing.sm),
+                  staff.specialties.isEmpty
+                      ? const Text(
+                          'Aucune spécialité.',
+                          style: AppTypography.bodySmall,
+                        )
+                      : Wrap(
+                          spacing: AppSpacing.xs,
+                          children: [
+                            for (final s in staff.specialties)
+                              KynzaBadge(label: s),
+                          ],
+                        ),
+                  const SizedBox(height: AppSpacing.xl),
+                  KynzaCard(
+                    onTap: () => context.push(
+                      RouteNames.ownerAvailabilityStaffPath(staff.id!),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.schedule_outlined, color: AppColors.primary),
+                        SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Text('Horaires', style: AppTypography.h3),
+                        ),
+                        Icon(Icons.chevron_right, color: AppColors.textMuted),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const Text('Derniers RDV', style: AppTypography.h3),
+                  const SizedBox(height: AppSpacing.sm),
+                  recentAsync.when(
+                    loading: () => const KynzaSkeleton(height: 48, count: 3),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (bookings) => bookings.isEmpty
+                        ? const Text(
+                            'Aucun RDV pour le moment.',
+                            style: AppTypography.bodySmall,
+                          )
+                        : Column(
+                            children: [
+                              for (final b in bookings)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm,
+                                  ),
+                                  child: KynzaCard(
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '${b.startTime.day}/${b.startTime.month}/${b.startTime.year}',
+                                            style: AppTypography.body,
+                                          ),
+                                        ),
+                                        Text(
+                                          b.status.name,
+                                          style: AppTypography.bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                  ),
+                  if (isOwner) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    KynzaButton(
+                      label: staff.isActive ? 'Désactiver' : 'Réactiver',
+                      variant: KynzaButtonVariant.secondary,
+                      onPressed: () => ref
+                          .read(staffNotifierProvider.notifier)
+                          .toggleActive(staff.id!, !staff.isActive)
+                          .catchError((_) {}),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    KynzaButton(
+                      label: staff.role == 'manager'
+                          ? 'Rétrograder en staff'
+                          : 'Promouvoir manager',
+                      variant: KynzaButtonVariant.secondary,
+                      onPressed: () => ref
+                          .read(staffNotifierProvider.notifier)
+                          .updateStaff(
+                            staff.copyWith(
+                              role: staff.role == 'manager'
+                                  ? 'staff'
+                                  : 'manager',
+                            ),
+                          )
+                          .catchError((_) {}),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    KynzaButton(
+                      label: 'Retirer du salon',
+                      variant: KynzaButtonVariant.destructive,
+                      onPressed: () async {
+                        final confirmed = await showKynzaConfirmDialog(
+                          context,
+                          title: 'Retirer ce membre ?',
+                          message:
+                              '${staff.displayName} ne pourra plus accéder à ce salon.',
+                        );
+                        if (!confirmed) return;
+                        try {
+                          await ref
+                              .read(staffNotifierProvider.notifier)
+                              .remove(staff.id!);
+                          if (context.mounted) Navigator.of(context).pop();
+                        } catch (e) {
+                          if (context.mounted) {
+                            showKynzaToast(
+                              context,
+                              message: e is AppException
+                                  ? e.message
+                                  : 'Une erreur est survenue.',
+                              level: ToastLevel.error,
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
+          ),
         ],
       ),
     );

@@ -24,9 +24,16 @@ class InvoiceHistoryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Historique des factures')),
-      body: salon == null
-          ? const Center(child: KynzaSpinner())
-          : _InvoiceList(salonId: salon.id),
+      body: Column(
+        children: [
+          const KynzaOfflineBanner(),
+          Expanded(
+            child: salon == null
+                ? const Center(child: KynzaSpinner())
+                : _InvoiceList(salonId: salon.id),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -46,7 +53,7 @@ class _InvoiceList extends ConsumerWidget {
         itemCount: 4,
         itemBuilder: (_, __) => const Padding(
           padding: EdgeInsets.only(bottom: AppSpacing.md),
-          child: KynzaSkeleton(height: 72),
+          child: KynzaBookingCardSkeleton(),
         ),
       ),
       error: (_, __) => KynzaErrorState(
@@ -64,49 +71,52 @@ class _InvoiceList extends ConsumerWidget {
             onCta: _noop,
           );
         }
-        return ListView.builder(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          itemCount: invoices.length,
-          itemBuilder: (context, index) {
-            final invoice = invoices[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: KynzaCard(
-                onTap: () => showKynzaBottomSheet(
-                  context,
-                  builder: (_) => _InvoiceDetailSheet(invoice: invoice),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(salonInvoicesProvider(salonId)),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            itemCount: invoices.length,
+            itemBuilder: (context, index) {
+              final invoice = invoices[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: KynzaCard(
+                  onTap: () => showKynzaBottomSheet(
+                    context,
+                    builder: (_) => _InvoiceDetailSheet(invoice: invoice),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(invoice.reference, style: AppTypography.mono),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              _planNames[invoice.planKey] ?? invoice.planKey,
+                              style: AppTypography.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(invoice.reference, style: AppTypography.mono),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            _planNames[invoice.planKey] ?? invoice.planKey,
-                            style: AppTypography.bodySmall,
+                          KynzaAmountWidget(
+                            amountBif: invoice.amountBif,
+                            style: AppTypography.amountSm,
                           ),
+                          const SizedBox(height: AppSpacing.xs),
+                          _StatusChip(status: invoice.status),
                         ],
                       ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        KynzaAmountWidget(
-                          amountBif: invoice.amountBif,
-                          style: AppTypography.amountSm,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        _StatusChip(status: invoice.status),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );

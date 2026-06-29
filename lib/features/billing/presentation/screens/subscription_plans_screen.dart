@@ -31,57 +31,66 @@ class SubscriptionPlansScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Abonnement KYNZA')),
-      body: salon == null
-          ? const Center(child: KynzaSpinner())
-          : ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              children: [
-                Center(
-                  child: KynzaBadge(
-                    label: salon.plan == 'free'
-                        ? 'PLAN GRATUIT'
-                        : 'PLAN ${salon.plan.toUpperCase()}',
-                    variant: salon.plan == 'free'
-                        ? KynzaBadgeVariant.neutral
-                        : KynzaBadgeVariant.gold,
-                  ),
-                ),
-                if (salon.plan == 'free') ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  _UsageCard(salon: salon),
-                ],
-                const SizedBox(height: AppSpacing.xl),
-                plansAsync.when(
-                  loading: () => const KynzaSkeleton(height: 220, count: 3),
-                  error: (_, __) => KynzaErrorState(
-                    message: "Impossible de charger les plans.",
-                    onRetry: () => ref.invalidate(subscriptionPlansProvider),
-                  ),
-                  data: (plans) {
-                    final sorted = [...plans]
-                      ..sort(
-                        (a, b) => (_planOrder[a.key] ?? 0).compareTo(
-                          _planOrder[b.key] ?? 0,
+      body: Column(
+        children: [
+          const KynzaOfflineBanner(),
+          Expanded(
+            child: salon == null
+                ? const Center(child: KynzaSpinner())
+                : ListView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    children: [
+                      Center(
+                        child: KynzaBadge(
+                          label: salon.plan == 'free'
+                              ? 'PLAN GRATUIT'
+                              : 'PLAN ${salon.plan.toUpperCase()}',
+                          variant: salon.plan == 'free'
+                              ? KynzaBadgeVariant.neutral
+                              : KynzaBadgeVariant.gold,
                         ),
-                      );
-                    return Column(
-                      children: [
-                        for (final plan in sorted)
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.lg,
-                            ),
-                            child: _PlanCard(
-                              plan: plan,
-                              currentPlanKey: salon.plan,
-                            ),
-                          ),
+                      ),
+                      if (salon.plan == 'free') ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        _UsageCard(salon: salon),
                       ],
-                    );
-                  },
-                ),
-              ],
-            ),
+                      const SizedBox(height: AppSpacing.xl),
+                      plansAsync.when(
+                        loading: () =>
+                            const KynzaSkeleton(height: 220, count: 3),
+                        error: (_, __) => KynzaErrorState(
+                          message: "Impossible de charger les plans.",
+                          onRetry: () =>
+                              ref.invalidate(subscriptionPlansProvider),
+                        ),
+                        data: (plans) {
+                          final sorted = [...plans]
+                            ..sort(
+                              (a, b) => (_planOrder[a.key] ?? 0).compareTo(
+                                _planOrder[b.key] ?? 0,
+                              ),
+                            );
+                          return Column(
+                            children: [
+                              for (final plan in sorted)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.lg,
+                                  ),
+                                  child: _PlanCard(
+                                    plan: plan,
+                                    currentPlanKey: salon.plan,
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

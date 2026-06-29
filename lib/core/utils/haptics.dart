@@ -6,4 +6,5 @@ abstract class KynzaHaptics {
   static void success() => HapticFeedback.mediumImpact();
   static void error() => HapticFeedback.vibrate();
   static void warning() => HapticFeedback.heavyImpact();
+  static void selection() => HapticFeedback.selectionClick();
 }

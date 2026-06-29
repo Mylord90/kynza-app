@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/slot_availability.dart';
 import '../../../../core/models/time_slot_model.dart';
+import '../../../../core/utils/haptics.dart';
 
 class TimeSlotGrid extends StatelessWidget {
   const TimeSlotGrid({
@@ -36,7 +37,10 @@ class TimeSlotGrid extends StatelessWidget {
         final isRare = slot.availability == SlotAvailability.rare;
 
         return InkWell(
-          onTap: () => onSelected(slot),
+          onTap: () {
+            KynzaHaptics.selection();
+            onSelected(slot);
+          },
           borderRadius: AppRadius.md_,
           child: Container(
             decoration: BoxDecoration(

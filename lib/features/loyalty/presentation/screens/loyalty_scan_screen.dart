@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/haptics.dart';
+import '../../../../shared/widgets/kynza_widgets.dart';
 
 enum _ScanResultKind { success, error }
 
@@ -105,6 +106,12 @@ class _LoyaltyScanScreenState extends State<LoyaltyScanScreen> {
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
           _ScanFrame(),
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: KynzaOfflineBanner(),
+          ),
           if (_result != null) _ResultOverlay(result: _result!),
         ],
       ),

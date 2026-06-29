@@ -57,6 +57,7 @@ import '../../features/staff/presentation/screens/staff_detail_screen.dart';
 import '../../features/staff/presentation/screens/staff_list_screen.dart';
 import '../../features/team/presentation/screens/commission_screen.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_curves.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_typography.dart';
@@ -492,6 +493,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+/// Premium push transition — fade + a short rightward settle, decelerating
+/// into place. Every route uses this same builder so the whole app feels
+/// consistent; per-route variants (modal/dialog-style) can be added later
+/// without touching call sites since they all funnel through here.
 GoRoute _fadeRoute(
   String path,
   Widget Function(BuildContext, GoRouterState) builder,
@@ -501,9 +506,24 @@ GoRoute _fadeRoute(
     pageBuilder: (context, state) => CustomTransitionPage(
       key: state.pageKey,
       child: builder(context, state),
-      transitionDuration: AppDurations.standard,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-          FadeTransition(opacity: animation, child: child),
+      transitionDuration: AppDurations.pageTransition,
+      reverseTransitionDuration: AppDurations.standard,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: AppCurves.decelerate,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
     ),
   );
 }
@@ -984,7 +1004,16 @@ class _StaffPerformanceLoader extends ConsumerWidget {
                 ),
               ),
             )
-          : MyPerformanceScreen(staffId: staff.id!),
+          : Scaffold(
+              backgroundColor: AppColors.background,
+              appBar: AppBar(title: const Text('Ma Performance')),
+              body: Column(
+                children: [
+                  const KynzaOfflineBanner(),
+                  Expanded(child: MyPerformanceScreen(staffId: staff.id!)),
+                ],
+              ),
+            ),
     );
   }
 }

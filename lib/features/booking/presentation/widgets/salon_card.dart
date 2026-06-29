@@ -27,12 +27,15 @@ class SalonCard extends StatelessWidget {
             ),
             child: AspectRatio(
               aspectRatio: 16 / 9,
-              child: salon.coverUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: salon.coverUrl!,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(color: AppColors.surfaceVariant),
+              child: Hero(
+                tag: 'salon-cover-${salon.id}',
+                child: salon.coverUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: salon.coverUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(color: AppColors.surfaceVariant),
+              ),
             ),
           ),
           Padding(

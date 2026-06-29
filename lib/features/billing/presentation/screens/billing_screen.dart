@@ -20,89 +20,106 @@ class BillingScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Facturation')),
-      body: salon == null
-          ? const Center(child: KynzaSpinner())
-          : ListView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              children: [
-                KynzaCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          const KynzaOfflineBanner(),
+          Expanded(
+            child: salon == null
+                ? const Center(child: KynzaSpinner())
+                : ListView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
-                      const Text('Plan actuel', style: AppTypography.bodySmall),
-                      Text(
-                        _planNames[salon.plan] ?? salon.plan,
-                        style: AppTypography.h1,
+                      KynzaCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Plan actuel',
+                              style: AppTypography.bodySmall,
+                            ),
+                            Text(
+                              _planNames[salon.plan] ?? salon.plan,
+                              style: AppTypography.h1,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            if (salon.planStartedAt != null) ...[
+                              const Text(
+                                'Période en cours',
+                                style: AppTypography.bodySmall,
+                              ),
+                              Text(
+                                _periodLabel(salon.plan, salon.planStartedAt!),
+                                style: AppTypography.body,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                            ],
+                            const Text(
+                              'Méthode de paiement : Manuelle (virement bancaire)',
+                              style: AppTypography.bodySmall,
+                            ),
+                            if (salon.plan != 'free' &&
+                                salon.planStartedAt != null) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'Prochaine facturation : ${_nextBillingLabel(salon.plan, salon.planStartedAt!)}',
+                                style: AppTypography.bodySmall,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      KynzaCard(
+                        onTap: () => context.push(RouteNames.ownerSubscription),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.workspace_premium_outlined,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                'Gérer mon abonnement',
+                                style: AppTypography.h3,
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textMuted,
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      if (salon.planStartedAt != null) ...[
-                        const Text(
-                          'Période en cours',
-                          style: AppTypography.bodySmall,
+                      KynzaCard(
+                        onTap: () =>
+                            context.push(RouteNames.ownerBillingInvoices),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.receipt_long_outlined,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                'Historique des factures',
+                                style: AppTypography.h3,
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textMuted,
+                            ),
+                          ],
                         ),
-                        Text(
-                          _periodLabel(salon.plan, salon.planStartedAt!),
-                          style: AppTypography.body,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                      ],
-                      const Text(
-                        'Méthode de paiement : Manuelle (virement bancaire)',
-                        style: AppTypography.bodySmall,
                       ),
-                      if (salon.plan != 'free' &&
-                          salon.planStartedAt != null) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          'Prochaine facturation : ${_nextBillingLabel(salon.plan, salon.planStartedAt!)}',
-                          style: AppTypography.bodySmall,
-                        ),
-                      ],
                     ],
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                KynzaCard(
-                  onTap: () => context.push(RouteNames.ownerSubscription),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.workspace_premium_outlined,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          'Gérer mon abonnement',
-                          style: AppTypography.h3,
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, color: AppColors.textMuted),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                KynzaCard(
-                  onTap: () => context.push(RouteNames.ownerBillingInvoices),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          'Historique des factures',
-                          style: AppTypography.h3,
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, color: AppColors.textMuted),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          ),
+        ],
+      ),
     );
   }
 

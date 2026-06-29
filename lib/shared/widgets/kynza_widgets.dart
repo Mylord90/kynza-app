@@ -4,6 +4,7 @@ export 'kynza_badge.dart';
 export 'kynza_bottom_sheet.dart';
 export 'kynza_button.dart';
 export 'kynza_card.dart';
+export 'kynza_card_skeletons.dart';
 export 'kynza_confirm_dialog.dart';
 export 'kynza_dropdown.dart';
 export 'freemium_banner.dart';

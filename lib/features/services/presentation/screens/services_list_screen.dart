@@ -92,7 +92,7 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
         itemCount: 5,
         itemBuilder: (_, __) => const Padding(
           padding: EdgeInsets.only(bottom: AppSpacing.md),
-          child: KynzaSkeleton(height: 80),
+          child: KynzaServiceCardSkeleton(),
         ),
       ),
       error: (error, _) => KynzaErrorState(
@@ -156,47 +156,51 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
                 ),
               ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: visible.length,
-                itemBuilder: (context, index) {
-                  final service = visible[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: Dismissible(
-                      key: ValueKey(service.id),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: AppColors.errorBg,
-                          borderRadius: BorderRadius.circular(AppSpacing.md),
-                        ),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
-                        ),
-                      ),
-                      onDismissed: (_) => _swipeDelete(service),
-                      child: ServiceCard(
-                        service: service,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ServiceFormScreen(
-                              salonId: salonId,
-                              existing: service,
-                            ),
+              child: RefreshIndicator(
+                onRefresh: () async =>
+                    ref.invalidate(salonServicesProvider(salonId)),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: visible.length,
+                  itemBuilder: (context, index) {
+                    final service = visible[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Dismissible(
+                        key: ValueKey(service.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: AppSpacing.lg),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorBg,
+                            borderRadius: BorderRadius.circular(AppSpacing.md),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.error,
                           ),
                         ),
-                        onToggleActive: (active) => ref
-                            .read(serviceNotifierProvider.notifier)
-                            .toggleActive(service.id!, active)
-                            .catchError((_) {}),
+                        onDismissed: (_) => _swipeDelete(service),
+                        child: ServiceCard(
+                          service: service,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ServiceFormScreen(
+                                salonId: salonId,
+                                existing: service,
+                              ),
+                            ),
+                          ),
+                          onToggleActive: (active) => ref
+                              .read(serviceNotifierProvider.notifier)
+                              .toggleActive(service.id!, active)
+                              .catchError((_) {}),
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ],

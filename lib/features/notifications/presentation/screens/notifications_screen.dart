@@ -233,7 +233,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 itemCount: 5,
                 itemBuilder: (_, __) => const Padding(
                   padding: EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: KynzaSkeleton(height: 72),
+                  child: KynzaNotificationItemSkeleton(),
                 ),
               ),
               error: (_, __) => KynzaErrorState(

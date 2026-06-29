@@ -84,7 +84,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
         itemCount: 4,
         itemBuilder: (_, __) => const Padding(
           padding: EdgeInsets.only(bottom: AppSpacing.md),
-          child: KynzaSkeleton(height: 72),
+          child: KynzaStaffCardSkeleton(),
         ),
       ),
       error: (error, _) => KynzaErrorState(
@@ -215,25 +215,31 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
                         style: AppTypography.bodySmall,
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      itemCount: visible.length,
-                      itemBuilder: (context, index) {
-                        final member = visible[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: StaffCardDetailed(
-                            staff: member,
-                            isOwner: isOwner,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    StaffDetailScreen(staff: member),
+                  : RefreshIndicator(
+                      onRefresh: () async =>
+                          ref.invalidate(salonStaffProvider(widget.salonId)),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        itemCount: visible.length,
+                        itemBuilder: (context, index) {
+                          final member = visible[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
+                            child: StaffCardDetailed(
+                              staff: member,
+                              isOwner: isOwner,
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      StaffDetailScreen(staff: member),
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],

@@ -108,56 +108,68 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Mon QR fidélité')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: _loading
-              ? const KynzaSpinner()
-              : _error != null
-              ? KynzaErrorState(message: _error!, onRetry: _generate)
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (salonAsync?.valueOrNull != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                        child: Text(
-                          salonAsync!.valueOrNull!.name,
-                          style: AppTypography.h2,
-                          textAlign: TextAlign.center,
-                        ),
+      body: Column(
+        children: [
+          const KynzaOfflineBanner(),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: _loading
+                    ? const KynzaSpinner()
+                    : _error != null
+                    ? KynzaErrorState(message: _error!, onRetry: _generate)
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (salonAsync?.valueOrNull != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.lg,
+                              ),
+                              child: Text(
+                                salonAsync!.valueOrNull!.name,
+                                style: AppTypography.h2,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                            ),
+                            child: QrImageView(
+                              data: _token!.id,
+                              size: 220,
+                              backgroundColor: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+                          Text(
+                            _formatRemaining(_remaining),
+                            style: AppTypography.h3.copyWith(
+                              color: _remaining.inSeconds <= 120
+                                  ? AppColors.error
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          const Text(
+                            'Montrez ce code au personnel du salon',
+                            style: AppTypography.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.primary, width: 2),
-                      ),
-                      child: QrImageView(
-                        data: _token!.id,
-                        size: 220,
-                        backgroundColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Text(
-                      _formatRemaining(_remaining),
-                      style: AppTypography.h3.copyWith(
-                        color: _remaining.inSeconds <= 120
-                            ? AppColors.error
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    const Text(
-                      'Montrez ce code au personnel du salon',
-                      style: AppTypography.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-        ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

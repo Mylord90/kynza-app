@@ -85,6 +85,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
       ),
       body: Column(
         children: [
+          const KynzaOfflineBanner(),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: KynzaTextField(
@@ -133,21 +134,25 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                       final services = results
                           .where((r) => r.type == SearchResultType.service)
                           .toList();
-                      return ListView(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        children: [
-                          if (salons.isNotEmpty) ...[
-                            const Text('Salons', style: AppTypography.h3),
-                            const SizedBox(height: AppSpacing.sm),
-                            for (final r in salons) _ResultTile(item: r),
-                            const SizedBox(height: AppSpacing.lg),
+                      return RefreshIndicator(
+                        onRefresh: () async =>
+                            ref.invalidate(searchResultsProvider),
+                        child: ListView(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          children: [
+                            if (salons.isNotEmpty) ...[
+                              const Text('Salons', style: AppTypography.h3),
+                              const SizedBox(height: AppSpacing.sm),
+                              for (final r in salons) _ResultTile(item: r),
+                              const SizedBox(height: AppSpacing.lg),
+                            ],
+                            if (services.isNotEmpty) ...[
+                              const Text('Services', style: AppTypography.h3),
+                              const SizedBox(height: AppSpacing.sm),
+                              for (final r in services) _ResultTile(item: r),
+                            ],
                           ],
-                          if (services.isNotEmpty) ...[
-                            const Text('Services', style: AppTypography.h3),
-                            const SizedBox(height: AppSpacing.sm),
-                            for (final r in services) _ResultTile(item: r),
-                          ],
-                        ],
+                        ),
                       );
                     },
                   ),
