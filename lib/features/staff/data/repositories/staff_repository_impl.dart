@@ -100,10 +100,14 @@ class StaffRepositoryImpl implements StaffRepository {
     String salonId,
   ) async {
     try {
+      // Explicit deleted_at: null so re-assigning a service previously
+      // removed via removeService() (a soft delete) revives the same
+      // row instead of conflicting with it invisibly.
       await SupabaseService.from(_servicesTable).upsert({
         'staff_id': staffId,
         'service_id': serviceId,
         'salon_id': salonId,
+        'deleted_at': null,
       }, onConflict: 'staff_id,service_id');
     } catch (_) {
       throw const AppException("Impossible d'assigner ce service.");
@@ -113,9 +117,10 @@ class StaffRepositoryImpl implements StaffRepository {
   @override
   Future<void> removeService(String staffId, String serviceId) async {
     try {
-      await SupabaseService.from(
-        _servicesTable,
-      ).delete().eq('staff_id', staffId).eq('service_id', serviceId);
+      await SupabaseService.from(_servicesTable)
+          .update({'deleted_at': DateTime.now().toIso8601String()})
+          .eq('staff_id', staffId)
+          .eq('service_id', serviceId);
     } catch (_) {
       throw const AppException('Impossible de retirer ce service.');
     }

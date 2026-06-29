@@ -19,6 +19,8 @@ class StaffProfileModel with _$StaffProfileModel {
     String? invitedBy,
     String? invitationToken,
     DateTime? invitationAcceptedAt,
+    @Default('percent') String commissionType,
+    @Default(0) num commissionRate,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? deletedAt,

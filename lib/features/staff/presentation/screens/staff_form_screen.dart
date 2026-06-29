@@ -7,6 +7,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../services/application/providers/service_providers.dart';
+import '../../../team/application/providers/commission_providers.dart';
 import '../../application/providers/staff_providers.dart';
 
 class StaffFormScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,12 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
   late final _nameCtrl = TextEditingController(text: widget.staff.displayName);
   late final _bioCtrl = TextEditingController(text: widget.staff.bio);
   late final _phoneCtrl = TextEditingController(text: widget.staff.phone);
+  late final _commissionRateCtrl = TextEditingController(
+    text: widget.staff.commissionRate == 0
+        ? ''
+        : widget.staff.commissionRate.toString(),
+  );
+  late String _commissionType = widget.staff.commissionType;
   bool _isSaving = false;
   Set<String> _assignedServiceIds = {};
 
@@ -41,6 +48,7 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
     _nameCtrl.dispose();
     _bioCtrl.dispose();
     _phoneCtrl.dispose();
+    _commissionRateCtrl.dispose();
     super.dispose();
   }
 
@@ -55,6 +63,13 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
               bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
               phone: _phoneCtrl.text.trim(),
             ),
+          );
+      await ref
+          .read(commissionNotifierProvider.notifier)
+          .updateRate(
+            widget.staff.id!,
+            _commissionType,
+            num.tryParse(_commissionRateCtrl.text.trim()) ?? 0,
           );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -126,6 +141,34 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
           KynzaTextField(label: 'Téléphone', controller: _phoneCtrl),
           const SizedBox(height: AppSpacing.lg),
           KynzaTextField(label: 'Bio', controller: _bioCtrl, maxLines: 3),
+          const SizedBox(height: AppSpacing.xl),
+          const Text('Commission', style: AppTypography.h3),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: KynzaDropdown<String>(
+                  label: 'Type',
+                  value: _commissionType,
+                  items: const ['percent', 'fixed'],
+                  itemLabel: (v) => v == 'percent' ? '% du RDV' : 'FBu fixe',
+                  onChanged: (v) =>
+                      setState(() => _commissionType = v ?? 'percent'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: KynzaTextField(
+                  label: _commissionType == 'percent'
+                      ? 'Taux (%)'
+                      : 'Montant (FBu)',
+                  controller: _commissionRateCtrl,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.xl),
           const Text('Services proposés', style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),

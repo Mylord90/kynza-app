@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/models/booking_model.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../../../loyalty/application/providers/loyalty_providers.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/repositories/booking_repository.dart';
@@ -111,7 +112,9 @@ class BookingActionNotifier extends AsyncNotifier<void> {
 
   Future<void> cancel(String bookingId, String reason) async {
     try {
-      await ref.read(bookingRepositoryProvider).cancelBooking(bookingId, reason);
+      await ref
+          .read(bookingRepositoryProvider)
+          .cancelBooking(bookingId, reason);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -163,6 +166,7 @@ class BookingActionNotifier extends AsyncNotifier<void> {
       rethrow;
     }
     await _awardLoyaltyStamp(booking);
+    await _calculateCommission(booking);
   }
 
   /// Best-effort — a salon without an active loyalty program, or any
@@ -175,6 +179,19 @@ class BookingActionNotifier extends AsyncNotifier<void> {
         booking.clientId,
       );
       await loyalty.addStamp(card.id!, bookingId: booking.id);
+    } catch (_) {
+      // Ignored — see doc comment above.
+    }
+  }
+
+  /// Best-effort, same shape as [_awardLoyaltyStamp] — a practitioner with
+  /// no commission_rate set (e.g. solo owner) must never block this.
+  Future<void> _calculateCommission(BookingModel booking) async {
+    try {
+      await SupabaseService.client.functions.invoke(
+        'calculate-commission',
+        body: {'booking_id': booking.id},
+      );
     } catch (_) {
       // Ignored — see doc comment above.
     }

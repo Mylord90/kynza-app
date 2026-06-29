@@ -12,6 +12,7 @@ import '../../../booking/application/providers/booking_providers.dart';
 import '../../../booking/presentation/widgets/booking_list_card.dart';
 import '../../../staff/application/providers/staff_providers.dart';
 import '../../../notifications/presentation/widgets/unread_count_badge.dart';
+import '../../../staff/presentation/screens/my_performance_screen.dart';
 import '../widgets/staff_featured_card.dart';
 
 final _todayBookingsWithJoinsProvider =
@@ -51,6 +52,11 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
         title: Text(_titleFor(_tabIndex)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.qr_code_scanner_outlined),
+            tooltip: 'Scanner fidélité',
+            onPressed: () => context.push(RouteNames.ownerLoyaltyScan),
+          ),
+          IconButton(
             icon: const Icon(Icons.schedule_outlined),
             tooltip: 'Mes disponibilités',
             onPressed: () => context.push(RouteNames.staffAvailability),
@@ -87,7 +93,7 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
                   0 => _TodayTab(staffId: staff.id!),
                   1 => _AgendaTab(staffId: staff.id!),
                   2 => _MyClientsTab(staffId: staff.id!),
-                  _ => _PerfTab(staffId: staff.id!),
+                  _ => MyPerformanceScreen(staffId: staff.id!),
                 },
               ),
             ],
@@ -368,105 +374,4 @@ class _MyClientsTab extends ConsumerWidget {
       },
     );
   }
-}
-
-final _staffWeekRankProvider = FutureProvider.family<(int, int), String>((
-  ref,
-  staffId,
-) async {
-  final rows = await SupabaseService.client.rpc(
-    'get_staff_week_rank',
-    params: {'p_staff_id': staffId},
-  );
-  final row = (rows as List).first as Map<String, dynamic>;
-  return (row['rank'] as int, row['team_size'] as int);
-});
-
-class _PerfTab extends ConsumerWidget {
-  const _PerfTab({required this.staffId});
-
-  final String staffId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final rankAsync = ref.watch(_staffWeekRankProvider(staffId));
-    final now = DateTime.now();
-    final weekStart = DateTime(
-      now.year,
-      now.month,
-      now.day - (now.weekday - 1),
-    );
-
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        FutureBuilder<List<BookingModel>>(
-          future: ref
-              .read(bookingRepositoryProvider)
-              .getPractitionerBookingsInRange(
-                staffId,
-                weekStart,
-                weekStart.add(const Duration(days: 7)),
-              ),
-          builder: (context, snapshot) {
-            final bookings = snapshot.data ?? [];
-            final completed = bookings
-                .where((b) => b.status.name == 'completed')
-                .toList();
-            final revenue = completed.fold(0, (sum, b) => sum + b.amountBif);
-            return Row(
-              children: [
-                Expanded(
-                  child: KynzaCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Mes RDV', style: AppTypography.bodySmall),
-                        Text(
-                          '${completed.length}',
-                          style: AppTypography.amountMd,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: KynzaCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Mon CA', style: AppTypography.bodySmall),
-                        KynzaAmountWidget(
-                          amountBif: revenue,
-                          style: AppTypography.amountMd,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        rankAsync.when(
-          loading: () => const KynzaSkeleton(height: 56),
-          error: (_, __) => const SizedBox.shrink(),
-          data: (result) {
-            final (rank, teamSize) = result;
-            if (rank == 0) return const SizedBox.shrink();
-            return KynzaCard(
-              child: Text(
-                '$rank${_ordinalSuffix(rank)} sur $teamSize cette semaine',
-                style: AppTypography.h3,
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  String _ordinalSuffix(int n) => n == 1 ? 'er' : 'ème';
 }
