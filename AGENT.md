@@ -177,11 +177,15 @@ services (
   id UUID PK, salon_id, name, price_bif INT, duration_min INT,
   buffer_min INT DEFAULT 0, category, is_active BOOL, deleted_at TIMESTAMPTZ
 )
+-- Versionné (Phase 1.3) : trigger version_services → entity_versions
+-- sur chaque INSERT/UPDATE.
 
-subscriptions (
-  id UUID PK, salon_id, plan, status, expires_at TIMESTAMPTZ,
-  deleted_at TIMESTAMPTZ
-)
+-- NOTE : il n'existe PAS de table `subscriptions` séparée (vérifié
+-- Phase 1.3 — aucune migration, aucun call site Flutter/Edge Function ne
+-- la référence). L'état d'abonnement vit sur salons.plan/plan_status
+-- (basculé par mark_invoice_paid()) + invoices (l'historique réel de
+-- facturation/changement de plan). `invoices` est versionné (trigger
+-- version_invoices) comme substitut fidèle à l'intention du brief.
 
 loyalty_cards (
   id UUID PK, salon_id, client_id, stamps INT, required INT,
@@ -420,6 +424,7 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Recherche avancée (`advanced_search_screen.dart`) : résultats toujours sur skeleton générique — aucun des 7 variants nommés (Phase A) ne correspond à la disposition avatar+titre+sous-titre+trailing.
 - RBAC (Phase 1.1) : pas d'écran dédié pour les overrides par utilisateur (`user_permission_overrides`) — la table et `check_permission()` les gèrent, seule l'assignation à un groupe a une UI. Pas d'écran "audit des permissions" (qui a accès à quoi, vue transverse). L'entrée "Permissions & Équipe" vit dans l'onglet Profil de l'Owner faute d'écran Settings dédié — à déplacer quand la Phase 1.4 (Centre de Configuration) en créera un.
 - Audit (Phase 1.2) : `mv_audit_stats` n'a aucun consommateur (pas d'écran de stats dessus). Pas de collecte device_info/app_version/screen_name (colonnes présentes, non alimentées — nécessiterait `package_info_plus`/`device_info_plus`, pas encore une dépendance du projet). Pas d'export PDF du journal (CSV seulement). Le logging des changements de `salon_settings` est différé à la Phase 1.4 (la table n'existe pas encore).
+- Versioning (Phase 1.3) : `entity_versions` n'a aucun consommateur Flutter (pas d'écran d'historique, pas de `compare()`/`restore()`) — mécanisme backend vérifié fonctionnel uniquement. `restore()` nécessiterait du SQL dynamique par `entity_type` ou de la logique Dart par entité ; pas construit avant qu'un écran en ait réellement besoin.
 
 ---
 
