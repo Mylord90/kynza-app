@@ -133,8 +133,10 @@ lib/
     ├── payments/        # Checkout, Leapa flow, Receipts
     ├── notifications/   # FCM, WhatsApp templates
     ├── subscription/    # Plans, Upgrade, Billing
-    └── permissions/     # Permission groups (Phase 1.1 RBAC — owner-only,
-                          # additive to the base role system below)
+    ├── permissions/     # Permission groups (Phase 1.1 RBAC — owner-only,
+    │                    # additive to the base role system below)
+    └── settings/        # SettingsHomeScreen + generic SettingsCategoryScreen
+                          # (Phase 1.4 — salon_settings)
 ```
 
 Toute nouvelle feature respecte ce découpage : pas de logique transverse hors `core/`, pas de widget partagé dupliqué hors `shared/widgets/`.
@@ -297,7 +299,14 @@ client). Un Owner peut en plus créer des `permission_groups` par salon et y
 assigner des `manager`/`staff` pour leur donner des droits précis
 (`check_permission(user_id, salon_id, feature, action, resource)`, cache
 15 min SQL + Hive). Owner = accès total inconditionnel, jamais restreint
-par cette couche. Voir `docs/PHASE_1_1_SUMMARY.md`.
+par cette couche. Accessible depuis `/owner/settings` (Phase 1.4). Voir
+`docs/PHASE_1_1_SUMMARY.md`.
+
+**Centre de configuration (Phase 1.4)** — `salon_settings` (1 ligne par
+salon, créée automatiquement à l'INSERT du salon + backfill pour les
+salons déjà existants). Politique booking/notifications/marketing/staff/
+fidélité/avis/paiements/avancé — distinct de `notification_preferences`
+(par utilisateur). Voir `docs/PHASE_1_4_SUMMARY.md`.
 
 ---
 
@@ -422,9 +431,10 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Leapa API non live (compte en attente) — paiements mobile money non fonctionnels en prod.
 - `KynzaLoyaltyCardSkeleton` (Phase A) non branché sur `loyalty_card_widget.dart`/`client_loyalty_screen.dart` — le skeleton générique en place (`height: 220`) correspond à la hauteur réelle de la carte ; le variant nommé est plus court et introduirait un saut de layout. Vérifier la hauteur réelle avant de basculer.
 - Recherche avancée (`advanced_search_screen.dart`) : résultats toujours sur skeleton générique — aucun des 7 variants nommés (Phase A) ne correspond à la disposition avatar+titre+sous-titre+trailing.
-- RBAC (Phase 1.1) : pas d'écran dédié pour les overrides par utilisateur (`user_permission_overrides`) — la table et `check_permission()` les gèrent, seule l'assignation à un groupe a une UI. Pas d'écran "audit des permissions" (qui a accès à quoi, vue transverse). L'entrée "Permissions & Équipe" vit dans l'onglet Profil de l'Owner faute d'écran Settings dédié — à déplacer quand la Phase 1.4 (Centre de Configuration) en créera un.
+- RBAC (Phase 1.1) : pas d'écran dédié pour les overrides par utilisateur (`user_permission_overrides`) — la table et `check_permission()` les gèrent, seule l'assignation à un groupe a une UI. Pas d'écran "audit des permissions" (qui a accès à quoi, vue transverse). L'entrée "Permissions & Équipe" vit désormais dans `/owner/settings` (Phase 1.4) — déplacée de l'onglet Profil de l'Owner où elle vivait temporairement en 1.1/1.2.
 - Audit (Phase 1.2) : `mv_audit_stats` n'a aucun consommateur (pas d'écran de stats dessus). Pas de collecte device_info/app_version/screen_name (colonnes présentes, non alimentées — nécessiterait `package_info_plus`/`device_info_plus`, pas encore une dépendance du projet). Pas d'export PDF du journal (CSV seulement). Le logging des changements de `salon_settings` est différé à la Phase 1.4 (la table n'existe pas encore).
 - Versioning (Phase 1.3) : `entity_versions` n'a aucun consommateur Flutter (pas d'écran d'historique, pas de `compare()`/`restore()`) — mécanisme backend vérifié fonctionnel uniquement. `restore()` nécessiterait du SQL dynamique par `entity_type` ou de la logique Dart par entité ; pas construit avant qu'un écran en ait réellement besoin.
+- Settings (Phase 1.4) : pas de `PermissionGuard` sur les écrans de catégorie au-delà du `_RoleGuard` owner-only de la route — suffisant tant que seul l'Owner atteint `/owner/settings`. Pas de validation des champs entier/texte au-delà de `int.tryParse` (aucune borne min/max appliquée côté UI).
 
 ---
 

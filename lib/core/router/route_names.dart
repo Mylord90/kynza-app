@@ -103,4 +103,7 @@ abstract class RouteNames {
 
   static String ownerPermissionGroupDetailPath(String groupId) =>
       '/owner/permissions/$groupId';
+
+  // Enterprise Foundation V2 — Phase 1.4: Centre de Configuration
+  static const ownerSettings = '/owner/settings';
 }

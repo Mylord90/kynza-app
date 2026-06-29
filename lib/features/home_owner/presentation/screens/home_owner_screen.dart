@@ -425,14 +425,12 @@ class _ProfileTab extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         KynzaCard(
-          onTap: () => context.push(RouteNames.ownerPermissionGroups),
+          onTap: () => context.push(RouteNames.ownerSettings),
           child: const Row(
             children: [
-              Icon(Icons.shield_outlined, color: AppColors.primary),
+              Icon(Icons.settings_outlined, color: AppColors.primary),
               SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text('Permissions & Équipe', style: AppTypography.h3),
-              ),
+              Expanded(child: Text('Paramètres', style: AppTypography.h3)),
               Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),

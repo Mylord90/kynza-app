@@ -108,6 +108,22 @@ abstract class AuditLogger {
     isSensitive: true,
   );
 
+  static Future<void> settingsChanged(
+    String salonId,
+    String key,
+    dynamic oldValue,
+    dynamic newValue,
+  ) => log(
+    salonId: salonId,
+    typeAction: 'settings_changed',
+    tableName: 'salon_settings',
+    recordId: salonId,
+    oldValues: {key: oldValue},
+    newValues: {key: newValue},
+    severity: 'warning',
+    isSensitive: true,
+  );
+
   static Future<void> permissionGroupMemberRemoved(
     String salonId,
     String groupId,
