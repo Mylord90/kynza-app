@@ -96,4 +96,11 @@ abstract class RouteNames {
 
   // Advanced — Search
   static const search = '/search';
+
+  // Enterprise Foundation V2 — Phase 1.1: RBAC
+  static const ownerPermissionGroups = '/owner/permissions';
+  static const ownerPermissionGroupDetail = '/owner/permissions/:groupId';
+
+  static String ownerPermissionGroupDetailPath(String groupId) =>
+      '/owner/permissions/$groupId';
 }

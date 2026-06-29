@@ -28,6 +28,8 @@ import '../../features/home_client/presentation/screens/client_bookings_screen.d
 import '../../features/home_client/presentation/screens/client_profile_screen.dart';
 import '../../features/dashboard/presentation/screens/advanced_dashboard_screen.dart';
 import '../../features/dashboard/presentation/screens/audit_log_screen.dart';
+import '../../features/permissions/presentation/screens/permission_group_detail_screen.dart';
+import '../../features/permissions/presentation/screens/permission_groups_screen.dart';
 import '../../features/loyalty/presentation/screens/client_loyalty_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_qr_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_scan_screen.dart';
@@ -426,6 +428,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => const _RoleGuard(
           role: UserRole.owner,
           child: _OwnerAuditLogLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerPermissionGroups,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerPermissionGroupsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerPermissionGroupDetail,
+        (context, state) => _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerPermissionGroupDetailLoader(
+            groupId: state.pathParameters['groupId']!,
+          ),
         ),
       ),
       _fadeRoute(
@@ -924,6 +942,40 @@ class _OwnerAuditLogLoader extends ConsumerWidget {
       );
     }
     return AuditLogScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerPermissionGroupsLoader extends ConsumerWidget {
+  const _OwnerPermissionGroupsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return PermissionGroupsScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerPermissionGroupDetailLoader extends ConsumerWidget {
+  const _OwnerPermissionGroupDetailLoader({required this.groupId});
+
+  final String groupId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return PermissionGroupDetailScreen(salonId: salon.id, groupId: groupId);
   }
 }
 

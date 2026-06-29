@@ -9,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/env.dart';
 import 'core/constants/kynza_constants.dart';
+import 'core/permissions/permission_cache.dart';
 import 'core/providers/app_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/crash_reporting_service.dart';
@@ -32,6 +33,7 @@ Future<void> _bootstrap() async {
 
   await Hive.initFlutter();
   await Hive.openBox(SessionService.boxName);
+  await Hive.openBox(PermissionCache.boxName);
   await initializeDateFormatting('fr_FR');
 
   await Firebase.initializeApp();

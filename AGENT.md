@@ -114,6 +114,8 @@ lib/
 │   ├── providers/       # Providers globaux Riverpod
 │   ├── models/          # Modèles partagés (freezed)
 │   ├── services/        # Supabase client, Session, Connectivity
+│   ├── permissions/     # PermissionService/PermissionGuard (RBAC additive,
+│   │                    # Phase 1.1 — cache Hive 15min miroir SQL)
 │   ├── utils/           # formatBif(), validators, haptics (KynzaHaptics)
 │   └── enums/           # UserRole, BookingStatus, PaymentStatus
 ├── shared/
@@ -128,7 +130,9 @@ lib/
     ├── home_client/     # Discover, Salon, Booking, Appointments
     ├── payments/        # Checkout, Leapa flow, Receipts
     ├── notifications/   # FCM, WhatsApp templates
-    └── subscription/    # Plans, Upgrade, Billing
+    ├── subscription/    # Plans, Upgrade, Billing
+    └── permissions/     # Permission groups (Phase 1.1 RBAC — owner-only,
+                          # additive to the base role system below)
 ```
 
 Toute nouvelle feature respecte ce découpage : pas de logique transverse hors `core/`, pas de widget partagé dupliqué hors `shared/widgets/`.
@@ -271,6 +275,14 @@ Correctifs de sécurité à maintenir actifs en production (toute migration futu
 
 Toute nouvelle permission doit être ajoutée à cette table **et** répliquée en policy RLS — jamais l'un sans l'autre.
 
+**Couche granulaire additive (Phase 1.1, Enterprise Foundation V2)** — les
+rôles ci-dessus restent la source de vérité (`users.role`, immuable côté
+client). Un Owner peut en plus créer des `permission_groups` par salon et y
+assigner des `manager`/`staff` pour leur donner des droits précis
+(`check_permission(user_id, salon_id, feature, action, resource)`, cache
+15 min SQL + Hive). Owner = accès total inconditionnel, jamais restreint
+par cette couche. Voir `docs/PHASE_1_1_SUMMARY.md`.
+
 ---
 
 ## SECTION 11 — TESTING & CI
@@ -394,6 +406,7 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Leapa API non live (compte en attente) — paiements mobile money non fonctionnels en prod.
 - `KynzaLoyaltyCardSkeleton` (Phase A) non branché sur `loyalty_card_widget.dart`/`client_loyalty_screen.dart` — le skeleton générique en place (`height: 220`) correspond à la hauteur réelle de la carte ; le variant nommé est plus court et introduirait un saut de layout. Vérifier la hauteur réelle avant de basculer.
 - Recherche avancée (`advanced_search_screen.dart`) : résultats toujours sur skeleton générique — aucun des 7 variants nommés (Phase A) ne correspond à la disposition avatar+titre+sous-titre+trailing.
+- RBAC (Phase 1.1) : pas d'écran dédié pour les overrides par utilisateur (`user_permission_overrides`) — la table et `check_permission()` les gèrent, seule l'assignation à un groupe a une UI. Pas d'écran "audit des permissions" (qui a accès à quoi, vue transverse). L'entrée "Permissions & Équipe" vit dans l'onglet Profil de l'Owner faute d'écran Settings dédié — à déplacer quand la Phase 1.4 (Centre de Configuration) en créera un.
 
 ---
 
