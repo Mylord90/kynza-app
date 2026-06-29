@@ -4,6 +4,7 @@
 // row the Owner created (staff_invite_screen.dart), which is the only way
 // a staff_profiles row ever gets a user_id (no self-serve staff signup).
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 Deno.serve(async (req) => {
@@ -12,6 +13,11 @@ Deno.serve(async (req) => {
 
   try {
     const caller = await getAuthenticatedUser(req);
+    const supabase = createServiceRoleClient();
+    if (!(await checkRateLimit(supabase, `accept-invitation:${caller.id}`, 100, 60))) {
+      return jsonResponse({ error: "rate_limit_exceeded" }, 429);
+    }
+
     const body = await req.json();
     const invitationToken = body.invitation_token ?? body.invitationToken;
 
@@ -28,8 +34,6 @@ Deno.serve(async (req) => {
         400,
       );
     }
-
-    const supabase = createServiceRoleClient();
 
     const { data: staffProfile, error: lookupError } = await supabase
       .from("staff_profiles")

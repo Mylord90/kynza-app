@@ -45,7 +45,8 @@ final confidentialModeProvider =
       ConfidentialModeNotifier.new,
     );
 
-/// App locale code. Defaults to French (fr_BI market). Persisted in Hive.
+/// App locale code ('fr' or 'en'). Defaults to French (fr_BI market).
+/// Persisted in Hive.
 class LanguageNotifier extends Notifier<String> {
   @override
   String build() {
@@ -54,6 +55,8 @@ class LanguageNotifier extends Notifier<String> {
     );
     return ref.watch(sessionServiceProvider).getLanguage();
   }
+
+  void setLanguage(String code) => state = code;
 }
 
 final languageProvider = NotifierProvider<LanguageNotifier, String>(

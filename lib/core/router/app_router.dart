@@ -26,7 +26,12 @@ import '../../features/marketing/presentation/screens/promotion_center_screen.da
 import '../../features/marketing/presentation/screens/social_share_center_screen.dart';
 import '../../features/home_client/presentation/screens/client_bookings_screen.dart';
 import '../../features/home_client/presentation/screens/client_profile_screen.dart';
+import '../../features/dashboard/presentation/screens/advanced_dashboard_screen.dart';
+import '../../features/dashboard/presentation/screens/audit_log_screen.dart';
 import '../../features/loyalty/presentation/screens/client_loyalty_screen.dart';
+import '../../features/loyalty/presentation/screens/loyalty_qr_screen.dart';
+import '../../features/loyalty/presentation/screens/loyalty_scan_screen.dart';
+import '../../features/referral/presentation/screens/referral_claim_screen.dart';
 import '../../features/reviews/presentation/screens/leave_review_screen.dart';
 import '../../features/reviews/presentation/screens/owner_reviews_screen.dart';
 import '../../features/staff/application/providers/staff_providers.dart';
@@ -41,8 +46,16 @@ import '../../shared/widgets/kynza_widgets.dart';
 import '../../features/salon/presentation/screens/salon_creation_wizard_screen.dart';
 import '../../features/services/presentation/screens/services_list_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
+import '../../features/billing/presentation/screens/billing_screen.dart';
+import '../../features/billing/presentation/screens/invoice_history_screen.dart';
+import '../../features/billing/presentation/screens/subscription_plans_screen.dart';
+import '../../features/billing/presentation/screens/upgrade_success_screen.dart';
+import '../../features/search/presentation/screens/advanced_search_screen.dart';
 import '../../features/staff/presentation/screens/accept_invitation_screen.dart';
+import '../../features/staff/presentation/screens/my_performance_screen.dart';
+import '../../features/staff/presentation/screens/staff_detail_screen.dart';
 import '../../features/staff/presentation/screens/staff_list_screen.dart';
+import '../../features/team/presentation/screens/commission_screen.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_durations.dart';
 import '../constants/app_spacing.dart';
@@ -52,6 +65,7 @@ import '../providers/auth_providers.dart';
 import '../utils/auth_redirect.dart';
 import '../widgets/kynza_full_page_lock.dart';
 import 'auth_callback_screen.dart';
+import 'deep_link_handler.dart';
 import 'route_names.dart';
 
 /// Exposed so non-widget code (e.g. FCM foreground/tap handlers) can reach
@@ -63,22 +77,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refreshNotifier.dispose);
 
   String? redirect(BuildContext context, GoRouterState state) {
-    // The com.kynza.app://accept-invitation deep link parses with
-    // 'accept-invitation' as the URI *host* (custom schemes have no
-    // path segment before a query string), not as a go_router path —
-    // rewrite it to the real route before any path-based matching below.
-    if (state.uri.host == 'accept-invitation' &&
-        state.matchedLocation != RouteNames.acceptInvitation) {
-      final token = state.uri.queryParameters['token'];
-      return token != null
-          ? '${RouteNames.acceptInvitation}?token=$token'
-          : RouteNames.acceptInvitation;
+    // Incoming com.kynza.app:// deep links always carry a URI host
+    // (in-app context.go/push navigation never does) — rewrite them to
+    // the real route before any path-based matching below.
+    if (state.uri.host.isNotEmpty) {
+      final rewritten = DeepLinkHandler.parseRoute(state.uri);
+      if (rewritten != null) return rewritten;
     }
 
     final path = state.matchedLocation;
     final isAuthRoute = path.startsWith('/auth');
     final isSplash = path == RouteNames.splash;
-    final isAcceptInvitation = path == RouteNames.acceptInvitation;
+    final isAcceptInvitation =
+        path == RouteNames.acceptInvitation ||
+        path == RouteNames.acceptReferral;
     final isGuestRoute =
         path == RouteNames.login ||
         path == RouteNames.register ||
@@ -359,6 +371,121 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => const _RoleGuard.anyOf(
           roles: {UserRole.owner, UserRole.manager},
           child: _OwnerReviewsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.acceptReferral,
+        (context, state) =>
+            ReferralClaimScreen(token: state.uri.queryParameters['token']),
+      ),
+      _fadeRoute(
+        RouteNames.clientLoyaltyQr,
+        (context, state) => _RoleGuard(
+          role: UserRole.client,
+          child: LoyaltyQrScreen(cardId: state.pathParameters['cardId']!),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerLoyaltyScan,
+        (context, state) => const _RoleGuard.anyOf(
+          roles: {UserRole.owner, UserRole.manager, UserRole.staff},
+          child: LoyaltyScanScreen(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAnalytics,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerAnalyticsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAnalyticsClients,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerAnalyticsLoader(initialIndex: 1),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAnalyticsTeam,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerAnalyticsLoader(initialIndex: 2),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAnalyticsForecast,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerAnalyticsLoader(initialIndex: 3),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAuditLogs,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerAuditLogLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerTeam,
+        (context, state) =>
+            const _RoleGuard(role: UserRole.owner, child: StaffListScreen()),
+      ),
+      _fadeRoute(
+        RouteNames.ownerTeamDetail,
+        (context, state) => _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerTeamDetailLoader(
+            staffId: state.pathParameters['staffId']!,
+          ),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerTeamCommissions,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerTeamCommissionsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.staffPerformance,
+        (context, state) => const _RoleGuard(
+          role: UserRole.staff,
+          child: _StaffPerformanceLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerSubscription,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: SubscriptionPlansScreen(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerBilling,
+        (context, state) =>
+            const _RoleGuard(role: UserRole.owner, child: BillingScreen()),
+      ),
+      _fadeRoute(
+        RouteNames.ownerBillingInvoices,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: InvoiceHistoryScreen(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerBillingSuccess,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: UpgradeSuccessScreen(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.search,
+        (context, state) => const _RoleGuard(
+          role: UserRole.client,
+          child: AdvancedSearchScreen(),
         ),
       ),
     ],
@@ -740,5 +867,124 @@ class _OwnerReviewsLoader extends ConsumerWidget {
       );
     }
     return OwnerReviewsScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerAnalyticsLoader extends ConsumerWidget {
+  const _OwnerAnalyticsLoader({this.initialIndex = 0});
+
+  final int initialIndex;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return AdvancedDashboardScreen(
+      salonId: salon.id,
+      initialIndex: initialIndex,
+    );
+  }
+}
+
+class _OwnerAuditLogLoader extends ConsumerWidget {
+  const _OwnerAuditLogLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return AuditLogScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerTeamDetailLoader extends ConsumerWidget {
+  const _OwnerTeamDetailLoader({required this.staffId});
+
+  final String staffId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    final staff = ref.watch(salonStaffProvider(salon.id)).valueOrNull;
+    final member = staff?.where((s) => s.id == staffId).firstOrNull;
+    if (member == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: TextButton(
+            onPressed: () => context.go(RouteNames.ownerTeam),
+            child: const Text('Membre introuvable — retour à l\'équipe'),
+          ),
+        ),
+      );
+    }
+    return StaffDetailScreen(staff: member);
+  }
+}
+
+class _OwnerTeamCommissionsLoader extends ConsumerWidget {
+  const _OwnerTeamCommissionsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return CommissionScreen(salonId: salon.id);
+  }
+}
+
+class _StaffPerformanceLoader extends ConsumerWidget {
+  const _StaffPerformanceLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final staffAsync = ref.watch(myStaffProfileProvider);
+    return staffAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      ),
+      error: (_, __) => Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: TextButton(
+            onPressed: () => context.go(RouteNames.homeStaff),
+            child: const Text('Profil introuvable — retour à l\'accueil'),
+          ),
+        ),
+      ),
+      data: (staff) => staff == null
+          ? Scaffold(
+              backgroundColor: AppColors.background,
+              body: Center(
+                child: TextButton(
+                  onPressed: () => context.go(RouteNames.homeStaff),
+                  child: const Text('Profil introuvable — retour à l\'accueil'),
+                ),
+              ),
+            )
+          : MyPerformanceScreen(staffId: staff.id!),
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/models/user_profile.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/auth_errors.dart';
 import '../../data/datasources/auth_supabase_datasource.dart';
@@ -45,6 +46,7 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
     if (!profile.profileCompleted) {
       return AuthUiState.profileIncomplete(profile.id);
     }
+    CrashReportingService.setUser(profile.id, profile.role.name);
     return AuthUiState.authenticated(profile);
   }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/service_categories.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../../services/presentation/widgets/service_category_chip.dart';
@@ -37,7 +39,16 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Découvrir')),
+      appBar: AppBar(
+        title: const Text('Découvrir'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: 'Recherche avancée',
+            onPressed: () => context.push(RouteNames.search),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           const KynzaOfflineBanner(),

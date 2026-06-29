@@ -62,4 +62,38 @@ abstract class RouteNames {
 
   static String clientReviewPath(String bookingId) =>
       '/client/review/$bookingId';
+
+  static String clientPaymentPath(String id) => '/client/payment/$id';
+
+  // Phase 3B — Deep linking + Loyalty QR + Notifications
+  static const acceptReferral = '/accept-referral';
+  static const clientLoyaltyQr = '/client/loyalty/qr/:cardId';
+  static const ownerLoyaltyScan = '/owner/loyalty/scan';
+
+  static String clientLoyaltyQrPath(String cardId) =>
+      '/client/loyalty/qr/$cardId';
+
+  // Phase 4 — Owner Dashboard Enterprise
+  static const ownerAnalytics = '/owner/analytics';
+  static const ownerAnalyticsClients = '/owner/analytics/clients';
+  static const ownerAnalyticsTeam = '/owner/analytics/team';
+  static const ownerAnalyticsForecast = '/owner/analytics/forecast';
+  static const ownerAuditLogs = '/owner/audit-logs';
+
+  // Phase 5 — Team Management + Commissions
+  static const ownerTeam = '/owner/team';
+  static const ownerTeamDetail = '/owner/team/:staffId';
+  static const ownerTeamCommissions = '/owner/team/commissions';
+  static const staffPerformance = '/staff/performance';
+
+  static String ownerTeamDetailPath(String staffId) => '/owner/team/$staffId';
+
+  // Phase 6 — Subscriptions + Billing
+  static const ownerSubscription = '/owner/subscription';
+  static const ownerBilling = '/owner/billing';
+  static const ownerBillingInvoices = '/owner/billing/invoices';
+  static const ownerBillingSuccess = '/owner/billing/success';
+
+  // Advanced — Search
+  static const search = '/search';
 }

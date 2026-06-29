@@ -1,6 +1,7 @@
 // supabase/functions/mark-no-show/index.ts
 // Staff taps [Absent] on a booking tile, H+15min after start_time.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 Deno.serve(async (req) => {
@@ -9,10 +10,13 @@ Deno.serve(async (req) => {
 
   try {
     const user = await getAuthenticatedUser(req);
+    const supabase = createServiceRoleClient();
+    if (!(await checkRateLimit(supabase, `mark-no-show:${user.id}`, 100, 60))) {
+      return jsonResponse({ error: "rate_limit_exceeded" }, 429);
+    }
+
     const { bookingId } = await req.json();
     if (!bookingId) return jsonResponse({ error: "missing_fields" }, 400);
-
-    const supabase = createServiceRoleClient();
 
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")

@@ -5,6 +5,7 @@
 // already serializes correctly against that constraint in Postgres; this
 // avoids holding a row lock across a slower multi-step transaction.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 const BUJUMBURA_OFFSET_MS = 2 * 3600_000; // Africa/Bujumbura, UTC+2, no DST
@@ -81,14 +82,17 @@ Deno.serve(async (req) => {
 
   try {
     const user = await getAuthenticatedUser(req);
+    const supabase = createServiceRoleClient();
+    if (!(await checkRateLimit(supabase, `create-booking:${user.id}`, 100, 60))) {
+      return jsonResponse({ error: "rate_limit_exceeded" }, 429);
+    }
+
     const body = await req.json();
     const { salonId, serviceId, practitionerId, startTime, notes } = body;
 
     if (!salonId || !serviceId || !practitionerId || !startTime) {
       return jsonResponse({ error: "missing_fields" }, 400);
     }
-
-    const supabase = createServiceRoleClient();
 
     const { data: salon } = await supabase
       .from("salons")

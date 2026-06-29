@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/models/notification_log_model.dart';
 import '../../../../core/models/notification_preferences_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../data/repositories/notification_repository_impl.dart';
@@ -8,11 +9,14 @@ final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => NotificationRepositoryImpl(),
 );
 
-final notificationsProvider = StreamProvider.autoDispose((ref) {
-  final profile = ref.watch(currentUserProfileProvider).valueOrNull;
-  if (profile == null) return const Stream.empty();
-  return ref.watch(notificationRepositoryProvider).getNotifications(profile.id);
-});
+final notificationsProvider = StreamProvider.autoDispose
+    .family<List<NotificationLogModel>, int>((ref, limit) {
+      final profile = ref.watch(currentUserProfileProvider).valueOrNull;
+      if (profile == null) return const Stream.empty();
+      return ref
+          .watch(notificationRepositoryProvider)
+          .getNotifications(profile.id, limit: limit);
+    });
 
 final unreadCountProvider = StreamProvider.autoDispose((ref) {
   final profile = ref.watch(currentUserProfileProvider).valueOrNull;
@@ -55,7 +59,9 @@ class NotificationNotifier extends AsyncNotifier<void> {
 
   Future<void> delete(String notifId) async {
     try {
-      await ref.read(notificationRepositoryProvider).deleteNotification(notifId);
+      await ref
+          .read(notificationRepositoryProvider)
+          .deleteNotification(notifId);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

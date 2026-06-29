@@ -1,6 +1,7 @@
 // supabase/functions/create-payment/index.ts
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { buildIdempotencyKey } from "../_shared/hmac.ts";
+import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 const LEAPA_API_KEY = Deno.env.get("LEAPA_API_KEY");
@@ -12,10 +13,13 @@ Deno.serve(async (req) => {
 
   try {
     const user = await getAuthenticatedUser(req);
+    const supabase = createServiceRoleClient();
+    if (!(await checkRateLimit(supabase, `create-payment:${user.id}`, 100, 60))) {
+      return jsonResponse({ error: "rate_limit_exceeded" }, 429);
+    }
+
     const { bookingId, method, phone } = await req.json();
     if (!bookingId || !method) return jsonResponse({ error: "missing_fields" }, 400);
-
-    const supabase = createServiceRoleClient();
 
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")

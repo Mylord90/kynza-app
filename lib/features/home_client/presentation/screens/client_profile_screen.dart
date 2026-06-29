@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/models/user_profile.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/errors/app_exception.dart';
@@ -18,6 +19,7 @@ import '../../../loyalty/application/providers/loyalty_providers.dart';
 import '../../../loyalty/presentation/widgets/loyalty_card_widget.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
 import '../../../salon/presentation/widgets/media_upload_button.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../application/providers/client_profile_providers.dart';
 
 final _myReviewCountProvider = FutureProvider.autoDispose<int>((ref) async {
@@ -257,6 +259,35 @@ class ClientProfileScreen extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
 
+        // SECTION 6b — Langue
+        Builder(
+          builder: (context) {
+            final language = ref.watch(languageProvider);
+            return KynzaCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.language, color: AppColors.primary),
+                  const SizedBox(width: AppSpacing.md),
+                  const Expanded(
+                    child: Text('Langue', style: AppTypography.h3),
+                  ),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'fr', label: Text('FR')),
+                      ButtonSegment(value: 'en', label: Text('EN')),
+                    ],
+                    selected: {language},
+                    onSelectionChanged: (selected) => ref
+                        .read(languageProvider.notifier)
+                        .setLanguage(selected.first),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.lg),
+
         // SECTION 7 — Partager KYNZA
         Consumer(
           builder: (context, ref, _) {
@@ -285,7 +316,7 @@ class ClientProfileScreen extends ConsumerWidget {
 
         // SECTION 8 — Déconnexion
         KynzaButton(
-          label: 'Se déconnecter',
+          label: AppLocalizations.of(context)!.authLogout,
           variant: KynzaButtonVariant.destructive,
           onPressed: () async {
             final confirmed = await showKynzaConfirmDialog(
