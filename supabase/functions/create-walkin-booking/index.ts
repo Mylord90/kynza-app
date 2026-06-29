@@ -5,6 +5,7 @@
 // row (service_role only — never reachable from the authenticated client
 // directly, since creating an auth identity is a privileged operation).
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 Deno.serve(async (req) => {
@@ -13,6 +14,11 @@ Deno.serve(async (req) => {
 
   try {
     const caller = await getAuthenticatedUser(req);
+    const supabase = createServiceRoleClient();
+    if (!(await checkRateLimit(supabase, `create-walkin-booking:${caller.id}`, 100, 60))) {
+      return jsonResponse({ error: "rate_limit_exceeded" }, 429);
+    }
+
     const body = await req.json();
     const { salonId, serviceId, practitionerId, startTime, guestFirstName, guestPhone, notes } =
       body;
@@ -26,7 +32,23 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "forbidden" }, 403);
     }
 
-    const supabase = createServiceRoleClient();
+    // Same server-side check as create-booking — the client-side check in
+    // _CalendarTab's FAB (FreemiumService.canCreateBooking) is UX only and
+    // must not be the only thing standing between a free plan and an
+    // unlimited walk-in booking.
+    const { data: salon } = await supabase
+      .from("salons")
+      .select("plan, monthly_bookings_count")
+      .eq("id", salonId)
+      .single();
+
+    if (salon?.plan === "free" && (salon.monthly_bookings_count ?? 0) >= 20) {
+      return jsonResponse(
+        { error: "freemium_limit_reached", message: "Limite atteinte. Vos clients attendent." },
+        403,
+      );
+    }
+
     const phone = guestPhone.trim();
 
     let clientId: string;

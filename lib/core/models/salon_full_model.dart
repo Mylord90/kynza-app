@@ -13,6 +13,7 @@ class SalonFullModel with _$SalonFullModel {
     String? ownerId,
     @Default('free') String plan,
     @Default('active') String planStatus,
+    DateTime? planStartedAt,
     @Default('BI') String countryCode,
     @Default('BIF') String currency,
     @Default(true) bool isOnline,

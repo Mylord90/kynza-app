@@ -15,4 +15,12 @@ abstract class KynzaConstants {
   static const noShowPenalty = 1;
   static const noShowThreshold = 3;
   static const gracePeriodDays = 3;
+
+  // TODO(billing): placeholder — replace with KYNZA's real bank account
+  // details before any real upgrade request is sent to a client.
+  static const bankTransferInstructions =
+      'Banque : [À CONFIGURER]\n'
+      'Titulaire du compte : KYNZA SARL\n'
+      'Numéro de compte : [À CONFIGURER]\n'
+      "Merci d'inclure la référence ci-dessus dans le motif du virement.";
 }
