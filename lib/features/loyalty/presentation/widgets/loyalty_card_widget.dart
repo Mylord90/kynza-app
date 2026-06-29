@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/models/loyalty/loyalty_card_model.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/loyalty_providers.dart';
@@ -257,6 +259,19 @@ class _LoyaltyCardDetail extends ConsumerWidget {
                 );
               },
             ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          KynzaButton(
+            label: 'Afficher mon QR',
+            icon: const Icon(
+              Icons.qr_code,
+              size: 18,
+              color: AppColors.background,
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.push(RouteNames.clientLoyaltyQrPath(card.id!));
+            },
           ),
         ],
       ),

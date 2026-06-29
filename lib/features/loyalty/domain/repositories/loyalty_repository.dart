@@ -1,5 +1,6 @@
 import '../../../../core/models/loyalty/loyalty_card_model.dart';
 import '../../../../core/models/loyalty/loyalty_program_model.dart';
+import '../../../../core/models/loyalty/loyalty_qr_token_model.dart';
 import '../../../../core/models/loyalty/loyalty_stamp_log_model.dart';
 
 abstract class LoyaltyRepository {
@@ -12,4 +13,5 @@ abstract class LoyaltyRepository {
   Stream<List<LoyaltyCardModel>> getClientCards(String clientId);
   Future<List<LoyaltyCardModel>> getSalonCards(String salonId);
   Future<List<LoyaltyStampLogModel>> getStampLogs(String cardId);
+  Future<LoyaltyQrTokenModel> createQrToken(LoyaltyCardModel card);
 }

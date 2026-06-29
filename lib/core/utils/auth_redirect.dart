@@ -25,10 +25,15 @@ Future<String> resolvePostAuthRoute(
   SessionService sessionService,
   UserProfile profile,
 ) async {
-  final pendingToken = sessionService.getPendingInvitationToken();
-  if (pendingToken != null) {
+  final pendingInvitation = sessionService.getPendingInvitationToken();
+  if (pendingInvitation != null) {
     await sessionService.clearPendingInvitationToken();
-    return '${RouteNames.acceptInvitation}?token=$pendingToken';
+    return '${RouteNames.acceptInvitation}?token=$pendingInvitation';
+  }
+  final pendingReferral = sessionService.getPendingReferralToken();
+  if (pendingReferral != null) {
+    await sessionService.clearPendingReferralToken();
+    return '${RouteNames.acceptReferral}?token=$pendingReferral';
   }
   return redirectAfterAuth(profile);
 }

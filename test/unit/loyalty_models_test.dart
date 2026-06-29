@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kynza/core/enums/app_enums.dart';
 import 'package:kynza/core/models/loyalty/loyalty_card_model.dart';
 import 'package:kynza/core/models/loyalty/loyalty_program_model.dart';
+import 'package:kynza/core/models/loyalty/loyalty_qr_token_model.dart';
 import 'package:kynza/core/models/loyalty/loyalty_stamp_log_model.dart';
 
 void main() {
@@ -111,6 +112,26 @@ void main() {
         stampsDelta: 1,
       );
       expect(log.action, LoyaltyAction.earned);
+    });
+  });
+
+  group('LoyaltyQrTokenModel.fromSupabase', () {
+    test('parses snake_case columns into the model fields', () {
+      final token = LoyaltyQrTokenModel.fromSupabase({
+        'id': 'tok1',
+        'card_id': 'card1',
+        'salon_id': 's1',
+        'client_id': 'c1',
+        'expires_at': '2026-06-27T10:10:00.000Z',
+        'used_at': null,
+        'created_at': '2026-06-27T10:00:00.000Z',
+      });
+      expect(token.id, 'tok1');
+      expect(token.cardId, 'card1');
+      expect(token.salonId, 's1');
+      expect(token.clientId, 'c1');
+      expect(token.usedAt, isNull);
+      expect(token.expiresAt, DateTime.parse('2026-06-27T10:10:00.000Z'));
     });
   });
 }

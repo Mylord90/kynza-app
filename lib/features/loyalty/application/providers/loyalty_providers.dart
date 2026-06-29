@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/loyalty/loyalty_card_model.dart';
 import '../../../../core/models/loyalty/loyalty_program_model.dart';
+import '../../../../core/models/loyalty/loyalty_qr_token_model.dart';
 import '../../../../core/models/loyalty/loyalty_stamp_log_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../data/repositories/loyalty_repository_impl.dart';
@@ -84,5 +85,9 @@ class LoyaltyNotifier extends AsyncNotifier<void> {
     } finally {
       ref.invalidate(salonLoyaltyCardsProvider(salonId));
     }
+  }
+
+  Future<LoyaltyQrTokenModel> createQrToken(LoyaltyCardModel card) {
+    return ref.read(loyaltyRepositoryProvider).createQrToken(card);
   }
 }

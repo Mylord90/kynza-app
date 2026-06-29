@@ -1,6 +1,7 @@
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/loyalty/loyalty_card_model.dart';
 import '../../../../core/models/loyalty/loyalty_program_model.dart';
+import '../../../../core/models/loyalty/loyalty_qr_token_model.dart';
 import '../../../../core/models/loyalty/loyalty_stamp_log_model.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/loyalty_repository.dart';
@@ -9,6 +10,7 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   static const _programsTable = 'loyalty_programs';
   static const _cardsTable = 'loyalty_cards';
   static const _logsTable = 'loyalty_stamp_logs';
+  static const _qrTokensTable = 'loyalty_qr_tokens';
 
   @override
   Future<LoyaltyProgramModel?> getLoyaltyProgram(String salonId) async {
@@ -165,5 +167,22 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
       _logsTable,
     ).select().eq('card_id', cardId).order('created_at', ascending: false);
     return rows.map(LoyaltyStampLogModel.fromSupabase).toList();
+  }
+
+  @override
+  Future<LoyaltyQrTokenModel> createQrToken(LoyaltyCardModel card) async {
+    try {
+      final row = await SupabaseService.from(_qrTokensTable)
+          .insert({
+            'card_id': card.id,
+            'salon_id': card.salonId,
+            'client_id': card.clientId,
+          })
+          .select()
+          .single();
+      return LoyaltyQrTokenModel.fromSupabase(row);
+    } catch (_) {
+      throw const AppException('Impossible de générer le QR code.');
+    }
   }
 }

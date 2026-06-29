@@ -55,7 +55,9 @@ class ReviewNotifier extends AsyncNotifier<void> {
   ) async {
     state = const AsyncLoading();
     try {
-      await ref.read(reviewRepositoryProvider).updateReview(id, rating, comment);
+      await ref
+          .read(reviewRepositoryProvider)
+          .updateReview(id, rating, comment);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

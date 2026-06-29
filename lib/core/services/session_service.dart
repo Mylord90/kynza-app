@@ -8,7 +8,9 @@ abstract class _HiveKeys {
   static const language = 'language';
   static const confidentialMode = 'confidential_mode';
   static const pendingInvitationToken = 'pending_invitation_token';
+  static const pendingReferralToken = 'pending_referral_token';
   static const journeyDismissedSalonId = 'journey_dismissed_salon_id';
+  static const recentSearches = 'recent_searches';
 }
 
 /// Hive-based persistence for lightweight app state.
@@ -61,6 +63,17 @@ class SessionService {
   Future<void> clearPendingInvitationToken() =>
       _box.delete(_HiveKeys.pendingInvitationToken);
 
+  /// Same as [savePendingInvitationToken], for a referral link tapped by
+  /// a brand-new/logged-out user — see ReferralClaimScreen.
+  Future<void> savePendingReferralToken(String token) =>
+      _box.put(_HiveKeys.pendingReferralToken, token);
+
+  String? getPendingReferralToken() =>
+      _box.get(_HiveKeys.pendingReferralToken) as String?;
+
+  Future<void> clearPendingReferralToken() =>
+      _box.delete(_HiveKeys.pendingReferralToken);
+
   /// Once dismissed at 100%, the owner journey card never resurfaces for
   /// that salon — only one salon is ever dismissed at a time in V1.
   Future<void> dismissJourneyCard(String salonId) =>
@@ -68,4 +81,23 @@ class SessionService {
 
   bool isJourneyCardDismissed(String salonId) =>
       _box.get(_HiveKeys.journeyDismissedSalonId) == salonId;
+
+  static const _maxRecentSearches = 10;
+
+  List<String> getRecentSearches() =>
+      (_box.get(_HiveKeys.recentSearches) as List?)?.cast<String>() ?? const [];
+
+  Future<void> addRecentSearch(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+    final current = getRecentSearches().toList()
+      ..remove(trimmed)
+      ..insert(0, trimmed);
+    await _box.put(
+      _HiveKeys.recentSearches,
+      current.take(_maxRecentSearches).toList(),
+    );
+  }
+
+  Future<void> clearRecentSearches() => _box.delete(_HiveKeys.recentSearches);
 }
