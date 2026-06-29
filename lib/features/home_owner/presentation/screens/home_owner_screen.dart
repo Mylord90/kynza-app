@@ -15,19 +15,9 @@ import '../../../booking/presentation/widgets/walkin_booking_sheet.dart';
 import '../../../marketing/presentation/screens/marketing_dashboard_screen.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../../salon/presentation/screens/salon_creation_wizard_screen.dart';
-import '../../../services/application/providers/service_providers.dart';
-import '../../../services/presentation/screens/services_list_screen.dart';
-import '../../../staff/application/providers/staff_providers.dart';
-import '../../../staff/presentation/screens/staff_invite_screen.dart';
 import '../../../notifications/presentation/widgets/unread_count_badge.dart';
-import '../../../journey/presentation/widgets/journey_progress_card.dart';
-import '../../../dashboard/application/providers/dashboard_providers.dart';
-import '../../../dashboard/presentation/widgets/kynza_kpi_card.dart';
-import '../../../dashboard/presentation/widgets/kynza_period_selector.dart';
-import '../../../dashboard/presentation/widgets/kynza_simple_bar_chart.dart';
-import '../../../dashboard/presentation/widgets/kynza_top_services_list.dart';
-import '../../../dashboard/presentation/widgets/kynza_top_staff_row.dart';
-import '../../../../core/enums/user_role.dart';
+import '../../../dashboard/presentation/screens/advanced_dashboard_screen.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/booking_detail_sheet.dart';
 import '../widgets/booking_tile.dart';
 
@@ -66,6 +56,11 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
               icon: const Icon(Icons.share_outlined),
               onPressed: () => context.go(RouteNames.ownerShare),
             ),
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner_outlined),
+            tooltip: 'Scanner fidélité',
+            onPressed: () => context.push(RouteNames.ownerLoyaltyScan),
+          ),
           const UnreadCountBadge(),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.lg),
@@ -82,7 +77,7 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
           ? const _NoSalonEmptyState()
           : switch (_tabIndex) {
               0 => _CalendarTab(salonId: salon.id),
-              1 => _DashboardTab(salonId: salon.id),
+              1 => AdvancedDashboardTabs(salonId: salon.id),
               2 => _ClientsTab(salonId: salon.id),
               3 => MarketingDashboardBody(salonId: salon.id),
               _ => const _ProfileTab(),
@@ -169,7 +164,10 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
         onPressed: () {
           if (salon == null) return;
           if (!FreemiumService.canCreateBooking(salon)) {
-            showFreemiumLimitModal(context, onUpgrade: () {});
+            showFreemiumLimitModal(
+              context,
+              onUpgrade: () => context.push(RouteNames.ownerSubscription),
+            );
             return;
           }
           showKynzaBottomSheet(
@@ -182,7 +180,10 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
       body: Column(
         children: [
           const KynzaOfflineBanner(),
-          if (salon != null) FreemiumBanner(onUpgrade: () {}),
+          if (salon != null)
+            FreemiumBanner(
+              onUpgrade: () => context.push(RouteNames.ownerSubscription),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Row(
@@ -251,246 +252,6 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
                 );
               },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DashboardTab extends ConsumerWidget {
-  const _DashboardTab({required this.salonId});
-
-  final String salonId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final period = ref.watch(selectedPeriodProvider);
-    final summaryAsync = ref.watch(dashboardSummaryProvider(salonId));
-    final servicesAsync = ref.watch(salonServicesProvider(salonId));
-    final topServicesAsync = ref.watch(topServicesProvider(salonId));
-    final topStaffAsync = ref.watch(topStaffProvider(salonId));
-    final staffAsync = ref.watch(salonStaffProvider(salonId));
-    final profile = ref.watch(currentUserProfileProvider).valueOrNull;
-    final isOwner = profile?.role == UserRole.owner;
-
-    return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(dashboardSummaryProvider(salonId)),
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          const KynzaOfflineBanner(),
-          const SizedBox(height: AppSpacing.sm),
-          JourneyProgressCard(salonId: salonId),
-          KynzaPeriodSelector(
-            selected: period,
-            onChanged: (r) =>
-                ref.read(selectedPeriodProvider.notifier).state = r,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          // SECTION 1 — KPI Grid 2x2
-          summaryAsync.when(
-            loading: () => GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: AppSpacing.sm,
-              mainAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 1.6,
-              children: const [
-                KynzaSkeleton(height: 90),
-                KynzaSkeleton(height: 90),
-                KynzaSkeleton(height: 90),
-                KynzaSkeleton(height: 90),
-              ],
-            ),
-            error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger le dashboard.',
-              onRetry: () => ref.invalidate(dashboardSummaryProvider(salonId)),
-            ),
-            data: (summary) => GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: AppSpacing.sm,
-              mainAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 1.6,
-              children: [
-                KynzaKpiCard(
-                  label: 'Revenu',
-                  amountBif: summary.revenueBif,
-                  trendPct: summary.revenueTrendPct,
-                  icon: Icons.payments_outlined,
-                ),
-                KynzaKpiCard(
-                  label: 'Réservations',
-                  value: '${summary.bookingsTotal}',
-                  trendPct: summary.bookingsTrendPct,
-                  icon: Icons.event_available_outlined,
-                ),
-                KynzaKpiCard(
-                  label: 'Taux remplissage',
-                  value: '${summary.occupancyRate.round()}%',
-                  icon: Icons.donut_large_outlined,
-                ),
-                KynzaKpiCard(
-                  label: 'Taux no-show',
-                  value: '${summary.noShowRate.round()}%',
-                  icon: Icons.event_busy_outlined,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          // SECTION 2 — Revenue chart
-          summaryAsync.when(
-            loading: () => const KynzaSkeleton(height: 180),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (summary) => KynzaSimpleBarChart(
-              title: 'Évolution du CA',
-              bars: [
-                for (final kpi in summary.dailySeries)
-                  BarData(label: '${kpi.day.day}', value: kpi.revenueBif),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          // SECTION 3 — Top services
-          topServicesAsync.when(
-            loading: () => const KynzaSkeleton(height: 92),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (services) => services.isEmpty
-                ? KynzaEmptyState(
-                    icon: Icons.spa_outlined,
-                    title: 'Aucun service',
-                    subtitle:
-                        'Ajoutez vos prestations pour suivre leur succès.',
-                    ctaLabel: 'Ajouter un service',
-                    onCta: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ServicesListScreen(),
-                      ),
-                    ),
-                  )
-                : KynzaTopServicesList(services: services),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          // SECTION 4 — Top staff (owner only)
-          if (isOwner)
-            topStaffAsync.when(
-              loading: () => const KynzaSkeleton(height: 96),
-              error: (_, __) => const SizedBox.shrink(),
-              data: (staff) => staff.isEmpty
-                  ? KynzaEmptyState(
-                      icon: Icons.people_outline,
-                      title: 'Aucun staff',
-                      subtitle:
-                          'Invitez votre équipe pour suivre leurs performances.',
-                      ctaLabel: 'Inviter votre équipe',
-                      onCta: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => StaffInviteScreen(salonId: salonId),
-                        ),
-                      ),
-                    )
-                  : KynzaTopStaffRow(staff: staff, isOwner: isOwner),
-            ),
-          const SizedBox(height: AppSpacing.xl),
-          // SECTION 5 — Quick actions
-          servicesAsync.maybeWhen(
-            data: (services) => staffAsync.maybeWhen(
-              data: (staff) => _QuickActionsRow(
-                salonId: salonId,
-                hasServices: services.isNotEmpty,
-                hasStaff: staff.isNotEmpty,
-              ),
-              orElse: () => const SizedBox.shrink(),
-            ),
-            orElse: () => const SizedBox.shrink(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionsRow extends StatelessWidget {
-  const _QuickActionsRow({
-    required this.salonId,
-    required this.hasServices,
-    required this.hasStaff,
-  });
-
-  final String salonId;
-  final bool hasServices;
-  final bool hasStaff;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.add_circle_outline,
-            label: 'Nouveau RDV',
-            onTap: () => showKynzaBottomSheet(
-              context,
-              builder: (_) => WalkInBookingSheet(salonId: salonId),
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.spa_outlined,
-            label: hasServices ? 'Services' : 'Ajouter service',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ServicesListScreen()),
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.person_add_outlined,
-            label: hasStaff ? 'Équipe' : 'Inviter staff',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => StaffInviteScreen(salonId: salonId),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return KynzaCard(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.primary),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            label,
-            style: AppTypography.bodySmall,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -648,9 +409,60 @@ class _ProfileTab extends ConsumerWidget {
             ],
           ),
         ),
+        const SizedBox(height: AppSpacing.md),
+        KynzaCard(
+          onTap: () => context.push(RouteNames.ownerAuditLogs),
+          child: const Row(
+            children: [
+              Icon(Icons.history_outlined, color: AppColors.primary),
+              SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text("Journal d'activité", style: AppTypography.h3),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        KynzaCard(
+          onTap: () => context.push(RouteNames.ownerBilling),
+          child: const Row(
+            children: [
+              Icon(Icons.workspace_premium_outlined, color: AppColors.primary),
+              SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  'Abonnement & Facturation',
+                  style: AppTypography.h3,
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        KynzaCard(
+          child: Row(
+            children: [
+              const Icon(Icons.language, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(child: Text('Langue', style: AppTypography.h3)),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'fr', label: Text('FR')),
+                  ButtonSegment(value: 'en', label: Text('EN')),
+                ],
+                selected: {ref.watch(languageProvider)},
+                onSelectionChanged: (selected) => ref
+                    .read(languageProvider.notifier)
+                    .setLanguage(selected.first),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         KynzaButton(
-          label: 'Se déconnecter',
+          label: AppLocalizations.of(context)!.authLogout,
           variant: KynzaButtonVariant.destructive,
           onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
         ),
