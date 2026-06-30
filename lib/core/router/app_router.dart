@@ -30,6 +30,7 @@ import '../../features/dashboard/presentation/screens/advanced_dashboard_screen.
 import '../../features/dashboard/presentation/screens/audit_log_screen.dart';
 import '../../features/permissions/presentation/screens/permission_group_detail_screen.dart';
 import '../../features/permissions/presentation/screens/permission_groups_screen.dart';
+import '../../features/settings/presentation/screens/about_screen.dart';
 import '../../features/settings/presentation/screens/settings_home_screen.dart';
 import '../../features/automation/presentation/screens/automation_list_screen.dart';
 import '../../features/data_platform/backup/presentation/screens/backup_screen.dart';
@@ -522,6 +523,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _fadeRoute(
         RouteNames.forceUpdate,
         (context, state) => const ForceUpdateScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.ownerAbout,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: AboutScreen(),
+        ),
       ),
       _fadeRoute(
         RouteNames.ownerTeam,

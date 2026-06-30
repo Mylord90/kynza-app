@@ -114,6 +114,12 @@ class SettingsHomeScreen extends StatelessWidget {
             label: 'Drapeaux de fonctionnalités',
             onTap: () => context.push(RouteNames.ownerFeatureFlags),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsTile(
+            icon: Icons.info_outline,
+            label: 'À propos de KYNZA',
+            onTap: () => context.push(RouteNames.ownerAbout),
+          ),
         ],
       ),
     );

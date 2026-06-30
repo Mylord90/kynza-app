@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_branding.dart';
 import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
@@ -53,22 +54,10 @@ class _KynzaLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: AppRadius.md_,
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'K',
-            style: TextStyle(
-              color: AppColors.background,
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
+        Image.asset(
+          AppBranding.logoFull,
+          height: 64,
+          fit: BoxFit.contain,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(

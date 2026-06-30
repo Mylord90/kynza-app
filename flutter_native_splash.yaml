@@ -1,0 +1,13 @@
+flutter_native_splash:
+  color: "#09090B"
+  image: assets/branding/splash/splash_logo_2x.png
+  color_dark: "#09090B"
+  image_dark: assets/branding/splash/splash_logo_2x.png
+  android_12:
+    image: assets/branding/kynza_logo_icon_only.png
+    icon_background_color: "#09090B"
+    image_dark: assets/branding/kynza_logo_icon_only.png
+    icon_background_color_dark: "#09090B"
+  android: true
+  ios: true
+  fullscreen: true

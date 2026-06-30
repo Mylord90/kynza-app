@@ -118,4 +118,7 @@ abstract class RouteNames {
   static const ownerFeatureFlags = '/owner/feature-flags';
   static const maintenance = '/maintenance';
   static const forceUpdate = '/force-update';
+
+  // Branding — À propos
+  static const ownerAbout = '/owner/about';
 }

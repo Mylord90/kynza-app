@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_branding.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -111,22 +112,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           children: [
             ScaleTransition(
               scale: _markScale,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'K',
-                  style: TextStyle(
-                    color: AppColors.background,
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+              child: Image.asset(
+                AppBranding.logoFull,
+                width: 120,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
