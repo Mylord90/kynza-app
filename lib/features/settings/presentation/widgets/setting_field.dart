@@ -1,50 +1,103 @@
+import '../../../../l10n/app_localizations.dart';
+
 enum SettingFieldType { boolean, integer, text }
 
 /// One row in a [SettingsCategoryScreen] — `key` matches a `salon_settings`
 /// column exactly (the table uses `field_rename: snake` JSON codegen, so
 /// `SalonSettingsModel.toJson()[key]` looks it up directly with no
 /// per-field mapping needed).
+///
+/// [labelKey] is an l10n key resolved at render time via [resolveLabel].
 class SettingField {
   const SettingField({
     required this.key,
-    required this.label,
+    required this.labelKey,
     required this.type,
   });
 
   final String key;
-  final String label;
+  final String labelKey;
   final SettingFieldType type;
+
+  String resolveLabel(AppLocalizations l10n) =>
+      _settingFieldLabels(l10n)[labelKey] ?? labelKey;
 }
+
+Map<String, String> _settingFieldLabels(AppLocalizations l10n) => {
+  'settingFieldBookingAdvanceDays': l10n.settingFieldBookingAdvanceDays,
+  'settingFieldBookingSlotDuration': l10n.settingFieldBookingSlotDuration,
+  'settingFieldBookingCancellationHours':
+      l10n.settingFieldBookingCancellationHours,
+  'settingFieldBookingRequiresConfirmation':
+      l10n.settingFieldBookingRequiresConfirmation,
+  'settingFieldBookingAllowWalkin': l10n.settingFieldBookingAllowWalkin,
+  'settingFieldBookingMaxPerClientPerDay':
+      l10n.settingFieldBookingMaxPerClientPerDay,
+  'settingFieldNotifSmsEnabled': l10n.settingFieldNotifSmsEnabled,
+  'settingFieldNotifWhatsappEnabled': l10n.settingFieldNotifWhatsappEnabled,
+  'settingFieldNotifPushEnabled': l10n.settingFieldNotifPushEnabled,
+  'settingFieldNotifReminderHoursBefore':
+      l10n.settingFieldNotifReminderHoursBefore,
+  'settingFieldNotifReminderHoursBefore2':
+      l10n.settingFieldNotifReminderHoursBefore2,
+  'settingFieldMarketingAutoReviewRequest':
+      l10n.settingFieldMarketingAutoReviewRequest,
+  'settingFieldMarketingReviewRequestHoursAfter':
+      l10n.settingFieldMarketingReviewRequestHoursAfter,
+  'settingFieldMarketingLoyaltyAutoStamp':
+      l10n.settingFieldMarketingLoyaltyAutoStamp,
+  'settingFieldMarketingReferralBonusBif':
+      l10n.settingFieldMarketingReferralBonusBif,
+  'settingFieldStaffShowEarnings': l10n.settingFieldStaffShowEarnings,
+  'settingFieldStaffCommissionAutoCalculate':
+      l10n.settingFieldStaffCommissionAutoCalculate,
+  'settingFieldStaffRequireCheckin': l10n.settingFieldStaffRequireCheckin,
+  'settingFieldLoyaltyStampsPerCard': l10n.settingFieldLoyaltyStampsPerCard,
+  'settingFieldLoyaltyRewardDescription':
+      l10n.settingFieldLoyaltyRewardDescription,
+  'settingFieldLoyaltyExpiryDays': l10n.settingFieldLoyaltyExpiryDays,
+  'settingFieldReviewsAutoPublish': l10n.settingFieldReviewsAutoPublish,
+  'settingFieldReviewsModerationEnabled':
+      l10n.settingFieldReviewsModerationEnabled,
+  'settingFieldReviewsMinRatingAlert': l10n.settingFieldReviewsMinRatingAlert,
+  'settingFieldPaymentGracePeriodMinutes':
+      l10n.settingFieldPaymentGracePeriodMinutes,
+  'settingFieldPaymentAutoInvoice': l10n.settingFieldPaymentAutoInvoice,
+  'settingFieldTimezone': l10n.settingFieldTimezone,
+  'settingFieldAdvancedDoubleBooking': l10n.settingFieldAdvancedDoubleBooking,
+  'settingFieldAdvancedOverbookingLimit':
+      l10n.settingFieldAdvancedOverbookingLimit,
+};
 
 const bookingSettingFields = [
   SettingField(
     key: 'booking_advance_days',
-    label: 'Délai de réservation max (jours)',
+    labelKey: 'settingFieldBookingAdvanceDays',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'booking_slot_duration_minutes',
-    label: 'Durée des créneaux (minutes)',
+    labelKey: 'settingFieldBookingSlotDuration',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'booking_cancellation_hours',
-    label: "Délai d'annulation (heures)",
+    labelKey: 'settingFieldBookingCancellationHours',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'booking_requires_confirmation',
-    label: 'Confirmation requise',
+    labelKey: 'settingFieldBookingRequiresConfirmation',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'booking_allow_walkin',
-    label: 'Autoriser les walk-ins',
+    labelKey: 'settingFieldBookingAllowWalkin',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'booking_max_per_client_per_day',
-    label: 'Max RDV par client / jour',
+    labelKey: 'settingFieldBookingMaxPerClientPerDay',
     type: SettingFieldType.integer,
   ),
 ];
@@ -52,27 +105,27 @@ const bookingSettingFields = [
 const notificationSalonSettingFields = [
   SettingField(
     key: 'notif_sms_enabled',
-    label: 'SMS activés',
+    labelKey: 'settingFieldNotifSmsEnabled',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'notif_whatsapp_enabled',
-    label: 'WhatsApp activé',
+    labelKey: 'settingFieldNotifWhatsappEnabled',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'notif_push_enabled',
-    label: 'Notifications push activées',
+    labelKey: 'settingFieldNotifPushEnabled',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'notif_reminder_hours_before',
-    label: 'Premier rappel avant RDV (heures)',
+    labelKey: 'settingFieldNotifReminderHoursBefore',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'notif_reminder_hours_before2',
-    label: 'Second rappel avant RDV (heures)',
+    labelKey: 'settingFieldNotifReminderHoursBefore2',
     type: SettingFieldType.integer,
   ),
 ];
@@ -80,22 +133,22 @@ const notificationSalonSettingFields = [
 const marketingSettingFields = [
   SettingField(
     key: 'marketing_auto_review_request',
-    label: "Demande d'avis automatique",
+    labelKey: 'settingFieldMarketingAutoReviewRequest',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'marketing_review_request_hours_after',
-    label: "Demande d'avis après le RDV (heures)",
+    labelKey: 'settingFieldMarketingReviewRequestHoursAfter',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'marketing_loyalty_auto_stamp',
-    label: 'Tampon fidélité automatique',
+    labelKey: 'settingFieldMarketingLoyaltyAutoStamp',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'marketing_referral_bonus_bif',
-    label: 'Bonus de parrainage (FBu)',
+    labelKey: 'settingFieldMarketingReferralBonusBif',
     type: SettingFieldType.integer,
   ),
 ];
@@ -103,17 +156,17 @@ const marketingSettingFields = [
 const staffSettingFields = [
   SettingField(
     key: 'staff_show_earnings',
-    label: 'Afficher les revenus au staff',
+    labelKey: 'settingFieldStaffShowEarnings',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'staff_commission_auto_calculate',
-    label: 'Calcul automatique des commissions',
+    labelKey: 'settingFieldStaffCommissionAutoCalculate',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'staff_require_checkin',
-    label: 'Check-in requis',
+    labelKey: 'settingFieldStaffRequireCheckin',
     type: SettingFieldType.boolean,
   ),
 ];
@@ -121,17 +174,17 @@ const staffSettingFields = [
 const loyaltySettingFields = [
   SettingField(
     key: 'loyalty_stamps_per_card',
-    label: 'Tampons par carte',
+    labelKey: 'settingFieldLoyaltyStampsPerCard',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'loyalty_reward_description',
-    label: 'Description de la récompense',
+    labelKey: 'settingFieldLoyaltyRewardDescription',
     type: SettingFieldType.text,
   ),
   SettingField(
     key: 'loyalty_expiry_days',
-    label: 'Expiration (jours)',
+    labelKey: 'settingFieldLoyaltyExpiryDays',
     type: SettingFieldType.integer,
   ),
 ];
@@ -139,17 +192,17 @@ const loyaltySettingFields = [
 const reviewsSettingFields = [
   SettingField(
     key: 'reviews_auto_publish',
-    label: 'Publication automatique',
+    labelKey: 'settingFieldReviewsAutoPublish',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'reviews_moderation_enabled',
-    label: 'Modération activée',
+    labelKey: 'settingFieldReviewsModerationEnabled',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'reviews_min_rating_alert',
-    label: 'Alerte si note ≤',
+    labelKey: 'settingFieldReviewsMinRatingAlert',
     type: SettingFieldType.integer,
   ),
 ];
@@ -157,12 +210,12 @@ const reviewsSettingFields = [
 const paymentSettingFields = [
   SettingField(
     key: 'payment_grace_period_minutes',
-    label: 'Délai de grâce (minutes)',
+    labelKey: 'settingFieldPaymentGracePeriodMinutes',
     type: SettingFieldType.integer,
   ),
   SettingField(
     key: 'payment_auto_invoice',
-    label: 'Facturation automatique',
+    labelKey: 'settingFieldPaymentAutoInvoice',
     type: SettingFieldType.boolean,
   ),
 ];
@@ -170,17 +223,17 @@ const paymentSettingFields = [
 const advancedSettingFields = [
   SettingField(
     key: 'timezone',
-    label: 'Fuseau horaire',
+    labelKey: 'settingFieldTimezone',
     type: SettingFieldType.text,
   ),
   SettingField(
     key: 'advanced_double_booking',
-    label: 'Autoriser le double-booking',
+    labelKey: 'settingFieldAdvancedDoubleBooking',
     type: SettingFieldType.boolean,
   ),
   SettingField(
     key: 'advanced_overbooking_limit',
-    label: 'Limite de surbooking',
+    labelKey: 'settingFieldAdvancedOverbookingLimit',
     type: SettingFieldType.integer,
   ),
 ];

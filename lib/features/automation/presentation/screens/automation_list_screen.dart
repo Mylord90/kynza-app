@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/automation_workflow_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/automation_providers.dart';
@@ -21,11 +22,11 @@ class AutomationListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Automatisations'),
+        title: Text(context.l10n.automationListTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
-            tooltip: "Historique d'exécution",
+            tooltip: context.l10n.automationListHistoryTooltip,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => WorkflowExecutionLogScreen(salonId: salonId),
@@ -57,7 +58,7 @@ class AutomationListScreen extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger les workflows.',
+                message: context.l10n.errorLoadFailed,
                 onRetry: () =>
                     ref.invalidate(automationWorkflowsProvider(salonId)),
               ),
@@ -65,10 +66,9 @@ class AutomationListScreen extends ConsumerWidget {
                 if (workflows.isEmpty) {
                   return KynzaEmptyState(
                     icon: Icons.bolt_outlined,
-                    title: 'Aucune automatisation',
-                    subtitle:
-                        'Créez un workflow pour automatiser une action quand un événement se produit.',
-                    ctaLabel: 'Créer un workflow',
+                    title: context.l10n.automationListEmptyTitle,
+                    subtitle: context.l10n.automationListEmptySubtitle,
+                    ctaLabel: context.l10n.automationWorkflowCreateButton,
                     onCta: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => WorkflowBuilderScreen(salonId: salonId),
@@ -134,7 +134,7 @@ class _WorkflowTile extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.xs),
                     child: Text(
-                      '${workflow.triggerType} · ${workflow.executionCount} exécution(s)',
+                      '${workflow.triggerType} · ${context.l10n.automationWorkflowExecutionCount(workflow.executionCount)}',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../widgets/province_selector.dart';
 
@@ -35,8 +36,8 @@ class SalonLocationStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           KynzaTextField(
-            label: 'Adresse',
-            hint: 'Rue, numéro, quartier',
+            label: context.l10n.salonLocationStepAddressLabel,
+            hint: context.l10n.salonLocationHint,
             controller: addressController,
             maxLines: 2,
           ),

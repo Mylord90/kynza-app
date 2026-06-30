@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -43,7 +44,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Future<void> _exchangeCode() async {
     final code = GoRouterState.of(context).uri.queryParameters['code'];
     if (code == null || code.isEmpty) {
-      _showToast('Lien invalide ou expiré.');
+      _showToast(context.l10n.authResetPasswordInvalidLink);
       if (mounted) context.go(RouteNames.forgotPassword);
       return;
     }
@@ -79,13 +80,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       _showToast(error);
       return;
     }
-    _showToast('Mot de passe réinitialisé.');
+    _showToast(context.l10n.authResetPasswordSuccess);
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) context.go(RouteNames.login);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     if (_exchanging) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -101,28 +104,28 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Réinitialiser',
+              Text(
+                l10n.authResetPasswordTitle,
                 style: AppTypography.h1,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
               KynzaPasswordField(
-                label: 'Nouveau mot de passe',
+                label: l10n.authResetPasswordNewLabel,
                 controller: _passwordController,
                 validator: Validators.password,
                 showStrengthBar: true,
               ),
               const SizedBox(height: AppSpacing.md),
               KynzaPasswordField(
-                label: 'Confirmer le mot de passe',
+                label: l10n.authResetPasswordConfirmLabel,
                 controller: _confirmController,
                 validator: (v) =>
                     Validators.confirmPassword(v, _passwordController.text),
               ),
               const SizedBox(height: AppSpacing.lg),
               KynzaButton(
-                label: 'Réinitialiser →',
+                label: l10n.authResetPasswordSubmitButton,
                 onPressed: _submit,
                 isLoading: _isSubmitting,
               ),

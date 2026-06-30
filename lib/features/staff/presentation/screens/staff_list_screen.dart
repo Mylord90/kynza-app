@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/user_role.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
@@ -16,8 +17,6 @@ import '../../application/providers/staff_providers.dart';
 import 'staff_detail_screen.dart';
 import 'staff_invite_screen.dart';
 
-const _filters = ['Actifs', 'En attente', 'Désactivés'];
-
 class StaffListScreen extends ConsumerWidget {
   const StaffListScreen({super.key});
 
@@ -28,12 +27,12 @@ class StaffListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Mon Équipe'),
+        title: Text(context.l10n.staffListTitle),
         actions: [
           if (salon != null) ...[
             IconButton(
               icon: const Icon(Icons.payments_outlined),
-              tooltip: 'Commissions',
+              tooltip: context.l10n.staffListCommissionsTooltip,
               onPressed: () => context.push(RouteNames.ownerTeamCommissions),
             ),
             TextButton(
@@ -42,9 +41,9 @@ class StaffListScreen extends ConsumerWidget {
                   builder: (_) => StaffInviteScreen(salonId: salon.id),
                 ),
               ),
-              child: const Text(
-                'Inviter',
-                style: TextStyle(color: AppColors.primary),
+              child: Text(
+                context.l10n.commonAdd,
+                style: const TextStyle(color: AppColors.primary),
               ),
             ),
           ],
@@ -72,6 +71,12 @@ class _StaffBody extends ConsumerStatefulWidget {
 class _StaffBodyState extends ConsumerState<_StaffBody> {
   int _filterIndex = 0;
 
+  List<String> _filters(BuildContext context) => [
+    context.l10n.staffFilterActive,
+    context.l10n.staffFilterPending,
+    context.l10n.staffFilterDisabled,
+  ];
+
   @override
   Widget build(BuildContext context) {
     final staffAsync = ref.watch(salonStaffProvider(widget.salonId));
@@ -88,7 +93,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
         ),
       ),
       error: (error, _) => KynzaErrorState(
-        message: "Impossible de charger l'équipe.",
+        message: context.l10n.staffListLoadError,
         onRetry: () => ref.invalidate(salonStaffProvider(widget.salonId)),
       ),
       data: (staff) {
@@ -98,11 +103,9 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
               Expanded(
                 child: KynzaEmptyState(
                   icon: Icons.groups_outlined,
-                  title: 'Aucun membre',
-                  subtitle:
-                      'Invitez votre équipe pour commencer à organiser le '
-                      'planning, ou travaillez seul pour commencer.',
-                  ctaLabel: 'Inviter un membre',
+                  title: context.l10n.staffInviteTitle,
+                  subtitle: context.l10n.staffListEmptySubtitle,
+                  ctaLabel: context.l10n.staffInviteTitle,
                   onCta: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) =>
@@ -118,7 +121,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
                       .read(journeyNotifierProvider.notifier)
                       .markStep(widget.salonId, 'team')
                       .catchError((_) {}),
-                  child: const Text('Je travaille seul →'),
+                  child: Text(context.l10n.staffListSoloLink),
                 ),
               ),
             ],
@@ -147,19 +150,19 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _CountChip(label: 'actifs', count: active.length),
+                    child: _CountChip(label: context.l10n.staffCountActive, count: active.length),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _CountChip(
-                      label: 'en attente',
+                      label: context.l10n.staffCountPending,
                       count: pending.length,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _CountChip(
-                      label: 'désactivés',
+                      label: context.l10n.staffCountDisabled,
                       count: disabled.length,
                     ),
                   ),
@@ -172,7 +175,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 scrollDirection: Axis.horizontal,
-                itemCount: _filters.length,
+                itemCount: _filters(context).length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (context, index) {
@@ -191,7 +194,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
                         borderRadius: BorderRadius.circular(9999),
                       ),
                       child: Text(
-                        _filters[index],
+                        _filters(context)[index],
                         style: AppTypography.bodySmall.copyWith(
                           color: selected
                               ? AppColors.background
@@ -209,9 +212,9 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
             const SizedBox(height: AppSpacing.sm),
             Expanded(
               child: visible.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Aucun membre dans cette catégorie.',
+                        context.l10n.staffNoMembersInCategory,
                         style: AppTypography.bodySmall,
                       ),
                     )

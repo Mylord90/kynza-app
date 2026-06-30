@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../widgets/setting_field.dart';
@@ -31,93 +32,100 @@ class SettingsHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Paramètres')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           _SettingsTile(
             icon: Icons.shield_outlined,
-            label: 'Permissions & Équipe',
+            label: l10n.settingsPermissionsLabel,
             onTap: () => context.push(RouteNames.ownerPermissionGroups),
           ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.bolt_outlined,
-            label: 'Automatisations',
+            label: l10n.settingsAutomationLabel,
             onTap: () => context.push(RouteNames.ownerAutomation),
           ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.calendar_today_outlined,
-            label: 'Réservations',
+            label: l10n.settingsBookingLabel,
             onTap: () =>
-                _openCategory(context, 'Réservations', bookingSettingFields),
+                _openCategory(context, l10n.settingsBookingLabel, bookingSettingFields),
           ),
           _SettingsTile(
             icon: Icons.notifications_outlined,
-            label: 'Notifications du salon',
+            label: l10n.settingsNotificationsSalonLabel,
             onTap: () => _openCategory(
               context,
-              'Notifications du salon',
+              l10n.settingsNotificationsSalonLabel,
               notificationSalonSettingFields,
             ),
           ),
           _SettingsTile(
             icon: Icons.campaign_outlined,
-            label: 'Marketing',
+            label: l10n.settingsMarketingLabel,
             onTap: () =>
-                _openCategory(context, 'Marketing', marketingSettingFields),
+                _openCategory(context, l10n.settingsMarketingLabel, marketingSettingFields),
           ),
           _SettingsTile(
             icon: Icons.people_outline,
-            label: 'Équipe',
-            onTap: () => _openCategory(context, 'Équipe', staffSettingFields),
+            label: l10n.settingsTeamLabel,
+            onTap: () => _openCategory(context, l10n.settingsTeamLabel, staffSettingFields),
           ),
           _SettingsTile(
             icon: Icons.card_giftcard_outlined,
-            label: 'Fidélité',
+            label: l10n.settingsLoyaltyLabel,
             onTap: () =>
-                _openCategory(context, 'Fidélité', loyaltySettingFields),
+                _openCategory(context, l10n.settingsLoyaltyLabel, loyaltySettingFields),
           ),
           _SettingsTile(
             icon: Icons.star_outline,
-            label: 'Avis',
-            onTap: () => _openCategory(context, 'Avis', reviewsSettingFields),
+            label: l10n.settingsReviewsLabel,
+            onTap: () => _openCategory(context, l10n.settingsReviewsLabel, reviewsSettingFields),
           ),
           _SettingsTile(
             icon: Icons.payments_outlined,
-            label: 'Paiements',
+            label: l10n.settingsPaymentsLabel,
             onTap: () =>
-                _openCategory(context, 'Paiements', paymentSettingFields),
+                _openCategory(context, l10n.settingsPaymentsLabel, paymentSettingFields),
           ),
           _SettingsTile(
             icon: Icons.tune_outlined,
-            label: 'Avancé',
+            label: l10n.settingsAdvancedLabel,
             onTap: () =>
-                _openCategory(context, 'Avancé', advancedSettingFields),
+                _openCategory(context, l10n.settingsAdvancedLabel, advancedSettingFields),
           ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.description_outlined,
-            label: 'Modèles de documents',
+            label: l10n.settingsDocumentTemplatesLabel,
             onTap: () => context.push(RouteNames.ownerTemplates),
           ),
           _SettingsTile(
             icon: Icons.cloud_done_outlined,
-            label: 'Sauvegardes de données',
+            label: l10n.settingsDataBackupLabel,
             onTap: () => context.push(RouteNames.ownerBackup),
           ),
           _SettingsTile(
             icon: Icons.flag_outlined,
-            label: 'Drapeaux de fonctionnalités',
+            label: l10n.settingsFeatureFlagsLabel,
             onTap: () => context.push(RouteNames.ownerFeatureFlags),
           ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
+            icon: Icons.language_outlined,
+            label: l10n.settingsLanguageTitle,
+            onTap: () => context.push(RouteNames.ownerLanguage),
+          ),
+          _SettingsTile(
             icon: Icons.info_outline,
-            label: 'À propos de KYNZA',
+            label: l10n.settingsAboutLabel,
             onTap: () => context.push(RouteNames.ownerAbout),
           ),
         ],

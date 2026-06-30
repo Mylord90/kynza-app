@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../services/application/providers/service_providers.dart';
@@ -76,7 +77,7 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Une erreur est survenue.',
+          message: e is AppException ? e.message : context.l10n.errorGeneric,
           level: ToastLevel.error,
         );
       }
@@ -88,8 +89,8 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
   Future<void> _remove() async {
     final confirmed = await showKynzaConfirmDialog(
       context,
-      title: 'Retirer ce membre ?',
-      message: '${widget.staff.displayName} ne pourra plus accéder à ce salon.',
+      title: context.l10n.staffFormRemoveConfirmTitle,
+      message: context.l10n.staffFormRemoveConfirmMessage(widget.staff.displayName),
     );
     if (!confirmed) return;
     try {
@@ -99,7 +100,7 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Une erreur est survenue.',
+          message: e is AppException ? e.message : context.l10n.errorGeneric,
           level: ToastLevel.error,
         );
       }
@@ -132,27 +133,29 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Modifier le membre')),
+      appBar: AppBar(title: Text(context.l10n.staffFormTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         children: [
-          KynzaTextField(label: 'Nom affiché', controller: _nameCtrl),
+          KynzaTextField(label: context.l10n.staffFormDisplayNameLabel, controller: _nameCtrl),
           const SizedBox(height: AppSpacing.lg),
-          KynzaTextField(label: 'Téléphone', controller: _phoneCtrl),
+          KynzaTextField(label: context.l10n.staffFormPhoneLabel, controller: _phoneCtrl),
           const SizedBox(height: AppSpacing.lg),
-          KynzaTextField(label: 'Bio', controller: _bioCtrl, maxLines: 3),
+          KynzaTextField(label: context.l10n.staffFormBioLabel, controller: _bioCtrl, maxLines: 3),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Commission', style: AppTypography.h3),
+          Text(context.l10n.staffFormCommissionSectionTitle, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: KynzaDropdown<String>(
-                  label: 'Type',
+                  label: context.l10n.staffFormCommissionTypeLabel,
                   value: _commissionType,
                   items: const ['percent', 'fixed'],
-                  itemLabel: (v) => v == 'percent' ? '% du RDV' : 'FBu fixe',
+                  itemLabel: (v) => v == 'percent'
+                      ? context.l10n.staffFormCommissionTypePercent
+                      : context.l10n.staffFormCommissionTypeFixed,
                   onChanged: (v) =>
                       setState(() => _commissionType = v ?? 'percent'),
                 ),
@@ -161,8 +164,8 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
               Expanded(
                 child: KynzaTextField(
                   label: _commissionType == 'percent'
-                      ? 'Taux (%)'
-                      : 'Montant (FBu)',
+                      ? context.l10n.staffFormCommissionRatePercent
+                      : context.l10n.staffFormCommissionRateFixed,
                   controller: _commissionRateCtrl,
                   keyboardType: TextInputType.number,
                 ),
@@ -170,11 +173,11 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Services proposés', style: AppTypography.h3),
+          Text(context.l10n.staffDetailServicesTitle, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
           servicesAsync.when(
             loading: () => const KynzaSkeleton(height: 120),
-            error: (_, __) => const Text('Impossible de charger les services.'),
+            error: (_, __) => Text(context.l10n.staffFormServicesLoadError),
             data: (services) => Column(
               children: [
                 for (final s in services)
@@ -189,13 +192,13 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
           ),
           const SizedBox(height: AppSpacing.xxl),
           KynzaButton(
-            label: 'Enregistrer',
+            label: context.l10n.staffFormSaveButton,
             isLoading: _isSaving,
             onPressed: _save,
           ),
           const SizedBox(height: AppSpacing.md),
           KynzaButton(
-            label: 'Retirer ce membre',
+            label: context.l10n.staffFormRemoveButton,
             variant: KynzaButtonVariant.destructive,
             onPressed: _remove,
           ),

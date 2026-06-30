@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/haptics.dart';
@@ -60,6 +61,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final email =
         ref
             .watch(authNotifierProvider)
@@ -85,28 +87,30 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     color: AppColors.primary,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  const Text(
-                    'Vérifiez votre email',
+                  Text(
+                    l10n.authVerifyEmailTitle,
                     style: AppTypography.h1,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Un lien de confirmation a été envoyé à ${_maskEmail(email)}',
+                    l10n.authVerifyEmailSubtitle(_maskEmail(email)),
                     style: AppTypography.body,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  const Text(
-                    'Vérifiez vos spams.',
+                  Text(
+                    l10n.authVerifyEmailCheckSpam,
                     style: AppTypography.bodySmall,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   KynzaButton(
                     label: _secondsLeft > 0
-                        ? 'Renvoyer l\'email (00:${_secondsLeft.toString().padLeft(2, '0')})'
-                        : 'Renvoyer l\'email',
+                        ? l10n.authVerifyEmailResendCooldown(
+                            _secondsLeft.toString().padLeft(2, '0'),
+                          )
+                        : l10n.authVerifyEmailResendButton,
                     variant: KynzaButtonVariant.secondary,
                     onPressed: _secondsLeft > 0 || email.isEmpty
                         ? null
@@ -116,7 +120,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   Center(
                     child: TextButton(
                       onPressed: () => context.go(RouteNames.register),
-                      child: const Text('Utiliser une autre adresse'),
+                      child: Text(l10n.authVerifyEmailChangeAddress),
                     ),
                   ),
                 ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/permission_management_providers.dart';
@@ -55,7 +56,7 @@ class _PermissionGroupFormSheetState
       if (!mounted) return;
       showKynzaToast(
         context,
-        message: 'Impossible de créer ce groupe.',
+        message: context.l10n.permissionsGroupCreateError,
         level: ToastLevel.error,
       );
     } finally {
@@ -77,27 +78,27 @@ class _PermissionGroupFormSheetState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Nouveau groupe de permissions',
+            Text(
+              context.l10n.permissionsGroupFormTitle,
               style: AppTypography.h2,
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Nom du groupe',
-              hint: 'ex. Réceptionniste Senior',
+              label: context.l10n.permissionsGroupFormNameLabel,
+              hint: context.l10n.permissionsGroupNameHint,
               controller: _nameController,
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Nom requis' : null,
+                  (v == null || v.trim().isEmpty) ? context.l10n.permissionsGroupFormNameRequired : null,
             ),
             const SizedBox(height: AppSpacing.md),
             KynzaTextField(
-              label: 'Description (optionnel)',
+              label: context.l10n.permissionsGroupFormDescriptionLabel,
               controller: _descriptionController,
               maxLines: 2,
             ),
             const SizedBox(height: AppSpacing.md),
             KynzaDropdown<String>(
-              label: 'Rôle de base',
+              label: context.l10n.permissionsGroupFormBaseRoleLabel,
               value: _baseRole,
               items: _baseRoles,
               itemLabel: (v) => v,
@@ -105,7 +106,7 @@ class _PermissionGroupFormSheetState
             ),
             const SizedBox(height: AppSpacing.xl),
             KynzaButton(
-              label: 'Créer le groupe',
+              label: context.l10n.permissionsGroupFormCreateButton,
               isLoading: _saving,
               onPressed: _submit,
             ),

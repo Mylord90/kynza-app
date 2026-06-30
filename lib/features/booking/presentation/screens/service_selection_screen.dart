@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../services/application/providers/service_providers.dart';
 import '../../application/providers/booking_flow_provider.dart';
 import '../widgets/service_booking_card.dart';
@@ -18,10 +19,10 @@ class ServiceSelectionScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Choisir un service')),
+      appBar: AppBar(title: Text(context.l10n.bookingSelectServiceTitle)),
       body: salon == null
-          ? const KynzaErrorState(
-              message: 'Aucun salon sélectionné.',
+          ? KynzaErrorState(
+              message: context.l10n.bookingNoSalonSelected,
               onRetry: _noop,
             )
           : Consumer(
@@ -39,18 +40,18 @@ class ServiceSelectionScreen extends ConsumerWidget {
                     ),
                   ),
                   error: (_, __) => KynzaErrorState(
-                    message: 'Impossible de charger les services.',
+                    message: context.l10n.bookingWalkInServicesLoadError,
                     onRetry: () =>
                         ref.invalidate(salonServicesProvider(salon.id)),
                   ),
                   data: (services) {
                     final active = services.where((s) => s.isActive).toList();
                     if (active.isEmpty) {
-                      return const KynzaEmptyState(
+                      return KynzaEmptyState(
                         icon: Icons.content_cut,
-                        title: 'Aucun service disponible',
-                        subtitle: 'Ce salon n\'a pas encore publié de service.',
-                        ctaLabel: 'Retour',
+                        title: context.l10n.bookingSelectServiceEmptyTitle,
+                        subtitle: context.l10n.bookingSelectServiceEmptySubtitle,
+                        ctaLabel: context.l10n.commonBack,
                         onCta: _noop,
                       );
                     }

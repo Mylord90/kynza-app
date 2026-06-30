@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
@@ -43,9 +44,9 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 3),
-        content: Text('« ${service.name} » supprimé.'),
+        content: Text(context.l10n.servicesDeleteSnack(service.name)),
         action: SnackBarAction(
-          label: 'Annuler',
+          label: context.l10n.commonCancel,
           onPressed: () {
             _pendingDeletes[id]?.cancel();
             _pendingDeletes.remove(id);
@@ -62,7 +63,7 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Services')),
+      appBar: AppBar(title: Text(context.l10n.servicesListTitle)),
       floatingActionButton: salon == null
           ? null
           : FloatingActionButton(
@@ -96,17 +97,16 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
         ),
       ),
       error: (error, _) => KynzaErrorState(
-        message: 'Impossible de charger les services.',
+        message: context.l10n.bookingSalonDetailServicesLoadError,
         onRetry: () => ref.invalidate(salonServicesProvider(salonId)),
       ),
       data: (services) {
         if (services.isEmpty) {
           return KynzaEmptyState(
             icon: Icons.content_cut,
-            title: 'Aucun service',
-            subtitle:
-                'Ajoutez vos prestations pour commencer à recevoir des RDV.',
-            ctaLabel: 'Ajouter un service',
+            title: context.l10n.servicesNoServiceTitle,
+            subtitle: context.l10n.servicesNoServiceSubtitle,
+            ctaLabel: context.l10n.servicesNoServiceCta,
             onCta: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => ServiceFormScreen(salonId: salonId),
@@ -138,7 +138,7 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: AppSpacing.sm),
                       child: ServiceCategoryChip(
-                        label: 'Toutes',
+                        label: context.l10n.servicesFilterAll,
                         isSelected: _categoryFilter == null,
                         onTap: () => setState(() => _categoryFilter = null),
                       ),

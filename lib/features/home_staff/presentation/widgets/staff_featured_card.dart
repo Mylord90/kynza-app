@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/booking_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -45,7 +46,7 @@ class StaffFeaturedCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Prochain rendez-vous',
+              context.l10n.homeStaffNextAppointment,
               style: AppTypography.label.copyWith(color: AppColors.primary),
             ),
             Column(
@@ -63,7 +64,7 @@ class StaffFeaturedCard extends StatelessWidget {
             ),
             if (canConfirm)
               KynzaButton(
-                label: 'Confirmer arrivée',
+                label: context.l10n.homeStaffConfirmArrivalButton,
                 onPressed: onConfirmArrival,
               ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -31,26 +32,27 @@ class SalonInfoStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Form(
       key: formKey,
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
           KynzaTextField(
-            label: 'Nom du salon *',
+            label: l10n.salonInfoStepNameLabel,
             controller: nameController,
             maxLength: 100,
-            validator: (v) => Validators.required(v, 'Nom du salon'),
+            validator: (v) => Validators.required(v, l10n.salonInfoStepNameLabel),
           ),
           const SizedBox(height: 16),
           KynzaTextField(
-            label: 'Slogan',
+            label: l10n.salonInfoStepSloganLabel,
             controller: sloganController,
             maxLength: 150,
           ),
           const SizedBox(height: 16),
           KynzaTextField(
-            label: 'Description',
+            label: l10n.salonInfoStepDescriptionLabel,
             controller: descriptionController,
             maxLength: 500,
             maxLines: 4,
@@ -62,14 +64,14 @@ class SalonInfoStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           KynzaTextField(
-            label: 'Email',
+            label: l10n.authLoginEmailLabel,
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             validator: (v) =>
                 v == null || v.isEmpty ? null : Validators.email(v),
           ),
           const SizedBox(height: 24),
-          const Text('Réseaux sociaux', style: AppTypography.h3),
+          Text(l10n.salonInfoStepSocialTitle, style: AppTypography.h3),
           const SizedBox(height: 12),
           KynzaTextField(label: 'Facebook', controller: facebookController),
           const SizedBox(height: 12),

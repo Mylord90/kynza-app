@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/permission_management_providers.dart';
@@ -20,7 +21,7 @@ class PermissionGroupsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Groupes de permissions')),
+      appBar: AppBar(title: Text(context.l10n.permissionsGroupsTitle)),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () => showKynzaBottomSheet(
@@ -43,7 +44,7 @@ class PermissionGroupsScreen extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger les groupes de permissions.',
+                message: context.l10n.permissionsGroupsLoadError,
                 onRetry: () =>
                     ref.invalidate(permissionGroupsProvider(salonId)),
               ),
@@ -51,10 +52,9 @@ class PermissionGroupsScreen extends ConsumerWidget {
                 if (groups.isEmpty) {
                   return KynzaEmptyState(
                     icon: Icons.shield_outlined,
-                    title: 'Aucun groupe de permissions',
-                    subtitle:
-                        'Créez un groupe pour donner à un membre de votre équipe des droits précis, au-delà de son rôle de base.',
-                    ctaLabel: 'Créer un groupe',
+                    title: context.l10n.permissionsGroupEmptyTitle,
+                    subtitle: context.l10n.permissionsGroupEmptySubtitle,
+                    ctaLabel: context.l10n.permissionsGroupEmptyCtaLabel,
                     onCta: () => showKynzaBottomSheet(
                       context,
                       builder: (_) =>

@@ -3,6 +3,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/working_hour_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -32,6 +33,7 @@ class WorkingHoursEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -40,14 +42,14 @@ class WorkingHoursEditor extends StatelessWidget {
           runSpacing: AppSpacing.sm,
           children: [
             ActionChip(
-              label: const Text('Jours de semaine 8h–18h'),
+              label: Text(l10n.availabilityWeekdayPreset),
               onPressed: () => _applyPreset(
                 const TimeOfDay(hour: 8, minute: 0),
                 const TimeOfDay(hour: 18, minute: 0),
               ),
             ),
             ActionChip(
-              label: const Text('Tous les jours 8h–20h'),
+              label: Text(l10n.availabilityAllDayPreset),
               onPressed: () => _applyPreset(
                 const TimeOfDay(hour: 8, minute: 0),
                 const TimeOfDay(hour: 20, minute: 0),
@@ -121,7 +123,7 @@ class _DayRow extends StatelessWidget {
           if (hour.isClosed)
             Expanded(
               child: Text(
-                'Fermé',
+                context.l10n.workingHoursClosed,
                 textAlign: TextAlign.end,
                 style: AppTypography.body.copyWith(
                   color: AppColors.textSecondary,

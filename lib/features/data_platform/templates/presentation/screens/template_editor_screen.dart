@@ -3,16 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../../core/models/document_template_model.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/template_providers.dart';
 
 const _types = ['invoice', 'receipt', 'monthly_report'];
-const _typeLabels = {
-  'invoice': 'Facture',
-  'receipt': 'Reçu',
-  'monthly_report': 'Rapport mensuel',
-};
 
 // Variable hints shown to the user per template type.
 const _variableHints = {
@@ -22,6 +19,13 @@ const _variableHints = {
       '{{client_name}}, {{service_name}}, {{price}}, {{date}}, {{salon_name}}, {{payment_method}}, {{amount_paid}}',
   'monthly_report':
       '{{month}}, {{total_revenue}}, {{bookings_completed}}, {{top_service}}, {{salon_name}}, {{no_show_rate}}',
+};
+
+String _typeLabel(AppLocalizations l10n, String type) => switch (type) {
+  'invoice' => l10n.dataPlatformTemplateTypeInvoice,
+  'receipt' => l10n.dataPlatformTemplateTypeReceipt,
+  'monthly_report' => l10n.dataPlatformTemplateTypeMonthlyReport,
+  _ => type,
 };
 
 class TemplateEditorScreen extends ConsumerStatefulWidget {
@@ -72,7 +76,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
         _bodyController.text.trim().isEmpty) {
       showKynzaToast(
         context,
-        message: 'Le nom et le contenu sont requis.',
+        message: context.l10n.dataPlatformTemplateValidationError,
         level: ToastLevel.error,
       );
       return;
@@ -114,26 +118,31 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hints = _variableHints[_type] ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Modifier le modèle' : 'Nouveau modèle'),
+        title: Text(
+          _isEditing
+              ? l10n.dataPlatformTemplateEditTitle
+              : l10n.dataPlatformTemplateNewTitle,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           KynzaTextField(
-            label: 'Nom du modèle',
+            label: l10n.dataPlatformTemplateNameLabel,
             controller: _nameController,
           ),
           const SizedBox(height: AppSpacing.md),
           KynzaDropdown<String>(
-            label: 'Type',
+            label: l10n.dataPlatformTemplateTypeLabel,
             value: _type,
             items: _types,
-            itemLabel: (t) => _typeLabels[t] ?? t,
+            itemLabel: (t) => _typeLabel(l10n, t),
             onChanged: (v) => setState(() => _type = v ?? 'invoice'),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -141,7 +150,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Variables disponibles', style: AppTypography.label),
+                Text(l10n.dataPlatformTemplateVariablesTitle,
+                    style: AppTypography.label),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   hints,
@@ -155,10 +165,10 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           KynzaTextField(
-            label: 'Contenu du modèle',
+            label: l10n.dataPlatformTemplateBodyLabel,
             controller: _bodyController,
             maxLines: 14,
-            hint: 'Utilisez {{variable}} pour insérer des données dynamiques.',
+            hint: l10n.dataPlatformTemplateBodyHint,
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
@@ -169,12 +179,15 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                 onChanged: (v) => setState(() => _isDefault = v),
               ),
               const SizedBox(width: AppSpacing.sm),
-              const Text('Modèle par défaut', style: AppTypography.body),
+              Text(l10n.dataPlatformTemplateIsDefaultLabel,
+                  style: AppTypography.body),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
           KynzaButton(
-            label: _isEditing ? 'Enregistrer' : 'Créer le modèle',
+            label: _isEditing
+                ? l10n.dataPlatformTemplateSaveButton
+                : l10n.dataPlatformTemplateCreateButton,
             isLoading: _saving,
             onPressed: _save,
           ),

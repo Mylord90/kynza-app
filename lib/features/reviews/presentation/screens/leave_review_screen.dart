@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/review/review_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/utils/haptics.dart';
@@ -37,7 +38,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     if (_rating == 0) {
       showKynzaToast(
         context,
-        message: 'Choisissez une note avant de publier.',
+        message: context.l10n.reviewsLeaveRatingRequired,
         level: ToastLevel.warning,
       );
       return;
@@ -67,7 +68,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: 'Avis publié ! Merci 💛',
+          message: context.l10n.reviewsLeaveSuccess,
           level: ToastLevel.success,
         );
         context.pop();
@@ -76,7 +77,9 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : "Échec de l'envoi.",
+          message: e is AppException
+              ? e.message
+              : context.l10n.reviewsReplyError,
           level: ToastLevel.error,
         );
       }
@@ -92,22 +95,20 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Laisser un avis')),
+      appBar: AppBar(title: Text(context.l10n.reviewsLeaveTitle)),
       body: canReviewAsync.when(
         loading: () => const Center(child: KynzaSpinner()),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de vérifier votre réservation.',
+          message: context.l10n.reviewsLeaveBookingError,
           onRetry: () => ref.invalidate(canReviewProvider(widget.bookingId)),
         ),
         data: (canReview) {
           if (!canReview) {
             return KynzaEmptyState(
               icon: Icons.rate_review_outlined,
-              title: 'Avis indisponible',
-              subtitle:
-                  'Cette réservation a déjà reçu un avis ou ne peut pas '
-                  'encore être notée.',
-              ctaLabel: 'Retour à mes RDV',
+              title: context.l10n.reviewsLeaveUnavailableTitle,
+              subtitle: context.l10n.reviewsLeaveUnavailableSubtitle,
+              ctaLabel: context.l10n.reviewsLeaveBackButton,
               onCta: () => context.pop(),
             );
           }
@@ -120,7 +121,8 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   Text(
-                    booking.service?.name ?? 'Votre prestation',
+                    booking.service?.name ??
+                        context.l10n.reviewsLeaveServiceFallback,
                     style: AppTypography.h2,
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -140,7 +142,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                   KynzaTextField(
-                    label: 'Partagez votre expérience (optionnel)',
+                    label: context.l10n.reviewsLeaveCommentLabel,
                     controller: _commentCtrl,
                     maxLines: 4,
                     maxLength: 300,
@@ -148,8 +150,8 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Rester anonyme',
+                    title: Text(
+                      context.l10n.reviewsLeaveAnonymousLabel,
                       style: AppTypography.h3,
                     ),
                     value: _anonymous,
@@ -158,7 +160,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   KynzaButton(
-                    label: 'Publier mon avis',
+                    label: context.l10n.reviewsLeavePublishButton,
                     isLoading: _saving,
                     onPressed: _publish,
                   ),
@@ -166,7 +168,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                   Center(
                     child: TextButton(
                       onPressed: () => context.pop(),
-                      child: const Text('Passer'),
+                      child: Text(context.l10n.reviewsLeaveSkipButton),
                     ),
                   ),
                 ],

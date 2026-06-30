@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/time_slot_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../availability/application/providers/availability_providers.dart';
@@ -45,12 +46,13 @@ class TimeSlotScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final flowState = ref.watch(bookingFlowProvider);
     final slotsAsync = ref.watch(_slotsForFlowProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Choisir un horaire')),
+      appBar: AppBar(title: Text(l10n.bookingSelectTimeTitle)),
       body: slotsAsync.when(
         loading: () => GridView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -64,18 +66,18 @@ class TimeSlotScreen extends ConsumerWidget {
           itemBuilder: (_, __) => const KynzaSkeleton(height: 48),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger les créneaux.',
+          message: l10n.bookingTimeLoadError,
           onRetry: () => ref.invalidate(_slotsForFlowProvider),
         ),
         data: (slots) {
           if (slots.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
+            return Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: KynzaEmptyState(
                 icon: Icons.event_busy_outlined,
-                title: 'Aucun créneau disponible',
-                subtitle: 'Essayez une autre date.',
-                ctaLabel: 'Choisir une autre date',
+                title: l10n.bookingSelectTimeEmptyTitle,
+                subtitle: l10n.bookingSelectTimeEmptySubtitle,
+                ctaLabel: l10n.bookingSelectTimeEmptyCtaLabel,
                 onCta: _noop,
               ),
             );

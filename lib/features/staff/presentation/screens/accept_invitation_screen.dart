@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
@@ -34,7 +35,6 @@ class _AcceptInvitationScreenState extends ConsumerState<AcceptInvitationScreen>
     duration: AppDurations.spring,
   );
   _InvitationStatus _status = _InvitationStatus.verifying;
-  String _errorMessage = '';
 
   @override
   void initState() {
@@ -95,8 +95,6 @@ class _AcceptInvitationScreenState extends ConsumerState<AcceptInvitationScreen>
     if (!mounted) return;
     setState(() {
       _status = _InvitationStatus.error;
-      _errorMessage =
-          'Invitation invalide ou expirée. Contactez votre salon pour en recevoir une nouvelle.';
     });
   }
 
@@ -105,11 +103,11 @@ class _AcceptInvitationScreenState extends ConsumerState<AcceptInvitationScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: switch (_status) {
-        _InvitationStatus.verifying => const KynzaLoadingOverlay(
-          message: "Vérification de l'invitation...",
+        _InvitationStatus.verifying => KynzaLoadingOverlay(
+          message: context.l10n.staffAcceptInvitationVerifying,
         ),
         _InvitationStatus.error => KynzaErrorState(
-          message: _errorMessage,
+          message: context.l10n.acceptInvitationError,
           onRetry: () => context.go(RouteNames.login),
         ),
         _InvitationStatus.success => Center(
@@ -130,8 +128,8 @@ class _AcceptInvitationScreenState extends ConsumerState<AcceptInvitationScreen>
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text(
-                  "Bienvenue dans l'équipe !",
+                Text(
+                  context.l10n.acceptInvitationWelcome,
                   style: AppTypography.h1,
                   textAlign: TextAlign.center,
                 ),

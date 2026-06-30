@@ -17,7 +17,7 @@ import '../../../salon/application/providers/salon_providers.dart';
 import '../../../salon/presentation/screens/salon_creation_wizard_screen.dart';
 import '../../../notifications/presentation/widgets/unread_count_badge.dart';
 import '../../../dashboard/presentation/screens/advanced_dashboard_screen.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../widgets/booking_detail_sheet.dart';
 import '../widgets/booking_tile.dart';
 
@@ -58,7 +58,7 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.qr_code_scanner_outlined),
-            tooltip: 'Scanner fidélité',
+            tooltip: context.l10n.homeOwnerScanLoyaltyTooltip,
             onPressed: () => context.push(RouteNames.ownerLoyaltyScan),
           ),
           const UnreadCountBadge(),
@@ -85,26 +85,26 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _tabIndex,
         onTap: (index) => setState(() => _tabIndex = index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Calendrier',
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: context.l10n.navCalendar,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            label: context.l10n.navDashboard,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            label: 'Clients',
+            icon: const Icon(Icons.people_outline),
+            label: context.l10n.navClients,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.campaign_outlined),
-            label: 'Marketing',
+            icon: const Icon(Icons.campaign_outlined),
+            label: context.l10n.navMarketing,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
+            icon: const Icon(Icons.person_outline),
+            label: context.l10n.navProfile,
           ),
         ],
       ),
@@ -112,11 +112,11 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
   }
 
   String _titleFor(int index) => switch (index) {
-    0 => 'Calendrier',
-    1 => '📊 Dashboard KYNZA',
-    2 => 'Clients',
-    3 => 'Marketing',
-    _ => 'Profil',
+    0 => context.l10n.navCalendar,
+    1 => '📊 ${context.l10n.homeOwnerDashboardTitle}',
+    2 => context.l10n.navClients,
+    3 => context.l10n.navMarketing,
+    _ => context.l10n.navProfile,
   };
 }
 
@@ -127,10 +127,9 @@ class _NoSalonEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return KynzaEmptyState(
       icon: Icons.store_outlined,
-      title: 'Créez votre salon',
-      subtitle:
-          'Configurez votre salon pour commencer à recevoir des réservations.',
-      ctaLabel: 'Créer mon salon →',
+      title: context.l10n.homeOwnerNoSalonTitle,
+      subtitle: context.l10n.homeOwnerNoSalonSubtitle,
+      ctaLabel: context.l10n.homeOwnerNoSalonCta,
       onCta: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const SalonCreationWizardScreen()),
       ),
@@ -223,7 +222,7 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger le planning.',
+                message: context.l10n.homeOwnerCalendarError,
                 onRetry: () => ref.invalidate(
                   salonBookingsProvider((widget.salonId, _selectedDate)),
                 ),
@@ -232,9 +231,9 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
                 if (bookings.isEmpty) {
                   return KynzaEmptyState(
                     icon: Icons.calendar_today_outlined,
-                    title: 'Aucun RDV ce jour',
-                    subtitle: 'Votre planning est libre.',
-                    ctaLabel: "Aujourd'hui",
+                    title: context.l10n.homeOwnerCalendarEmptyTitle,
+                    subtitle: context.l10n.homeOwnerCalendarEmptySubtitle,
+                    ctaLabel: context.l10n.homeOwnerCalendarEmptyCta,
                     onCta: () => setState(() => _selectedDate = DateTime.now()),
                   );
                 }
@@ -308,17 +307,16 @@ class _ClientsTab extends ConsumerWidget {
         ),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger vos clients.',
+        message: context.l10n.homeOwnerClientsError,
         onRetry: () => ref.invalidate(_salonClientsProvider(salonId)),
       ),
       data: (clients) {
         if (clients.isEmpty) {
-          return const KynzaEmptyState(
+          return KynzaEmptyState(
             icon: Icons.people_outline,
-            title: 'Aucun client encore',
-            subtitle:
-                'Vos clients apparaîtront ici après leur première réservation.',
-            ctaLabel: 'Retour',
+            title: context.l10n.homeOwnerClientsEmptyTitle,
+            subtitle: context.l10n.homeOwnerClientsEmptySubtitle,
+            ctaLabel: context.l10n.commonBack,
             onCta: _noop,
           );
         }
@@ -339,7 +337,7 @@ class _ClientsTab extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            client['fullName'] as String? ?? 'Client',
+                            client['fullName'] as String? ?? context.l10n.homeOwnerClientFallbackName,
                             style: AppTypography.h3,
                           ),
                           if (client['phone'] != null)
@@ -348,7 +346,7 @@ class _ClientsTab extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '${client['count']} RDV',
+                      context.l10n.homeOwnerClientRdvCount(client['count'] as int),
                       style: AppTypography.bodySmall,
                     ),
                   ],
@@ -400,81 +398,73 @@ class _ProfileTab extends ConsumerWidget {
         const SizedBox(height: AppSpacing.lg),
         KynzaCard(
           onTap: () => context.go(RouteNames.ownerReviews),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.star_outline, color: AppColors.primary),
-              SizedBox(width: AppSpacing.md),
-              Expanded(child: Text('Mes Avis', style: AppTypography.h3)),
-              Icon(Icons.chevron_right, color: AppColors.textMuted),
+              const Icon(Icons.star_outline, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: Text(context.l10n.homeOwnerProfileMyReviews, style: AppTypography.h3)),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         KynzaCard(
           onTap: () => context.push(RouteNames.ownerAuditLogs),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.history_outlined, color: AppColors.primary),
-              SizedBox(width: AppSpacing.md),
+              const Icon(Icons.history_outlined, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text("Journal d'activité", style: AppTypography.h3),
+                child: Text(context.l10n.homeOwnerProfileActivityLog, style: AppTypography.h3),
               ),
-              Icon(Icons.chevron_right, color: AppColors.textMuted),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         KynzaCard(
           onTap: () => context.push(RouteNames.ownerSettings),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.settings_outlined, color: AppColors.primary),
-              SizedBox(width: AppSpacing.md),
-              Expanded(child: Text('Paramètres', style: AppTypography.h3)),
-              Icon(Icons.chevron_right, color: AppColors.textMuted),
+              const Icon(Icons.settings_outlined, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: Text(context.l10n.homeOwnerProfileSettings, style: AppTypography.h3)),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         KynzaCard(
           onTap: () => context.push(RouteNames.ownerBilling),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.workspace_premium_outlined, color: AppColors.primary),
-              SizedBox(width: AppSpacing.md),
+              const Icon(Icons.workspace_premium_outlined, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
-                  'Abonnement & Facturation',
+                  context.l10n.homeOwnerProfileSubscription,
                   style: AppTypography.h3,
                 ),
               ),
-              Icon(Icons.chevron_right, color: AppColors.textMuted),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         KynzaCard(
+          onTap: () => context.push(RouteNames.ownerLanguage),
           child: Row(
             children: [
               const Icon(Icons.language, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
-              const Expanded(child: Text('Langue', style: AppTypography.h3)),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'fr', label: Text('FR')),
-                  ButtonSegment(value: 'en', label: Text('EN')),
-                ],
-                selected: {ref.watch(languageProvider)},
-                onSelectionChanged: (selected) => ref
-                    .read(languageProvider.notifier)
-                    .setLanguage(selected.first),
-              ),
+              Expanded(child: Text(context.l10n.homeOwnerProfileLanguage, style: AppTypography.h3)),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
         KynzaButton(
-          label: AppLocalizations.of(context)!.authLogout,
+          label: context.l10n.authLogout,
           variant: KynzaButtonVariant.destructive,
           onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
         ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/marketing/promotion_model.dart';
 import '../../../../core/models/salon_full_model.dart';
 import '../../../../core/models/service_model.dart';
@@ -28,14 +29,14 @@ class SocialShareCenterScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Partager mon salon')),
+      appBar: AppBar(title: Text(context.l10n.marketingShareTitle)),
       body: salonAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AppSpacing.lg),
           child: KynzaSkeleton(height: 400),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger votre salon.',
+          message: context.l10n.marketingLoadSalonError,
           onRetry: () => ref.invalidate(salonByIdProvider(salonId)),
         ),
         data: (salon) {
@@ -73,22 +74,22 @@ class SocialShareCenterScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     KynzaButton(
-                      label: 'Partager →',
+                      label: '${context.l10n.commonShare} →',
                       onPressed: () => ShareService.shareSalon(salon),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              const Text('Partager mes services', style: AppTypography.h2),
+              Text(context.l10n.marketingShareServicesTitle, style: AppTypography.h2),
               const SizedBox(height: AppSpacing.md),
               servicesAsync.when(
                 loading: () => const KynzaSkeleton(height: 90),
                 error: (_, __) => const SizedBox.shrink(),
                 data: (services) {
                   if (services.isEmpty) {
-                    return const Text(
-                      'Aucun service à partager pour le moment.',
+                    return Text(
+                      context.l10n.marketingNoServicesToShare,
                       style: AppTypography.body,
                     );
                   }
@@ -119,7 +120,7 @@ class SocialShareCenterScreen extends ConsumerWidget {
                                   ),
                                   const Spacer(),
                                   KynzaButton(
-                                    label: 'Partager',
+                                    label: context.l10n.commonShare,
                                     height: 36,
                                     onPressed: () => ShareService.shareService(
                                       salon,
@@ -145,8 +146,8 @@ class SocialShareCenterScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Partager une promotion',
+                        Text(
+                          context.l10n.marketingSharePromotionTitle,
                           style: AppTypography.h2,
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -175,7 +176,7 @@ class SocialShareCenterScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   KynzaButton(
-                                    label: 'Partager',
+                                    label: context.l10n.commonShare,
                                     height: 36,
                                     width: 110,
                                     onPressed: () =>
@@ -236,18 +237,17 @@ class _InviteLinkCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Lien d'invitation personnalisé", style: AppTypography.h3),
+          Text(context.l10n.marketingInviteLinkTitle, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
-            'Partagez ce lien. Vos clients téléchargent KYNZA et vous '
-            'retrouvent directement.',
+          Text(
+            context.l10n.marketingInviteLinkSubtitle,
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
           tokenAsync.when(
             loading: () => const KynzaSkeleton(height: 36),
-            error: (_, __) => const Text(
-              "Impossible de générer le lien pour l'instant.",
+            error: (_, __) => Text(
+              context.l10n.marketingInviteLinkGenError,
               style: AppTypography.bodySmall,
             ),
             data: (token) {
@@ -278,14 +278,14 @@ class _InviteLinkCard extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: KynzaButton(
-                          label: 'Copier le lien',
+                          label: context.l10n.marketingCopyLinkButton,
                           variant: KynzaButtonVariant.secondary,
                           onPressed: () async {
                             await Clipboard.setData(ClipboardData(text: link));
                             if (context.mounted) {
                               showKynzaToast(
                                 context,
-                                message: 'Lien copié !',
+                                message: context.l10n.marketingLinkCopied,
                                 level: ToastLevel.success,
                               );
                             }
@@ -295,7 +295,7 @@ class _InviteLinkCard extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: KynzaButton(
-                          label: 'Partager →',
+                          label: context.l10n.marketingShareArrowButton,
                           onPressed: () =>
                               ShareService.shareClientInvite(salon, token),
                         ),

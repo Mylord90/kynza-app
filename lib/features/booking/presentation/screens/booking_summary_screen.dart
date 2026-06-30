@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/kynza_constants.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../payment/presentation/screens/payment_screen.dart';
 import '../../application/providers/booking_flow_provider.dart';
 import '../widgets/booking_summary_card.dart';
@@ -51,14 +52,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Récapitulatif')),
+      appBar: AppBar(title: Text(context.l10n.bookingSummaryTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           BookingSummaryCard(state: state),
           const SizedBox(height: AppSpacing.lg),
           KynzaTextField(
-            label: 'Note pour le salon (optionnel)',
+            label: context.l10n.bookingSummaryNotesLabel,
             controller: _notesCtrl,
             maxLines: 3,
             maxLength: KynzaConstants.maxNoteChars,
@@ -70,15 +71,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
               color: AppColors.warningBg,
               borderRadius: BorderRadius.circular(AppSpacing.md),
             ),
-            child: const Text(
-              'Votre créneau est verrouillé 5 minutes pendant le paiement. '
-              'Aucun montant ne sera prélevé avant la validation finale.',
+            child: Text(
+              context.l10n.bookingSummaryPaymentLockWarning,
               style: AppTypography.bodySmall,
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
           KynzaButton(
-            label: 'Confirmer et payer →',
+            label: context.l10n.bookingSummarySubmitButton,
             isLoading: state.isLoading,
             onPressed: _confirm,
           ),

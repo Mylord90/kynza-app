@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/booking_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
@@ -51,7 +52,7 @@ class BookingDetailSheet extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           if (booking.status == BookingStatus.confirmed) ...[
             KynzaButton(
-              label: 'Terminer + encaisser',
+              label: context.l10n.bookingDetailCompleteAndCollect,
               onPressed: () {
                 notifier.markCompleted(booking).catchError((_) {});
                 Navigator.of(context).pop();
@@ -60,8 +61,8 @@ class BookingDetailSheet extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             KynzaButton(
               label: gracePassed
-                  ? 'Marquer absent'
-                  : 'Marquer absent (dès +15 min)',
+                  ? context.l10n.bookingDetailMarkAbsent
+                  : context.l10n.bookingDetailMarkAbsentGrace,
               variant: KynzaButtonVariant.secondary,
               onPressed: gracePassed
                   ? () {
@@ -74,13 +75,13 @@ class BookingDetailSheet extends ConsumerWidget {
           if (canCancel) ...[
             const SizedBox(height: AppSpacing.sm),
             KynzaButton(
-              label: 'Annuler ce RDV',
+              label: context.l10n.bookingDetailCancelButton,
               variant: KynzaButtonVariant.destructive,
               onPressed: () async {
                 final confirmed = await showKynzaConfirmDialog(
                   context,
-                  title: 'Annuler ce RDV ?',
-                  message: 'Le client sera notifié et remboursé si applicable.',
+                  title: context.l10n.homeOwnerBookingCancelConfirmTitle,
+                  message: context.l10n.homeOwnerBookingCancelConfirmMessage,
                 );
                 if (!confirmed) return;
                 try {

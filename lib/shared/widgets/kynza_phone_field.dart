@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/constants/kynza_constants.dart';
+import '../../core/localization/extensions/build_context_l10n_extension.dart';
 
 class KynzaPhoneField extends StatelessWidget {
   const KynzaPhoneField({
@@ -18,6 +19,7 @@ class KynzaPhoneField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return TextFormField(
       controller: controller,
       validator: validator,
@@ -26,8 +28,8 @@ class KynzaPhoneField extends StatelessWidget {
       maxLength: 8,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       decoration: InputDecoration(
-        labelText: 'Numéro de téléphone',
-        helperText: 'Pour les notifications WhatsApp uniquement.',
+        labelText: l10n.fieldPhoneLabel,
+        helperText: l10n.fieldPhoneHelper,
         counterText: '',
         prefix: Padding(
           padding: const EdgeInsets.only(right: 8),

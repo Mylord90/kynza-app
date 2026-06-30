@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/loyalty/loyalty_card_model.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -69,7 +70,7 @@ class LoyaltyCardWidget extends ConsumerWidget {
                           children: [
                             Text(salon.name, style: AppTypography.h3),
                             Text(
-                              '$required tampons requis',
+                              context.l10n.loyaltyStampsRequired(required),
                               style: AppTypography.bodySmall,
                             ),
                           ],
@@ -81,7 +82,7 @@ class LoyaltyCardWidget extends ConsumerWidget {
                   _StampGrid(filled: card.stampsCount, total: required),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    '${card.stampsCount} / $required tampons',
+                    context.l10n.loyaltyStampsProgress(card.stampsCount, required),
                     style: AppTypography.bodySmall,
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -107,9 +108,9 @@ class LoyaltyCardWidget extends ConsumerWidget {
                   ),
                   if (complete) ...[
                     const SizedBox(height: AppSpacing.md),
-                    const Text(
-                      '🎉 Récompense disponible ! Montrez ce code au salon.',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.loyaltyRewardAvailable,
+                      style: const TextStyle(
                         color: AppColors.success,
                         fontWeight: FontWeight.w600,
                       ),
@@ -198,8 +199,8 @@ class _LoyaltyCardDetail extends ConsumerWidget {
         children: [
           Text(salonName, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'Historique de vos tampons',
+          Text(
+            context.l10n.loyaltyStampLogsTitle,
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -209,14 +210,14 @@ class _LoyaltyCardDetail extends ConsumerWidget {
             ),
             child: logsAsync.when(
               loading: () => const KynzaSkeleton(height: 48, count: 3),
-              error: (_, __) => const Text(
-                "Impossible de charger l'historique.",
+              error: (_, __) => Text(
+                context.l10n.loyaltyStampLogsLoadError,
                 style: AppTypography.bodySmall,
               ),
               data: (logs) {
                 if (logs.isEmpty) {
-                  return const Text(
-                    'Aucun tampon pour le moment.',
+                  return Text(
+                    context.l10n.loyaltyStampLogsEmpty,
                     style: AppTypography.bodySmall,
                   );
                 }
@@ -242,8 +243,8 @@ class _LoyaltyCardDetail extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               log.stampsDelta >= 0
-                                  ? 'Tampon ajouté'
-                                  : 'Récompense validée',
+                                  ? context.l10n.loyaltyStampAdded
+                                  : context.l10n.loyaltyStampRewardValidated,
                               style: AppTypography.body,
                             ),
                           ),
@@ -262,7 +263,7 @@ class _LoyaltyCardDetail extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           KynzaButton(
-            label: 'Afficher mon QR',
+            label: context.l10n.loyaltyShowQrButton,
             icon: const Icon(
               Icons.qr_code,
               size: 18,

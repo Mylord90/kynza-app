@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/permission_definition_model.dart';
 import '../../../../core/models/permission_group_model.dart';
 import '../../../../core/models/staff_profile_model.dart';
@@ -38,7 +39,7 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(group?.name ?? 'Groupe de permissions'),
+        title: Text(group?.name ?? context.l10n.permissionsGroupDefaultTitle),
         actions: [
           if (group != null && !group.isSystem)
             IconButton(
@@ -46,10 +47,9 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
               onPressed: () async {
                 final confirmed = await showKynzaConfirmDialog(
                   context,
-                  title: 'Supprimer ce groupe ?',
-                  message:
-                      'Les membres de "${group.name}" perdront les permissions accordées par ce groupe.',
-                  confirmLabel: 'Supprimer',
+                  title: context.l10n.permissionsGroupDeleteConfirmTitle,
+                  message: context.l10n.permissionsGroupDeleteConfirmMessage(group.name),
+                  confirmLabel: context.l10n.commonDelete,
                 );
                 if (!confirmed) return;
                 await ref
@@ -71,17 +71,17 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
             child: groupsAsync.when(
               loading: () => const Center(child: KynzaSpinner()),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger ce groupe.',
+                message: context.l10n.permissionsGroupDetailLoadError,
                 onRetry: () =>
                     ref.invalidate(permissionGroupsProvider(salonId)),
               ),
               data: (_) {
                 if (group == null) {
-                  return const KynzaEmptyState(
+                  return KynzaEmptyState(
                     icon: Icons.error_outline,
-                    title: 'Groupe introuvable',
-                    subtitle: 'Ce groupe a peut-être été supprimé.',
-                    ctaLabel: 'Retour',
+                    title: context.l10n.permissionsGroupNotFound,
+                    subtitle: context.l10n.permissionsGroupNotFoundSubtitle,
+                    ctaLabel: context.l10n.commonBack,
                     onCta: _noop,
                   );
                 }
@@ -90,7 +90,7 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
                   children: [
                     _MembersSection(salonId: salonId, groupId: groupId),
                     const SizedBox(height: AppSpacing.xl),
-                    const Text('Permissions', style: AppTypography.h2),
+                    Text(context.l10n.permissionsPermissionsTitle, style: AppTypography.h2),
                     const SizedBox(height: AppSpacing.sm),
                     _PermissionsSection(salonId: salonId, groupId: groupId),
                   ],
@@ -130,7 +130,7 @@ class _PermissionsSection extends ConsumerWidget {
     }
     if (catalogAsync.hasError || grantedAsync.hasError) {
       return KynzaErrorState(
-        message: 'Impossible de charger les permissions.',
+        message: context.l10n.permissionsPermissionsLoadError,
         onRetry: () {
           ref.invalidate(permissionCatalogProvider);
           ref.invalidate(groupPermissionIdsProvider(groupId));
@@ -208,7 +208,7 @@ class _MembersSection extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Membres', style: AppTypography.h2),
+            Text(context.l10n.permissionsMembersTitle, style: AppTypography.h2),
             IconButton(
               icon: const Icon(Icons.person_add_outlined),
               onPressed: () => _showAddMemberSheet(
@@ -228,6 +228,7 @@ class _MembersSection extends ConsumerWidget {
           )
         else
           ..._memberTiles(
+            context,
             ref,
             memberIdsAsync.valueOrNull ?? const [],
             staffAsync.valueOrNull ?? const [],
@@ -237,16 +238,17 @@ class _MembersSection extends ConsumerWidget {
   }
 
   List<Widget> _memberTiles(
+    BuildContext context,
     WidgetRef ref,
     List<String> memberIds,
     List<StaffProfileModel> staff,
   ) {
     if (memberIds.isEmpty) {
-      return const [
+      return [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Text(
-            'Aucun membre dans ce groupe pour le moment.',
+            context.l10n.permissionsMembersEmpty,
             style: AppTypography.bodySmall,
           ),
         ),
@@ -259,7 +261,7 @@ class _MembersSection extends ConsumerWidget {
         child: KynzaCard(
           child: Row(
             children: [
-              KynzaAvatar(fullName: member?.displayName ?? 'Membre'),
+              KynzaAvatar(fullName: member?.displayName ?? context.l10n.permissionsMemberFallback),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
@@ -306,13 +308,13 @@ class _MembersSection extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Ajouter un membre', style: AppTypography.h2),
+            Text(context.l10n.permissionsAddMemberTitle, style: AppTypography.h2),
             const SizedBox(height: AppSpacing.md),
             if (candidates.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                 child: Text(
-                  "Toute l'équipe fait déjà partie de ce groupe.",
+                  context.l10n.permissionsAddMemberAllInGroup,
                   style: AppTypography.body,
                 ),
               )

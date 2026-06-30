@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/loyalty/loyalty_card_model.dart';
 import '../../../../core/models/loyalty/loyalty_qr_token_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -54,8 +55,9 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
   Future<void> _generate() async {
     final card = _findCard();
     if (card == null) {
+      final msg = context.l10n.loyaltyQrCardNotFound;
       setState(() {
-        _error = 'Carte de fidélité introuvable.';
+        _error = msg;
         _loading = false;
       });
       return;
@@ -78,7 +80,7 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'Impossible de générer le QR code.';
+        _error = context.l10n.loyaltyQrGenerateError;
         _loading = false;
       });
     }
@@ -107,7 +109,7 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Mon QR fidélité')),
+      appBar: AppBar(title: Text(context.l10n.loyaltyQrTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -151,7 +153,7 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           Text(
-                            _formatRemaining(_remaining),
+                            _formatRemaining(_remaining, context),
                             style: AppTypography.h3.copyWith(
                               color: _remaining.inSeconds <= 120
                                   ? AppColors.error
@@ -159,8 +161,8 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
                             ),
                           ),
                           const SizedBox(height: AppSpacing.xs),
-                          const Text(
-                            'Montrez ce code au personnel du salon',
+                          Text(
+                            context.l10n.loyaltyQrShowToStaff,
                             style: AppTypography.bodySmall,
                             textAlign: TextAlign.center,
                           ),
@@ -175,9 +177,9 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
   }
 }
 
-String _formatRemaining(Duration d) {
+String _formatRemaining(Duration d, BuildContext context) {
   final clamped = d.isNegative ? Duration.zero : d;
   final minutes = clamped.inMinutes.toString().padLeft(2, '0');
   final seconds = (clamped.inSeconds % 60).toString().padLeft(2, '0');
-  return 'Expire dans $minutes:$seconds';
+  return context.l10n.loyaltyQrExpiresIn(minutes, seconds);
 }

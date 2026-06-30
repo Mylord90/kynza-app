@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../core/localization/extensions/build_context_l10n_extension.dart';
 
 enum _Strength { empty, weak, fair, good, strong }
 
 class KynzaPasswordField extends StatefulWidget {
   const KynzaPasswordField({
     super.key,
-    this.label = 'Mot de passe',
+    this.label,
     this.hint,
     this.controller,
     this.validator,
@@ -16,7 +17,7 @@ class KynzaPasswordField extends StatefulWidget {
     this.showStrengthBar = false,
   });
 
-  final String label;
+  final String? label;
   final String? hint;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
@@ -65,6 +66,7 @@ class _KynzaPasswordFieldState extends State<KynzaPasswordField> {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveLabel = widget.label ?? context.l10n.fieldPasswordLabel;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -80,7 +82,7 @@ class _KynzaPasswordFieldState extends State<KynzaPasswordField> {
             widget.onChanged?.call(value);
           },
           decoration: InputDecoration(
-            labelText: widget.label,
+            labelText: effectiveLabel,
             hintText: widget.hint,
             suffixIcon: IconButton(
               icon: Icon(

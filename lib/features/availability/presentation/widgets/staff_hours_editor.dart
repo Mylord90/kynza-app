@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -90,7 +91,7 @@ class _DayRow extends StatelessWidget {
           if (hour.isClosed)
             Expanded(
               child: Text(
-                'Fermé',
+                context.l10n.availabilityClosedLabel,
                 textAlign: TextAlign.end,
                 style: AppTypography.body.copyWith(
                   color: AppColors.textSecondary,

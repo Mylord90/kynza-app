@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/user_profile.dart';
-import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/errors/app_exception.dart';
@@ -19,7 +19,6 @@ import '../../../loyalty/application/providers/loyalty_providers.dart';
 import '../../../loyalty/presentation/widgets/loyalty_card_widget.dart';
 import '../../../notifications/presentation/screens/notification_settings_screen.dart';
 import '../../../salon/presentation/widgets/media_upload_button.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../application/providers/client_profile_providers.dart';
 
 final _myReviewCountProvider = FutureProvider.autoDispose<int>((ref) async {
@@ -65,6 +64,7 @@ class ClientProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final profile = ref.watch(currentUserProfileProvider).valueOrNull;
     if (profile == null) return const SizedBox.shrink();
 
@@ -96,7 +96,7 @@ class ClientProfileScreen extends ConsumerWidget {
                         context,
                         message: e is AppException
                             ? e.message
-                            : "Échec de l'envoi de la photo.",
+                            : l10n.homeClientProfileAvatarUploadError,
                         level: ToastLevel.error,
                       );
                     }
@@ -120,7 +120,7 @@ class ClientProfileScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xxl),
 
         // SECTION 2 — Mes informations
-        const Text('Mes informations', style: AppTypography.h2),
+        Text(l10n.homeClientProfileInfoTitle, style: AppTypography.h2),
         const SizedBox(height: AppSpacing.md),
         KynzaCard(
           onTap: () => showKynzaBottomSheet(
@@ -135,11 +135,11 @@ class ClientProfileScreen extends ConsumerWidget {
                   children: [
                     Text(profile.fullName, style: AppTypography.h3),
                     Text(
-                      profile.phone ?? 'Aucun numéro',
+                      profile.phone ?? l10n.homeClientProfileNoPhone,
                       style: AppTypography.bodySmall,
                     ),
                     Text(
-                      profile.email ?? 'Aucun email',
+                      profile.email ?? l10n.homeClientProfileNoEmail,
                       style: AppTypography.bodySmall,
                     ),
                   ],
@@ -152,15 +152,15 @@ class ClientProfileScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xxl),
 
         // SECTION 3 — Mes RDV récents
-        const Text('Mes RDV récents', style: AppTypography.h2),
+        Text(l10n.homeClientProfileRecentBookingsTitle, style: AppTypography.h2),
         const SizedBox(height: AppSpacing.md),
         bookingsAsync.when(
           loading: () => const KynzaSkeleton(height: 72, count: 2),
           error: (_, __) => const SizedBox.shrink(),
           data: (bookings) {
             if (bookings.isEmpty) {
-              return const Text(
-                'Aucun RDV pour le moment.',
+              return Text(
+                l10n.homeClientProfileNoBookings,
                 style: AppTypography.body,
               );
             }
@@ -177,7 +177,7 @@ class ClientProfileScreen extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     onPressed: () => context.go(RouteNames.clientBookings),
-                    child: const Text('Voir tous mes RDV →'),
+                    child: Text(l10n.homeClientProfileSeeAllBookings),
                   ),
                 ),
               ],
@@ -187,15 +187,15 @@ class ClientProfileScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xxl),
 
         // SECTION 4 — Mes fidélités
-        const Text('Mes fidélités', style: AppTypography.h2),
+        Text(l10n.homeClientProfileLoyaltiesTitle, style: AppTypography.h2),
         const SizedBox(height: AppSpacing.md),
         cardsAsync.when(
           loading: () => const KynzaSkeleton(height: 100),
           error: (_, __) => const SizedBox.shrink(),
           data: (cards) {
             if (cards.isEmpty) {
-              return const Text(
-                'Réservez un RDV pour démarrer une carte de fidélité.',
+              return Text(
+                l10n.homeClientProfileNoLoyalty,
                 style: AppTypography.body,
               );
             }
@@ -206,7 +206,7 @@ class ClientProfileScreen extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     onPressed: () => context.go(RouteNames.clientLoyalty),
-                    child: const Text('Voir mes programmes →'),
+                    child: Text(l10n.homeClientProfileSeeAllPrograms),
                   ),
                 ),
               ],
@@ -216,7 +216,7 @@ class ClientProfileScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xxl),
 
         // SECTION 5 — Mes avis
-        const Text('Mes avis', style: AppTypography.h2),
+        Text(l10n.homeClientProfileReviewsTitle, style: AppTypography.h2),
         const SizedBox(height: AppSpacing.md),
         reviewCountAsync.when(
           loading: () => const KynzaSkeleton(height: 24),
@@ -225,7 +225,7 @@ class ClientProfileScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  "J'ai laissé $count avis.",
+                  l10n.homeClientProfileReviewCount(count),
                   style: AppTypography.body,
                 ),
               ),
@@ -234,7 +234,7 @@ class ClientProfileScreen extends ConsumerWidget {
                   context,
                   builder: (_) => const _MyReviewsSheet(),
                 ),
-                child: const Text('Voir mes avis →'),
+                child: Text(l10n.homeClientProfileSeeAllReviews),
               ),
             ],
           ),
@@ -248,43 +248,32 @@ class ClientProfileScreen extends ConsumerWidget {
               builder: (_) => const NotificationSettingsScreen(),
             ),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.notifications_outlined, color: AppColors.primary),
-              SizedBox(width: AppSpacing.md),
-              Expanded(child: Text('Notifications', style: AppTypography.h3)),
-              Icon(Icons.chevron_right, color: AppColors.textMuted),
+              const Icon(Icons.notifications_outlined, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(l10n.navNotifications, style: AppTypography.h3),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
 
         // SECTION 6b — Langue
-        Builder(
-          builder: (context) {
-            final language = ref.watch(languageProvider);
-            return KynzaCard(
-              child: Row(
-                children: [
-                  const Icon(Icons.language, color: AppColors.primary),
-                  const SizedBox(width: AppSpacing.md),
-                  const Expanded(
-                    child: Text('Langue', style: AppTypography.h3),
-                  ),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'fr', label: Text('FR')),
-                      ButtonSegment(value: 'en', label: Text('EN')),
-                    ],
-                    selected: {language},
-                    onSelectionChanged: (selected) => ref
-                        .read(languageProvider.notifier)
-                        .setLanguage(selected.first),
-                  ),
-                ],
+        KynzaCard(
+          onTap: () => context.push(RouteNames.ownerLanguage),
+          child: Row(
+            children: [
+              const Icon(Icons.language, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(l10n.settingsLanguageTitle, style: AppTypography.h3),
               ),
-            );
-          },
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
 
@@ -299,14 +288,17 @@ class ClientProfileScreen extends ConsumerWidget {
                   await ShareService.shareGenericInvite(token);
                 }
               },
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.favorite_outline, color: AppColors.primary),
-                  SizedBox(width: AppSpacing.md),
+                  const Icon(Icons.favorite_outline, color: AppColors.primary),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text('Invitez un ami', style: AppTypography.h3),
+                    child: Text(
+                      context.l10n.homeClientProfileInviteFriend,
+                      style: AppTypography.h3,
+                    ),
                   ),
-                  Icon(Icons.share_outlined, color: AppColors.textMuted),
+                  const Icon(Icons.share_outlined, color: AppColors.textMuted),
                 ],
               ),
             );
@@ -316,14 +308,14 @@ class ClientProfileScreen extends ConsumerWidget {
 
         // SECTION 8 — Déconnexion
         KynzaButton(
-          label: AppLocalizations.of(context)!.authLogout,
+          label: l10n.authLogout,
           variant: KynzaButtonVariant.destructive,
           onPressed: () async {
             final confirmed = await showKynzaConfirmDialog(
               context,
-              title: 'Déconnexion',
-              message: 'Êtes-vous sûr ?',
-              confirmLabel: 'Se déconnecter',
+              title: l10n.homeClientProfileLogoutTitle,
+              message: l10n.homeClientProfileLogoutMessage,
+              confirmLabel: l10n.homeClientProfileLogoutButton,
             );
             if (confirmed) {
               await ref.read(authNotifierProvider.notifier).signOut();
@@ -381,7 +373,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           context,
           message: e is AppException
               ? e.message
-              : 'Impossible de mettre à jour votre profil.',
+              : context.l10n.homeClientProfileUpdateError,
           level: ToastLevel.error,
         );
       }
@@ -392,6 +384,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -405,20 +398,26 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Modifier mes informations', style: AppTypography.h2),
+            Text(l10n.homeClientProfileEditTitle, style: AppTypography.h2),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Nom complet *',
+              label: l10n.authCompleteProfileFullNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, 'Nom'),
+              validator: Validators.fullName,
             ),
             const SizedBox(height: AppSpacing.lg),
-            KynzaTextField(label: 'Téléphone', controller: _phoneCtrl),
+            KynzaTextField(
+              label: l10n.homeClientProfilePhoneLabel,
+              controller: _phoneCtrl,
+            ),
             const SizedBox(height: AppSpacing.lg),
-            KynzaTextField(label: 'Email', controller: _emailCtrl),
+            KynzaTextField(
+              label: l10n.authLoginEmailLabel,
+              controller: _emailCtrl,
+            ),
             const SizedBox(height: AppSpacing.xl),
             KynzaButton(
-              label: 'Enregistrer',
+              label: l10n.commonSave,
               isLoading: _saving,
               onPressed: _save,
             ),
@@ -434,6 +433,7 @@ class _MyReviewsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final reviewsAsync = ref.watch(_myReviewsProvider);
 
     return Padding(
@@ -447,7 +447,7 @@ class _MyReviewsSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Mes avis', style: AppTypography.h2),
+          Text(l10n.homeClientProfileReviewsTitle, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.lg),
           ConstrainedBox(
             constraints: BoxConstraints(
@@ -455,14 +455,14 @@ class _MyReviewsSheet extends ConsumerWidget {
             ),
             child: reviewsAsync.when(
               loading: () => const KynzaSkeleton(height: 60, count: 3),
-              error: (_, __) => const Text(
-                'Impossible de charger vos avis.',
+              error: (_, __) => Text(
+                l10n.homeClientProfileReviewsLoadError,
                 style: AppTypography.body,
               ),
               data: (reviews) {
                 if (reviews.isEmpty) {
-                  return const Text(
-                    "Vous n'avez pas encore laissé d'avis.",
+                  return Text(
+                    l10n.homeClientProfileNoReviews,
                     style: AppTypography.body,
                   );
                 }

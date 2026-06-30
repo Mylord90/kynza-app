@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/marketing/promotion_model.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/services/share_service.dart';
@@ -41,9 +42,9 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
   Future<void> _deactivate(PromotionModel promo) async {
     final confirmed = await showKynzaConfirmDialog(
       context,
-      title: 'Désactiver cette promotion ?',
-      message: '${promo.title} ne sera plus visible des clients.',
-      confirmLabel: 'Désactiver',
+      title: context.l10n.marketingPromotionsDeactivateConfirmTitle,
+      message: context.l10n.marketingPromotionsDeactivateConfirmMessage(promo.title),
+      confirmLabel: context.l10n.marketingPromotionsDeactivateButton,
     );
     if (!confirmed) return;
     try {
@@ -54,7 +55,7 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Échec de la désactivation.',
+          message: e is AppException ? e.message : context.l10n.marketingPromotionsDeactivateError,
           level: ToastLevel.error,
         );
       }
@@ -75,7 +76,7 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Promotions'),
+        title: Text(context.l10n.marketingPromotionsTitle),
         actions: [
           IconButton(icon: const Icon(Icons.add), onPressed: () => _openForm()),
         ],
@@ -85,9 +86,9 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('Actives')),
-                ButtonSegment(value: true, label: Text('Expirées')),
+              segments: [
+                ButtonSegment(value: false, label: Text(context.l10n.marketingPromotionsActiveFilter)),
+                ButtonSegment(value: true, label: Text(context.l10n.marketingPromotionsExpiredFilter)),
               ],
               selected: {_showExpired},
               onSelectionChanged: (s) => setState(() => _showExpired = s.first),
@@ -104,7 +105,7 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger vos promotions.',
+                message: context.l10n.marketingPromotionsLoadError,
                 onRetry: () =>
                     ref.invalidate(promotionsProvider(widget.salonId)),
               ),
@@ -116,12 +117,12 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
                   return KynzaEmptyState(
                     icon: Icons.local_offer_outlined,
                     title: _showExpired
-                        ? 'Aucune promotion expirée'
-                        : 'Aucune promotion active',
+                        ? context.l10n.marketingPromotionsEmptyExpired
+                        : context.l10n.marketingPromotionsEmptyActive,
                     subtitle: _showExpired
                         ? ''
-                        : 'Créez votre première offre pour attirer vos clients.',
-                    ctaLabel: 'Créer ma première promotion',
+                        : context.l10n.marketingPromotionsEmptyActiveHint,
+                    ctaLabel: context.l10n.marketingPromotionsCreateButton,
                     onCta: () => _openForm(),
                   );
                 }
@@ -193,12 +194,11 @@ class _PromotionCard extends StatelessWidget {
           ],
           if (serviceName != null) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text('Service : $serviceName', style: AppTypography.bodySmall),
+            Text(context.l10n.promotionCardServiceLabel(serviceName!), style: AppTypography.bodySmall),
           ],
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '${promo.currentUses}${promo.maxUses != null ? ' / ${promo.maxUses}' : ''} utilisation(s)'
-            " · jusqu'au ${DateFormat('dd/MM/yyyy').format(promo.endsAt)}",
+            '${promo.maxUses != null ? context.l10n.promotionCardUsagesMaxLabel(promo.currentUses, promo.maxUses!) : context.l10n.promotionCardUsagesLabel(promo.currentUses)} ${context.l10n.promotionCardUntilDate(DateFormat('dd/MM/yyyy').format(promo.endsAt))}',
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -206,7 +206,7 @@ class _PromotionCard extends StatelessWidget {
             children: [
               Expanded(
                 child: KynzaButton(
-                  label: 'Partager',
+                  label: context.l10n.promotionCardShareButton,
                   height: 40,
                   variant: KynzaButtonVariant.secondary,
                   onPressed: onShare,
@@ -215,7 +215,7 @@ class _PromotionCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: KynzaButton(
-                  label: 'Modifier',
+                  label: context.l10n.promotionCardEditButton,
                   height: 40,
                   variant: KynzaButtonVariant.ghost,
                   onPressed: onEdit,
@@ -225,7 +225,7 @@ class _PromotionCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: KynzaButton(
-                    label: 'Désactiver',
+                    label: context.l10n.promotionCardDeactivateButton,
                     height: 40,
                     variant: KynzaButtonVariant.destructive,
                     onPressed: onDeactivate,
@@ -307,7 +307,7 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
     if (_endsAt.isBefore(_startsAt)) {
       showKynzaToast(
         context,
-        message: 'La date de fin doit être après la date de début.',
+        message: context.l10n.marketingPromotionDateError,
         level: ToastLevel.warning,
       );
       return;
@@ -341,7 +341,7 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
           context,
           message: e is AppException
               ? e.message
-              : 'Échec de l\'enregistrement.',
+              : context.l10n.promotionFormSaveError,
           level: ToastLevel.error,
         );
       }
@@ -372,8 +372,8 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
           children: [
             Text(
               widget.initial == null
-                  ? 'Créer une promotion'
-                  : 'Modifier la promotion',
+                  ? context.l10n.promotionFormCreateTitle
+                  : context.l10n.promotionFormEditTitle,
               style: AppTypography.h2,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -383,7 +383,7 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                   Expanded(
                     child: Text(
                       _titleCtrl.text.isEmpty
-                          ? 'Titre de la promotion'
+                          ? context.l10n.promotionFormTitlePlaceholder
                           : _titleCtrl.text,
                       style: AppTypography.h3,
                     ),
@@ -397,29 +397,29 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Titre *',
+              label: context.l10n.promotionFormTitleLabel,
               controller: _titleCtrl,
               maxLength: 100,
-              validator: (v) => Validators.required(v, 'Titre'),
+              validator: (v) => Validators.required(v, context.l10n.promotionFormTitleLabel),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Description',
+              label: context.l10n.promotionFormDescriptionLabel,
               controller: _descCtrl,
               maxLines: 3,
               maxLength: 300,
             ),
             const SizedBox(height: AppSpacing.lg),
             SegmentedButton<DiscountType>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: DiscountType.percent,
-                  label: Text('Pourcentage %'),
+                  label: Text(context.l10n.marketingPromotionTypePercentage),
                 ),
                 ButtonSegment(
                   value: DiscountType.fixedBif,
-                  label: Text('Montant fixe FBu'),
+                  label: Text(context.l10n.marketingPromotionTypeFixed),
                 ),
               ],
               selected: {_discountType},
@@ -429,20 +429,20 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
               label: _discountType == DiscountType.percent
-                  ? 'Valeur (%) *'
-                  : 'Valeur (FBu) *',
+                  ? context.l10n.promotionFormValuePercentLabel
+                  : context.l10n.promotionFormValueBifLabel,
               controller: _valueCtrl,
               keyboardType: TextInputType.number,
-              validator: (v) => Validators.required(v, 'Valeur'),
+              validator: (v) => Validators.required(v, context.l10n.promotionFormValuePercentLabel),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: AppSpacing.lg),
             servicesAsync.maybeWhen(
               data: (services) => KynzaDropdown<ServiceModel?>(
-                label: 'Service ciblé (optionnel)',
+                label: context.l10n.promotionFormTargetServiceLabel,
                 value: _selectedService,
                 items: [null, ...services],
-                itemLabel: (s) => s?.name ?? 'Tous les services',
+                itemLabel: (s) => s?.name ?? context.l10n.promotionFormAllServices,
                 onChanged: (s) => setState(() => _selectedService = s),
               ),
               orElse: () => const SizedBox.shrink(),
@@ -454,7 +454,7 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                   child: OutlinedButton(
                     onPressed: () => _pickDate(isStart: true),
                     child: Text(
-                      'Début : ${DateFormat('dd/MM/yyyy').format(_startsAt)}',
+                      context.l10n.promotionFormStartDate(DateFormat('dd/MM/yyyy').format(_startsAt)),
                     ),
                   ),
                 ),
@@ -463,7 +463,7 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                   child: OutlinedButton(
                     onPressed: () => _pickDate(isStart: false),
                     child: Text(
-                      'Fin : ${DateFormat('dd/MM/yyyy').format(_endsAt)}',
+                      context.l10n.promotionFormEndDate(DateFormat('dd/MM/yyyy').format(_endsAt)),
                     ),
                   ),
                 ),
@@ -471,7 +471,7 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: "Nombre d'utilisations max (optionnel)",
+              label: context.l10n.promotionFormMaxUsesLabel,
               controller: _maxUsesCtrl,
               keyboardType: TextInputType.number,
             ),
@@ -480,21 +480,21 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    _promoCode.isEmpty ? 'Aucun code promo' : _promoCode,
+                    _promoCode.isEmpty ? context.l10n.promotionFormNoCode : _promoCode,
                     style: AppTypography.mono,
                   ),
                 ),
                 TextButton(
                   onPressed: _generateCode,
-                  child: const Text('Générer un code'),
+                  child: Text(context.l10n.promotionFormGenerateCodeButton),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
             KynzaButton(
               label: widget.initial == null
-                  ? 'Créer la promotion'
-                  : 'Enregistrer',
+                  ? context.l10n.promotionFormCreateButton
+                  : context.l10n.commonSave,
               isLoading: _saving,
               onPressed: _save,
             ),

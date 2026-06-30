@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/notification_log_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
@@ -16,17 +17,17 @@ import '../widgets/notification_tile.dart';
 const _kPageSize = 20;
 
 class _NotifFilter {
-  const _NotifFilter(this.value, this.label);
+  const _NotifFilter(this.value, this.labelKey);
   final String value;
-  final String label;
+  final String labelKey;
 }
 
-const _filters = [
-  _NotifFilter('all', 'Tous'),
-  _NotifFilter('booking', 'RDV'),
-  _NotifFilter('loyalty', 'Fidélité'),
-  _NotifFilter('marketing', 'Marketing'),
-  _NotifFilter('system', 'Système'),
+const _filterValues = [
+  _NotifFilter('all', 'all'),
+  _NotifFilter('booking', 'booking'),
+  _NotifFilter('loyalty', 'loyalty'),
+  _NotifFilter('marketing', 'marketing'),
+  _NotifFilter('system', 'system'),
 ];
 
 String _categoryFor(String eventType) {
@@ -38,16 +39,6 @@ String _categoryFor(String eventType) {
     return 'marketing';
   }
   return 'system';
-}
-
-String _sectionFor(DateTime date) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final day = DateTime(date.year, date.month, date.day);
-  final diff = today.difference(day).inDays;
-  if (diff <= 0) return "Aujourd'hui";
-  if (diff < 7) return 'Cette semaine';
-  return 'Plus ancien';
 }
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -71,6 +62,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     super.dispose();
   }
 
+  String _sectionFor(DateTime date, BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(day).inDays;
+    if (diff <= 0) return context.l10n.notificationsSectionToday;
+    if (diff < 7) return context.l10n.notificationsSectionThisWeek;
+    return context.l10n.notificationsSectionOlder;
+  }
+
   void _swipeDelete(String notifId, String title) {
     setState(() {});
     _pendingDeletes[notifId] = Timer(const Duration(seconds: 3), () {
@@ -83,9 +84,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 3),
-        content: Text('« $title » supprimée.'),
+        content: Text(context.l10n.notificationsDeletedSnack(title)),
         action: SnackBarAction(
-          label: 'Annuler',
+          label: context.l10n.commonCancel,
           onPressed: () {
             _pendingDeletes[notifId]?.cancel();
             _pendingDeletes.remove(notifId);
@@ -100,7 +101,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final widgets = <Widget>[];
     String? lastSection;
     for (final notif in notifications) {
-      final section = _sectionFor(notif.createdAt ?? DateTime.now());
+      final section = _sectionFor(notif.createdAt ?? DateTime.now(), context);
       if (section != lastSection) {
         widgets.add(
           Padding(
@@ -133,10 +134,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             onDismissed: (_) => _swipeDelete(notif.id!, notif.title),
             child: NotificationTile(
               notification: notif,
-              // No generic booking-detail route exists yet in this app
-              // (only the role-specific calendar tiles/sheets) — tapping
-              // only acknowledges the alert rather than risk a dead
-              // navigation (R04).
               onTap: () => ref
                   .read(notificationNotifierProvider.notifier)
                   .markRead(notif.id!)
@@ -149,6 +146,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return widgets;
   }
 
+  String _filterLabel(BuildContext context, String value) {
+    switch (value) {
+      case 'booking':
+        return context.l10n.notificationsFilterBooking;
+      case 'loyalty':
+        return context.l10n.notificationsFilterLoyalty;
+      case 'marketing':
+        return context.l10n.notificationsFilterMarketing;
+      case 'system':
+        return context.l10n.notificationsFilterSystem;
+      default:
+        return context.l10n.notificationsFilterAll;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final notificationsAsync = ref.watch(notificationsProvider(_limit));
@@ -157,7 +169,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(context.l10n.notificationsListTitle),
         actions: [
           TextButton(
             onPressed: profile == null
@@ -166,9 +178,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       .read(notificationNotifierProvider.notifier)
                       .markAllRead(profile.id)
                       .catchError((_) {}),
-            child: const Text(
-              'Tout marquer lu',
-              style: TextStyle(color: AppColors.primary),
+            child: Text(
+              context.l10n.notificationsMarkAllRead,
+              style: const TextStyle(color: AppColors.primary),
             ),
           ),
           IconButton(
@@ -189,11 +201,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               height: 36,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _filters.length,
+                itemCount: _filterValues.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (context, index) {
-                  final filter = _filters[index];
+                  final filter = _filterValues[index];
                   final selected = _filter == filter.value;
                   return GestureDetector(
                     onTap: () => setState(() => _filter = filter.value),
@@ -210,7 +222,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         borderRadius: BorderRadius.circular(9999),
                       ),
                       child: Text(
-                        filter.label,
+                        _filterLabel(context, filter.value),
                         style: AppTypography.bodySmall.copyWith(
                           color: selected
                               ? AppColors.background
@@ -237,7 +249,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger vos notifications.',
+                message: context.l10n.notificationsLoadErrorFeed,
                 onRetry: () => ref.invalidate(notificationsProvider(_limit)),
               ),
               data: (all) {
@@ -247,11 +259,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           .where((n) => _categoryFor(n.eventType) == _filter)
                           .toList();
                 if (notifications.isEmpty) {
-                  return const KynzaEmptyState(
+                  return KynzaEmptyState(
                     icon: Icons.notifications_none,
-                    title: 'Aucune notification',
-                    subtitle: 'Revenez bientôt — vos alertes apparaîtront ici.',
-                    ctaLabel: 'Retour',
+                    title: context.l10n.notificationsEmptyTitle,
+                    subtitle: context.l10n.notificationsEmptySubtitle,
+                    ctaLabel: context.l10n.commonBack,
                     onCta: _noop,
                   );
                 }
@@ -271,7 +283,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             child: TextButton(
                               onPressed: () =>
                                   setState(() => _limit += _kPageSize),
-                              child: const Text('Charger plus'),
+                              child: Text(context.l10n.notificationsLoadMoreButton),
                             ),
                           ),
                         );

@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/marketing/client_contact_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/services/share_service.dart';
@@ -53,13 +54,14 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
     });
     _pendingTimers[contact.id!] = timer;
 
-    showKynzaToast(context, message: '${contact.fullName} supprimé.');
+    final l10n = context.l10n;
+    showKynzaToast(context, message: l10n.marketingClientsDeleteSuccess(contact.fullName));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 4),
-        content: Text('${contact.fullName} supprimé.'),
+        content: Text(l10n.marketingClientsDeleteSuccess(contact.fullName)),
         action: SnackBarAction(
-          label: 'Annuler',
+          label: l10n.commonCancel,
           onPressed: () {
             _pendingTimers.remove(contact.id)?.cancel();
             if (mounted) setState(() => _hiddenIds.remove(contact.id));
@@ -79,15 +81,15 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
       showKynzaToast(
         context,
         message: count == 0
-            ? 'Aucun nouveau client à importer.'
-            : '$count client(s) importé(s).',
+            ? context.l10n.marketingImportNone
+            : context.l10n.marketingImportCount(count),
         level: ToastLevel.success,
       );
     } catch (e) {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : "Échec de l'import.",
+          message: e is AppException ? e.message : context.l10n.marketingClientsImportError,
           level: ToastLevel.error,
         );
       }
@@ -109,7 +111,7 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Mes Clients'),
+        title: Text(context.l10n.marketingClientsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_add_outlined),
@@ -125,9 +127,9 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('Contacts')),
-                ButtonSegment(value: true, label: Text('Invitations')),
+              segments: [
+                ButtonSegment(value: false, label: Text(context.l10n.marketingClientsContactsTab)),
+                ButtonSegment(value: true, label: Text(context.l10n.marketingClientsInvitationsTab)),
               ],
               selected: {_showInvitations},
               onSelectionChanged: (s) =>
@@ -145,7 +147,7 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger vos contacts.',
+                message: context.l10n.marketingClientsLoadError,
                 onRetry: () =>
                     ref.invalidate(clientContactsProvider(widget.salonId)),
               ),
@@ -216,14 +218,14 @@ class _ContactsList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       children: [
         KynzaTextField(
-          hint: 'Rechercher un contact',
+          hint: context.l10n.marketingSearchContactHint,
           controller: searchCtrl,
           onChanged: onSearchChanged,
           suffixIcon: const Icon(Icons.search),
         ),
         const SizedBox(height: AppSpacing.md),
         KynzaButton(
-          label: 'Importer depuis les RDV',
+          label: context.l10n.marketingImportFromBookingsButton,
           variant: KynzaButtonVariant.secondary,
           isLoading: importing,
           onPressed: onImport,
@@ -232,9 +234,9 @@ class _ContactsList extends StatelessWidget {
         if (contacts.isEmpty)
           KynzaEmptyState(
             icon: Icons.people_outline,
-            title: 'Aucun contact encore',
-            subtitle: 'Ajoutez vos premiers clients.',
-            ctaLabel: 'Ajouter un contact',
+            title: context.l10n.marketingNoContactsTitle,
+            subtitle: context.l10n.marketingNoContactsSubtitle,
+            ctaLabel: context.l10n.marketingAddContactButton,
             onCta: onAddContact,
           )
         else
@@ -277,9 +279,9 @@ class _ContactsList extends StatelessWidget {
                               children: [
                                 KynzaBadge(
                                   label: switch (contact.source) {
-                                    'booking' => 'RDV',
-                                    'referral' => 'Parrainage',
-                                    _ => 'Manuel',
+                                    'booking' => context.l10n.contactSourceBooking,
+                                    'referral' => context.l10n.contactSourceReferral,
+                                    _ => context.l10n.contactSourceManual,
                                   },
                                   variant: switch (contact.source) {
                                     'booking' => KynzaBadgeVariant.info,
@@ -289,8 +291,8 @@ class _ContactsList extends StatelessWidget {
                                 ),
                                 if (contact.isKynzaUser) ...[
                                   const SizedBox(width: AppSpacing.xs),
-                                  const KynzaBadge(
-                                    label: 'Sur KYNZA ✓',
+                                  KynzaBadge(
+                                    label: context.l10n.marketingClientsOnKynzaBadge,
                                     variant: KynzaBadgeVariant.success,
                                   ),
                                 ],
@@ -321,11 +323,11 @@ class _InvitationsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (contacts.isEmpty) {
-      return const KynzaEmptyState(
+      return KynzaEmptyState(
         icon: Icons.send_outlined,
-        title: 'Aucune invitation envoyée',
-        subtitle: 'Partagez un lien de parrainage depuis vos contacts.',
-        ctaLabel: 'Retour',
+        title: context.l10n.marketingNoInvitationsSentTitle,
+        subtitle: context.l10n.marketingNoInvitationsSentSubtitle,
+        ctaLabel: context.l10n.commonBack,
         onCta: _noop,
       );
     }
@@ -348,14 +350,14 @@ class _InvitationsList extends StatelessWidget {
                     children: [
                       Text(contact.fullName, style: AppTypography.h3),
                       Text(
-                        'Envoyée le ${_formatDate(contact.inviteSentAt!)}',
+                        context.l10n.marketingInviteSentOnDate(_formatDate(contact.inviteSentAt!)),
                         style: AppTypography.bodySmall,
                       ),
                     ],
                   ),
                 ),
                 KynzaBadge(
-                  label: accepted ? 'Acceptée' : 'Envoyée',
+                  label: accepted ? context.l10n.marketingInviteAccepted : context.l10n.marketingInviteSent,
                   variant: accepted
                       ? KynzaBadgeVariant.success
                       : KynzaBadgeVariant.warning,
@@ -419,7 +421,7 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : "Échec de l'ajout.",
+          message: e is AppException ? e.message : context.l10n.marketingContactAddError,
           level: ToastLevel.error,
         );
       }
@@ -443,18 +445,18 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Ajouter un contact', style: AppTypography.h2),
+            Text(context.l10n.marketingAddContactTitle, style: AppTypography.h2),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Nom complet *',
+              label: context.l10n.marketingFullNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, 'Nom'),
+              validator: (v) => Validators.required(v, context.l10n.marketingFullNameLabel),
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaPhoneField(controller: _phoneCtrl),
             const SizedBox(height: AppSpacing.xl),
             KynzaButton(
-              label: 'Enregistrer',
+              label: context.l10n.commonSave,
               isLoading: _saving,
               onPressed: _save,
             ),

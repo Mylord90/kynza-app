@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/utils/csv_exporter.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -16,14 +17,6 @@ class _AuditFilter {
   final String? value;
   final String label;
 }
-
-const _filters = [
-  _AuditFilter(null, 'Tous'),
-  _AuditFilter('booking', 'RDV'),
-  _AuditFilter('payment', 'Paiement'),
-  _AuditFilter('staff', 'Équipe'),
-  _AuditFilter('settings', 'Paramètres'),
-];
 
 class AuditLogScreen extends ConsumerStatefulWidget {
   const AuditLogScreen({super.key, required this.salonId});
@@ -49,6 +42,14 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final filters = [
+      _AuditFilter(null, l10n.auditLogFilterAll),
+      _AuditFilter('booking', l10n.auditLogFilterBooking),
+      _AuditFilter('payment', l10n.auditLogFilterPayment),
+      _AuditFilter('staff', l10n.auditLogFilterStaff),
+      _AuditFilter('settings', l10n.auditLogFilterSettings),
+    ];
     final category = ref.watch(auditLogCategoryProvider);
     final limit = ref.watch(auditLogLimitProvider);
     final logsAsync = ref.watch(auditLogsProvider(widget.salonId));
@@ -64,11 +65,11 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Journal d'activité"),
+        title: Text(l10n.auditLogTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.ios_share_outlined),
-            tooltip: 'Exporter (CSV)',
+            tooltip: l10n.dashboardAuditLogExportTooltip,
             onPressed: filtered == null || filtered.isEmpty
                 ? null
                 : () => ShareService.shareCsv(
@@ -94,11 +95,11 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
               height: 36,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _filters.length,
+                itemCount: filters.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (context, index) {
-                  final filter = _filters[index];
+                  final filter = filters[index];
                   final selected = category == filter.value;
                   return GestureDetector(
                     onTap: () =>
@@ -161,18 +162,18 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: "Impossible de charger le journal d'activité.",
+                message: l10n.dashboardAuditLogLoadError,
                 onRetry: () =>
                     ref.invalidate(auditLogsProvider(widget.salonId)),
               ),
               data: (_) {
                 final logs = filtered ?? [];
                 if (logs.isEmpty) {
-                  return const KynzaEmptyState(
+                  return KynzaEmptyState(
                     icon: Icons.history_outlined,
-                    title: 'Aucune activité',
-                    subtitle: 'Le journal se remplira au fil de vos actions.',
-                    ctaLabel: 'Retour',
+                    title: l10n.auditLogNoActivityTitle,
+                    subtitle: l10n.auditLogNoActivitySubtitle,
+                    ctaLabel: l10n.commonBack,
                     onCta: _noop,
                   );
                 }
@@ -193,7 +194,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                           .read(auditLogLimitProvider.notifier)
                                           .state +=
                                       _kPageSize,
-                              child: const Text('Charger plus'),
+                              child: Text(l10n.commonLoadMore),
                             ),
                           ),
                         );

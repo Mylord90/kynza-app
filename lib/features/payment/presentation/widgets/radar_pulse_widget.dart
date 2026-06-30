@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -10,12 +11,11 @@ class RadarPulseWidget extends StatefulWidget {
   const RadarPulseWidget({
     super.key,
     required this.secondsRemaining,
-    this.message =
-        'Votre demande est envoyée. Attendez le message sur votre téléphone.',
+    this.message,
   });
 
   final int secondsRemaining;
-  final String message;
+  final String? message;
 
   @override
   State<RadarPulseWidget> createState() => _RadarPulseWidgetState();
@@ -60,7 +60,7 @@ class _RadarPulseWidgetState extends State<RadarPulseWidget>
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          widget.message,
+          widget.message ?? context.l10n.paymentRadarWaitMessage,
           style: AppTypography.body,
           textAlign: TextAlign.center,
         ),

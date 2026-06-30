@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../application/providers/maintenance_providers.dart';
 
 class MaintenanceScreen extends ConsumerStatefulWidget {
@@ -55,15 +56,13 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
-                  window?.title ?? 'Maintenance en cours',
+                  window?.title ?? context.l10n.evolutionMaintenanceDefaultTitle,
                   style: AppTypography.h1,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  window?.message ??
-                      'L\'application est temporairement indisponible. '
-                          'Nous reviendrons très bientôt.',
+                  window?.message ?? context.l10n.evolutionMaintenanceDefaultMessage,
                   style: AppTypography.body.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -77,7 +76,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 TextButton.icon(
                   onPressed: () => ref.invalidate(maintenanceStatusProvider),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Vérifier à nouveau'),
+                  label: Text(context.l10n.evolutionMaintenanceCheckButton),
                 ),
               ],
             ),
@@ -107,7 +106,7 @@ class _EndsAtChip extends StatelessWidget {
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Text(
-        'Fin prévue vers $formatted',
+        context.l10n.evolutionMaintenanceEndsAt(formatted),
         style: AppTypography.label.copyWith(color: AppColors.warning),
       ),
     );

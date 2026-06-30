@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/search/search_result_item.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -72,7 +73,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Recherche'),
+        title: Text(context.l10n.searchAdvancedTitle),
         actions: [
           IconButton(
             icon: Icon(
@@ -89,7 +90,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: KynzaTextField(
-              hint: 'Rechercher salons, services…',
+              hint: context.l10n.searchAdvancedHint,
               controller: _searchCtrl,
               prefixWidget: const Icon(Icons.search, size: 18),
               onChanged: _onChanged,
@@ -115,16 +116,16 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                       ),
                     ),
                     error: (_, __) => KynzaErrorState(
-                      message: 'Impossible de lancer la recherche.',
+                      message: context.l10n.searchLoadError,
                       onRetry: () => ref.invalidate(searchResultsProvider),
                     ),
                     data: (results) {
                       if (results.isEmpty) {
-                        return const KynzaEmptyState(
+                        return KynzaEmptyState(
                           icon: Icons.search_off,
-                          title: 'Aucun résultat',
-                          subtitle: 'Essayez une autre recherche ou filtre.',
-                          ctaLabel: 'Retour',
+                          title: context.l10n.searchNoResults,
+                          subtitle: context.l10n.searchNoResultsSubtitle,
+                          ctaLabel: context.l10n.commonBack,
                           onCta: _noop,
                         );
                       }
@@ -141,13 +142,13 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           children: [
                             if (salons.isNotEmpty) ...[
-                              const Text('Salons', style: AppTypography.h3),
+                              Text(context.l10n.searchSalonsSectionLabel, style: AppTypography.h3),
                               const SizedBox(height: AppSpacing.sm),
                               for (final r in salons) _ResultTile(item: r),
                               const SizedBox(height: AppSpacing.lg),
                             ],
                             if (services.isNotEmpty) ...[
-                              const Text('Services', style: AppTypography.h3),
+                              Text(context.l10n.searchServicesSectionLabel, style: AppTypography.h3),
                               const SizedBox(height: AppSpacing.sm),
                               for (final r in services) _ResultTile(item: r),
                             ],
@@ -187,10 +188,10 @@ class _SuggestionsBody extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recherches récentes', style: AppTypography.h3),
+              Text(context.l10n.searchRecentLabel, style: AppTypography.h3),
               TextButton(
                 onPressed: onClearRecent,
-                child: const Text('Effacer'),
+                child: Text(context.l10n.searchClearButton),
               ),
             ],
           ),
@@ -215,8 +216,8 @@ class _SuggestionsBody extends ConsumerWidget {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Recherches populaires',
+                    Text(
+                      context.l10n.searchPopularLabel,
                       style: AppTypography.h3,
                     ),
                     const SizedBox(height: AppSpacing.sm),

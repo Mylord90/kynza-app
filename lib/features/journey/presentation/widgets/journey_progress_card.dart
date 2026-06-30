@@ -6,6 +6,7 @@ import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/journey/owner_journey_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/journey_providers.dart';
@@ -85,9 +86,9 @@ class _JourneyCardBody extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '🚀 Lancez votre salon',
+                            context.l10n.journeyLaunchTitle,
                             style: AppTypography.h3,
                           ),
                         ),
@@ -109,10 +110,10 @@ class _JourneyCardBody extends ConsumerWidget {
                     if (journey.isComplete)
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              '🎉 Votre salon est prêt !',
-                              style: TextStyle(
+                              context.l10n.journeySalonReady,
+                              style: const TextStyle(
                                 color: AppColors.success,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -124,7 +125,7 @@ class _JourneyCardBody extends ConsumerWidget {
                                   journeyDismissedProvider(salonId).notifier,
                                 )
                                 .dismiss(salonId),
-                            child: const Text('Fermer'),
+                            child: Text(context.l10n.journeyProgressCloseButton),
                           ),
                         ],
                       )
@@ -139,7 +140,7 @@ class _JourneyCardBody extends ConsumerWidget {
                             );
                             context.go(next.route);
                           },
-                          child: const Text('Continuer la configuration →'),
+                          child: Text(context.l10n.journeyProgressContinueButton),
                         ),
                       ),
                   ],

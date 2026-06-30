@@ -4,7 +4,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/burundi_provinces.dart';
 import '../../../../core/constants/service_categories.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/search/search_result_item.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../domain/repositories/search_repository.dart';
 
@@ -66,6 +68,8 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final allProvinces = l10n.searchFiltersAllProvinces;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -81,16 +85,19 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Filtres', style: AppTypography.h2),
+                Text(l10n.searchFiltersTitle, style: AppTypography.h2),
                 TextButton(
                   onPressed: _reset,
-                  child: const Text('Réinitialiser'),
+                  child: Text(l10n.searchFiltersResetButton),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Prix (FBu) — ${_priceRange.start.round()} à ${_priceRange.end.round()}',
+              l10n.searchFiltersPriceLabel(
+                _priceRange.start.round().toString(),
+                _priceRange.end.round().toString(),
+              ),
               style: AppTypography.h3,
             ),
             RangeSlider(
@@ -102,7 +109,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
               onChanged: (v) => setState(() => _priceRange = v),
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text('Note minimum', style: AppTypography.h3),
+            Text(l10n.searchFiltersMinRatingLabel, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
@@ -118,7 +125,7 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text('Catégories', style: AppTypography.h3),
+            Text(l10n.searchFiltersCategoriesLabel, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.xs,
@@ -139,41 +146,41 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text('Province', style: AppTypography.h3),
+            Text(l10n.searchFiltersProvinceLabel, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.sm),
             KynzaDropdown<String?>(
-              hint: 'Toutes les provinces',
+              hint: allProvinces,
               value: _province,
               items: const [null, ...BurundiProvinces.provinces],
-              itemLabel: (p) => p ?? 'Toutes les provinces',
+              itemLabel: (p) => p ?? allProvinces,
               onChanged: (v) => setState(() => _province = v),
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text('Trier par', style: AppTypography.h3),
+            Text(l10n.searchFiltersSortByLabel, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.xs,
               children: [
                 for (final sort in SearchSortBy.values)
                   ChoiceChip(
-                    label: Text(_sortLabel(sort)),
+                    label: Text(_sortLabel(l10n, sort)),
                     selected: _sortBy == sort,
                     onSelected: (_) => setState(() => _sortBy = sort),
                   ),
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
-            KynzaButton(label: 'Appliquer', onPressed: _apply),
+            KynzaButton(label: l10n.searchFiltersApplyButton, onPressed: _apply),
           ],
         ),
       ),
     );
   }
 
-  String _sortLabel(SearchSortBy sort) => switch (sort) {
-    SearchSortBy.relevance => 'Pertinence',
-    SearchSortBy.priceAsc => 'Prix ↑',
-    SearchSortBy.priceDesc => 'Prix ↓',
-    SearchSortBy.rating => 'Note',
+  String _sortLabel(AppLocalizations l10n, SearchSortBy sort) => switch (sort) {
+    SearchSortBy.relevance => l10n.searchSortRelevance,
+    SearchSortBy.priceAsc => l10n.searchSortPriceAsc,
+    SearchSortBy.priceDesc => l10n.searchSortPriceDesc,
+    SearchSortBy.rating => l10n.searchSortRating,
   };
 }

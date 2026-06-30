@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/review/review_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -20,8 +21,8 @@ class ReviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayName = review.isAnonymous
-        ? 'Anonyme'
-        : (clientName ?? 'Client');
+        ? context.l10n.reviewsAnonymousName
+        : (clientName ?? context.l10n.reviewsClientFallbackName);
 
     return KynzaCard(
       child: Column(
@@ -83,7 +84,10 @@ class ReviewTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Réponse du salon', style: AppTypography.label),
+                  Text(
+                    context.l10n.reviewsSalonReplyLabel,
+                    style: AppTypography.label,
+                  ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(review.ownerReply!, style: AppTypography.bodySmall),
                 ],

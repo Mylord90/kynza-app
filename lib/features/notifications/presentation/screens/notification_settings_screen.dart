@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/notification_preferences_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -40,14 +41,14 @@ class _NotificationSettingsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Préférences de notifications')),
+      appBar: AppBar(title: Text(context.l10n.notificationsSettingsTitle)),
       body: prefsAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AppSpacing.lg),
           child: KynzaSkeleton(height: 240),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger vos préférences.',
+          message: context.l10n.notificationsLoadError,
           onRetry: () => ref.invalidate(notificationPrefsProvider),
         ),
         data: (prefs) {
@@ -60,11 +61,11 @@ class _NotificationSettingsScreenState
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              const Text('Canaux', style: AppTypography.h2),
+              Text(context.l10n.notificationsChannelsHeading, style: AppTypography.h2),
               const SizedBox(height: AppSpacing.sm),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Notifications push'),
+                title: Text(context.l10n.notificationsPushTitle),
                 value: draft.pushEnabled,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) =>
@@ -72,7 +73,7 @@ class _NotificationSettingsScreenState
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('WhatsApp'),
+                title: Text(context.l10n.notificationsWhatsappTitle),
                 value: draft.whatsappEnabled,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) =>
@@ -81,18 +82,18 @@ class _NotificationSettingsScreenState
               if (draft.whatsappEnabled) ...[
                 const SizedBox(height: AppSpacing.sm),
                 KynzaTextField(
-                  label: 'Numéro WhatsApp',
-                  hint: '+257 ...',
+                  label: context.l10n.notificationsWhatsappLabel,
+                  hint: context.l10n.notificationsWhatsappHint,
                   controller: _phoneCtrl,
                 ),
               ],
               const SizedBox(height: AppSpacing.xl),
-              const Text("Types d'alertes", style: AppTypography.h2),
+              Text(context.l10n.notificationsAlertTypesHeading, style: AppTypography.h2),
               const SizedBox(height: AppSpacing.sm),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Réservation créée'),
-                subtitle: const Text('Confirmation immédiate de votre demande'),
+                title: Text(context.l10n.notificationsBookingCreatedTitle),
+                subtitle: Text(context.l10n.notificationsBookingCreatedSubtitle),
                 value: draft.bookingCreated,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) =>
@@ -100,7 +101,7 @@ class _NotificationSettingsScreenState
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('RDV confirmé'),
+                title: Text(context.l10n.notificationsBookingConfirmedTitle),
                 value: draft.bookingConfirmed,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) => setState(
@@ -109,7 +110,7 @@ class _NotificationSettingsScreenState
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('RDV annulé'),
+                title: Text(context.l10n.notificationsBookingCancelledTitle),
                 value: draft.bookingCancelled,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) => setState(
@@ -118,8 +119,8 @@ class _NotificationSettingsScreenState
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Rappels RDV'),
-                subtitle: const Text('Rappel 24h et 2h avant le rendez-vous'),
+                title: Text(context.l10n.notificationsRemindersTitle),
+                subtitle: Text(context.l10n.notificationsRemindersSubtitle),
                 value: draft.remindersEnabled,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) => setState(
@@ -131,10 +132,8 @@ class _NotificationSettingsScreenState
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Équipe'),
-                subtitle: const Text(
-                  'Invitations et arrivées de collaborateurs',
-                ),
+                title: Text(context.l10n.notificationsTeamTitle),
+                subtitle: Text(context.l10n.notificationsTeamSubtitle),
                 value: draft.staffEvents,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) =>
@@ -142,8 +141,8 @@ class _NotificationSettingsScreenState
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Marketing'),
-                subtitle: const Text('Promotions et nouveautés du salon'),
+                title: Text(context.l10n.notificationsMarketingTitle),
+                subtitle: Text(context.l10n.notificationsMarketingSubtitle),
                 value: draft.marketing,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) =>
@@ -151,7 +150,7 @@ class _NotificationSettingsScreenState
               ),
               const SizedBox(height: AppSpacing.xl),
               KynzaButton(
-                label: 'Enregistrer',
+                label: context.l10n.notificationsSaveButton,
                 isLoading: saving,
                 onPressed: () async {
                   final phone = _phoneCtrl.text.trim();
@@ -167,7 +166,7 @@ class _NotificationSettingsScreenState
                     if (context.mounted) {
                       showKynzaToast(
                         context,
-                        message: 'Préférences enregistrées.',
+                        message: context.l10n.notificationsSaveSuccess,
                         level: ToastLevel.success,
                       );
                     }
@@ -177,7 +176,7 @@ class _NotificationSettingsScreenState
                         context,
                         message: e is AppException
                             ? e.message
-                            : "Échec de l'enregistrement.",
+                            : context.l10n.notificationsSaveError,
                         level: ToastLevel.error,
                       );
                     }

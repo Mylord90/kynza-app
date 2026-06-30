@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/date_range.dart';
 import '../../../../core/enums/user_role.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/analytics/churn_risk_model.dart';
 import '../../../../core/models/analytics/dashboard_summary_model.dart';
 import '../../../../core/models/analytics/staff_monthly_performance_model.dart';
@@ -36,7 +37,6 @@ import '../widgets/kynza_simple_bar_chart.dart';
 import '../widgets/kynza_top_services_list.dart';
 import '../widgets/kynza_top_staff_row.dart';
 
-const _weekdayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 /// Standalone Scaffold for the `/owner/analytics[...]` routes — wraps the
 /// same [AdvancedDashboardTabs] embedded inline as the owner's bottom-nav
@@ -56,7 +56,7 @@ class AdvancedDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('📊 Dashboard KYNZA')),
+      appBar: AppBar(title: Text('📊 ${context.l10n.dashboardTitle}')),
       body: AdvancedDashboardTabs(salonId: salonId, initialIndex: initialIndex),
     );
   }
@@ -100,11 +100,11 @@ class _AdvancedDashboardTabsState extends State<AdvancedDashboardTabs>
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
-          tabs: const [
-            Tab(text: "Vue d'ensemble"),
-            Tab(text: 'Clients'),
-            Tab(text: 'Équipe'),
-            Tab(text: 'Prévisions'),
+          tabs: [
+            Tab(text: context.l10n.dashboardOverviewTab),
+            Tab(text: context.l10n.dashboardClientsTab),
+            Tab(text: context.l10n.dashboardTeamTab),
+            Tab(text: context.l10n.dashboardForecastTab),
           ],
         ),
         Expanded(
@@ -166,9 +166,9 @@ class _OverviewTab extends ConsumerWidget {
                   size: 18,
                   color: AppColors.primary,
                 ),
-                label: const Text(
-                  'Exporter PDF',
-                  style: TextStyle(color: AppColors.primary),
+                label: Text(
+                  context.l10n.dashboardExportPdfButton,
+                  style: const TextStyle(color: AppColors.primary),
                 ),
                 onPressed: () => _exportPdf(
                   salon: salon,
@@ -198,7 +198,7 @@ class _OverviewTab extends ConsumerWidget {
               ],
             ),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger le dashboard.',
+              message: context.l10n.dashboardLoadError,
               onRetry: () => ref.invalidate(dashboardSummaryProvider(salonId)),
             ),
             data: (summary) => GridView.count(
@@ -210,24 +210,24 @@ class _OverviewTab extends ConsumerWidget {
               childAspectRatio: 1.6,
               children: [
                 KynzaKpiCard(
-                  label: 'Revenu',
+                  label: context.l10n.dashboardKpiRevenu,
                   amountBif: summary.revenueBif,
                   trendPct: summary.revenueTrendPct,
                   icon: Icons.payments_outlined,
                 ),
                 KynzaKpiCard(
-                  label: 'Réservations',
+                  label: context.l10n.dashboardKpiReservations,
                   value: '${summary.bookingsTotal}',
                   trendPct: summary.bookingsTrendPct,
                   icon: Icons.event_available_outlined,
                 ),
                 KynzaKpiCard(
-                  label: 'Taux remplissage',
+                  label: context.l10n.dashboardKpiOccupancyRate,
                   value: '${summary.occupancyRate.round()}%',
                   icon: Icons.donut_large_outlined,
                 ),
                 KynzaKpiCard(
-                  label: 'Taux no-show',
+                  label: context.l10n.dashboardKpiNoShowRate,
                   value: '${summary.noShowRate.round()}%',
                   icon: Icons.event_busy_outlined,
                 ),
@@ -239,7 +239,7 @@ class _OverviewTab extends ConsumerWidget {
             loading: () => const KynzaSkeleton(height: 180),
             error: (_, __) => const SizedBox.shrink(),
             data: (summary) => KynzaSimpleBarChart(
-              title: 'Évolution du CA',
+              title: context.l10n.dashboardRevenueChartTitle,
               bars: [
                 for (final kpi in summary.dailySeries)
                   BarData(label: '${kpi.day.day}', value: kpi.revenueBif),
@@ -253,10 +253,9 @@ class _OverviewTab extends ConsumerWidget {
             data: (services) => services.isEmpty
                 ? KynzaEmptyState(
                     icon: Icons.spa_outlined,
-                    title: 'Aucun service',
-                    subtitle:
-                        'Ajoutez vos prestations pour suivre leur succès.',
-                    ctaLabel: 'Ajouter un service',
+                    title: context.l10n.dashboardNoServiceTitle,
+                    subtitle: context.l10n.dashboardNoServiceSubtitle,
+                    ctaLabel: context.l10n.dashboardAddServiceCta,
                     onCta: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const ServicesListScreen(),
@@ -273,10 +272,9 @@ class _OverviewTab extends ConsumerWidget {
               data: (staff) => staff.isEmpty
                   ? KynzaEmptyState(
                       icon: Icons.people_outline,
-                      title: 'Aucun staff',
-                      subtitle:
-                          'Invitez votre équipe pour suivre leurs performances.',
-                      ctaLabel: 'Inviter votre équipe',
+                      title: context.l10n.dashboardNoStaffTitle,
+                      subtitle: context.l10n.dashboardNoStaffSubtitle,
+                      ctaLabel: context.l10n.dashboardInviteTeamCta,
                       onCta: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => StaffInviteScreen(salonId: salonId),
@@ -339,7 +337,7 @@ class _QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.spa_outlined,
-            label: hasServices ? 'Services' : 'Ajouter service',
+            label: hasServices ? context.l10n.dashboardQuickActionServices : context.l10n.dashboardQuickActionAddService,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ServicesListScreen()),
             ),
@@ -349,7 +347,7 @@ class _QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.person_add_outlined,
-            label: hasStaff ? 'Équipe' : 'Inviter staff',
+            label: hasStaff ? context.l10n.dashboardQuickActionTeam : context.l10n.dashboardQuickActionInviteStaff,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => StaffInviteScreen(salonId: salonId),
@@ -419,9 +417,9 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
               size: 18,
               color: AppColors.primary,
             ),
-            label: const Text(
-              'Exporter clients (CSV)',
-              style: TextStyle(color: AppColors.primary),
+            label: Text(
+              context.l10n.dashboardClientExportCsvButton,
+              style: const TextStyle(color: AppColors.primary),
             ),
             onPressed: clientLtvAsync.valueOrNull == null
                 ? null
@@ -431,7 +429,7 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
                   ),
           ),
         ),
-        const Text('Nouveaux vs Récurrents', style: AppTypography.h3),
+        Text(context.l10n.dashboardNewVsReturning, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.md),
         newVsReturningAsync.when(
           loading: () => const KynzaSkeleton(height: 180),
@@ -439,12 +437,12 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
           data: (counts) => KynzaPieChart(
             slices: [
               KynzaPieSlice(
-                label: 'Nouveaux',
+                label: context.l10n.dashboardNewClients,
                 value: (counts['new'] ?? 0).toDouble(),
                 color: AppColors.primary,
               ),
               KynzaPieSlice(
-                label: 'Récurrents',
+                label: context.l10n.dashboardReturningClients,
                 value: (counts['returning'] ?? 0).toDouble(),
                 color: AppColors.success,
               ),
@@ -452,14 +450,14 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        const Text('Clients à risque', style: AppTypography.h3),
+        Text(context.l10n.dashboardChurnRiskTitle, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.md),
         churnAsync.when(
           loading: () => const KynzaSkeleton(height: 64, count: 3),
           error: (_, __) => const SizedBox.shrink(),
           data: (risks) => risks.isEmpty
-              ? const Text(
-                  'Aucun client à risque pour le moment.',
+              ? Text(
+                  context.l10n.dashboardNoChurnRisk,
                   style: AppTypography.bodySmall,
                 )
               : Column(
@@ -476,14 +474,14 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
                 ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        const Text('Meilleurs clients', style: AppTypography.h3),
+        Text(context.l10n.dashboardTopClientsTitle, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.md),
         topClientsAsync.when(
           loading: () => const KynzaSkeleton(height: 56, count: 5),
           error: (_, __) => const SizedBox.shrink(),
           data: (clients) => clients.isEmpty
-              ? const Text(
-                  'Pas encore de clients.',
+              ? Text(
+                  context.l10n.dashboardNoTopClients,
                   style: AppTypography.bodySmall,
                 )
               : Column(
@@ -511,7 +509,7 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
                                     style: AppTypography.bodySmall,
                                   ),
                                   Text(
-                                    '${clients[i].visitCount} visites',
+                                    context.l10n.dashboardClientVisitCount(clients[i].visitCount),
                                     style: AppTypography.bodySmall,
                                   ),
                                 ],
@@ -524,7 +522,7 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
                 ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        const Text('Rétention par cohorte', style: AppTypography.h3),
+        Text(context.l10n.dashboardCohortTitle, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.md),
         cohortAsync.when(
           loading: () => const KynzaSkeleton(height: 160),
@@ -547,10 +545,10 @@ class _ChurnRiskSection extends StatelessWidget {
   final List<ChurnRiskModel> risks;
   final String salonName;
 
-  String get _title => switch (level) {
-    'high' => 'Risque élevé',
-    'medium' => 'Risque moyen',
-    _ => 'Risque faible',
+  String _title(BuildContext context) => switch (level) {
+    'high' => context.l10n.dashboardChurnRiskHigh,
+    'medium' => context.l10n.dashboardChurnRiskMedium,
+    _ => context.l10n.dashboardChurnRiskLow,
   };
 
   Color get _color => switch (level) {
@@ -568,7 +566,7 @@ class _ChurnRiskSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _title,
+            _title(context),
             style: AppTypography.bodySmall.copyWith(
               color: _color,
               fontWeight: FontWeight.w700,
@@ -589,7 +587,7 @@ class _ChurnRiskSection extends StatelessWidget {
                         children: [
                           Text(risk.clientName, style: AppTypography.body),
                           Text(
-                            'Absent depuis ${risk.daysSinceLastVisit} jours',
+                            context.l10n.dashboardChurnAbsentDays(risk.daysSinceLastVisit),
                             style: AppTypography.bodySmall,
                           ),
                         ],
@@ -629,26 +627,26 @@ class _TeamAnalyticsTab extends ConsumerWidget {
     final selectedMonth = ref.watch(selectedPerformanceMonthProvider);
 
     if (!isOwner) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.lock_outline,
                 size: 64,
                 color: AppColors.textSecondary,
               ),
-              SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
               Text(
-                'Réservé au propriétaire',
+                context.l10n.dashboardOwnerOnlyTitle,
                 style: AppTypography.h3,
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
               Text(
-                "Les performances de l'équipe ne sont visibles que par le propriétaire.",
+                context.l10n.dashboardOwnerOnlySubtitle,
                 style: AppTypography.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -664,7 +662,7 @@ class _TeamAnalyticsTab extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(_monthLabel(selectedMonth), style: AppTypography.h3),
+            Text(_monthLabel(context, selectedMonth), style: AppTypography.h3),
             IconButton(
               icon: const Icon(Icons.chevron_left),
               onPressed: () =>
@@ -683,17 +681,16 @@ class _TeamAnalyticsTab extends ConsumerWidget {
         performanceAsync.when(
           loading: () => const KynzaSkeleton(height: 200),
           error: (_, __) => KynzaErrorState(
-            message: 'Impossible de charger la performance équipe.',
+            message: context.l10n.dashboardTeamPerformanceError,
             onRetry: () => ref.invalidate(employeePerformanceProvider(salonId)),
           ),
           data: (staff) {
             if (staff.isEmpty) {
               return KynzaEmptyState(
                 icon: Icons.people_outline,
-                title: 'Aucune donnée équipe',
-                subtitle:
-                    'Les performances apparaîtront après les premiers RDV.',
-                ctaLabel: 'Inviter votre équipe',
+                title: context.l10n.dashboardNoTeamDataTitle,
+                subtitle: context.l10n.dashboardNoTeamDataSubtitle,
+                ctaLabel: context.l10n.dashboardInviteTeamCta,
                 onCta: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => StaffInviteScreen(salonId: salonId),
@@ -706,7 +703,7 @@ class _TeamAnalyticsTab extends ConsumerWidget {
             return Column(
               children: [
                 KynzaBarChartFl(
-                  title: 'CA par staff',
+                  title: context.l10n.dashboardTeamRevenueChartTitle,
                   bars: [
                     for (final s in sorted)
                       BarData(label: s.displayName, value: s.revenueBif),
@@ -757,7 +754,7 @@ class _TeamAnalyticsTab extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: KynzaButton(
-                        label: 'Exporter rapport (PDF)',
+                        label: context.l10n.dashboardExportReportPdfButton,
                         variant: KynzaButtonVariant.secondary,
                         onPressed: () => _exportPdf(ref, sorted, selectedMonth),
                       ),
@@ -765,7 +762,7 @@ class _TeamAnalyticsTab extends ConsumerWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: KynzaButton(
-                        label: 'Exporter CSV',
+                        label: context.l10n.dashboardExportCsvButton,
                         variant: KynzaButtonVariant.secondary,
                         onPressed: () => ShareService.shareCsv(
                           CsvExporter.staffPerformanceToCsv(sorted),
@@ -813,20 +810,21 @@ class _TeamAnalyticsTab extends ConsumerWidget {
     await ExportService.sharePdf(bytes, 'kynza-equipe-${salon.id}.pdf');
   }
 
-  String _monthLabel(DateTime month) {
-    const labels = [
-      'Janvier',
-      'Février',
-      'Mars',
-      'Avril',
-      'Mai',
-      'Juin',
-      'Juillet',
-      'Août',
-      'Septembre',
-      'Octobre',
-      'Novembre',
-      'Décembre',
+  String _monthLabel(BuildContext context, DateTime month) {
+    final l10n = context.l10n;
+    final labels = [
+      l10n.commonMonthJanuary,
+      l10n.commonMonthFebruary,
+      l10n.commonMonthMarch,
+      l10n.commonMonthApril,
+      l10n.commonMonthMay,
+      l10n.commonMonthJune,
+      l10n.commonMonthJuly,
+      l10n.commonMonthAugust,
+      l10n.commonMonthSeptember,
+      l10n.commonMonthOctober,
+      l10n.commonMonthNovember,
+      l10n.commonMonthDecember,
     ];
     return '${labels[month.month - 1]} ${month.year}';
   }
@@ -847,18 +845,18 @@ class _ForecastTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        const Text('Prévision sur 12 semaines', style: AppTypography.h3),
+        Text(context.l10n.dashboardForecastTitle, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.md),
         forecastAsync.when(
           loading: () => const KynzaSkeleton(height: 220),
           error: (_, __) => KynzaErrorState(
-            message: 'Impossible de calculer les prévisions.',
+            message: context.l10n.dashboardForecastsError,
             onRetry: () => ref.invalidate(revenueForecastProvider(salonId)),
           ),
           data: (points) {
             if (points.length < 2) {
-              return const Text(
-                "Pas encore assez d'historique pour une prévision.",
+              return Text(
+                context.l10n.dashboardForecastNoHistory,
                 style: AppTypography.bodySmall,
               );
             }
@@ -899,10 +897,10 @@ class _ForecastTab extends ConsumerWidget {
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.sm,
                   children: [
-                    _InsightChip(label: _trendLabel(actuals)),
+                    _InsightChip(label: _trendLabel(context, actuals)),
                     weekdayAsync.maybeWhen(
                       data: (counts) =>
-                          _InsightChip(label: _bestWeekdayLabel(counts)),
+                          _InsightChip(label: _bestWeekdayLabel(context, counts)),
                       orElse: () => const SizedBox.shrink(),
                     ),
                     TextButton.icon(
@@ -911,9 +909,9 @@ class _ForecastTab extends ConsumerWidget {
                         size: 18,
                         color: AppColors.primary,
                       ),
-                      label: const Text(
-                        'Exporter (CSV)',
-                        style: TextStyle(color: AppColors.primary),
+                      label: Text(
+                        context.l10n.dashboardExportForecastCsvButton,
+                        style: const TextStyle(color: AppColors.primary),
                       ),
                       onPressed: () => ShareService.shareCsv(
                         CsvExporter.revenueToCsv(points),
@@ -922,7 +920,7 @@ class _ForecastTab extends ConsumerWidget {
                     ),
                     hourAsync.maybeWhen(
                       data: (counts) =>
-                          _InsightChip(label: _peakHourLabel(counts)),
+                          _InsightChip(label: _peakHourLabel(context, counts)),
                       orElse: () => const SizedBox.shrink(),
                     ),
                   ],
@@ -943,7 +941,7 @@ class _ForecastTab extends ConsumerWidget {
                 border: Border.all(color: AppColors.primary),
               ),
               child: Text(
-                "Occupation à ${summary.occupancyRate.round()}% — pensez à relancer vos clients pour remplir votre planning.",
+                context.l10n.dashboardOccupancyTip(summary.occupancyRate.round()),
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.primary,
                 ),
@@ -956,27 +954,39 @@ class _ForecastTab extends ConsumerWidget {
     );
   }
 
-  String _trendLabel(List points) {
-    if (points.length < 2) return '→ Stable';
+  String _trendLabel(BuildContext context, List points) {
+    final l10n = context.l10n;
+    if (points.length < 2) return l10n.dashboardTrendStable;
     final first = points.first.actualBif as int;
     final last = points.last.actualBif as int;
-    if (first == 0) return last > 0 ? '↑ En croissance' : '→ Stable';
+    if (first == 0) return last > 0 ? l10n.dashboardTrendGrowing : l10n.dashboardTrendStable;
     final change = (last - first) / first;
-    if (change > 0.05) return '↑ En croissance';
-    if (change < -0.05) return '↓ En baisse';
-    return '→ Stable';
+    if (change > 0.05) return l10n.dashboardTrendGrowing;
+    if (change < -0.05) return l10n.dashboardTrendDecreasing;
+    return l10n.dashboardTrendStable;
   }
 
-  String _bestWeekdayLabel(Map<int, int> counts) {
-    if (counts.values.every((v) => v == 0)) return 'Meilleur jour : —';
+  String _bestWeekdayLabel(BuildContext context, Map<int, int> counts) {
+    final l10n = context.l10n;
+    if (counts.values.every((v) => v == 0)) return l10n.dashboardBestWeekdayNone;
     final best = counts.entries.reduce((a, b) => b.value > a.value ? b : a);
-    return 'Meilleur jour : ${_weekdayLabels[best.key - 1]}';
+    final weekdays = [
+      l10n.weekdayMondayShort,
+      l10n.weekdayTuesdayShort,
+      l10n.weekdayWednesdayShort,
+      l10n.weekdayThursdayShort,
+      l10n.weekdayFridayShort,
+      l10n.weekdaySaturdayShort,
+      l10n.weekdaySundayShort,
+    ];
+    return l10n.dashboardBestWeekday(weekdays[best.key - 1]);
   }
 
-  String _peakHourLabel(Map<int, int> counts) {
-    if (counts.values.every((v) => v == 0)) return 'Heure de pointe : —';
+  String _peakHourLabel(BuildContext context, Map<int, int> counts) {
+    final l10n = context.l10n;
+    if (counts.values.every((v) => v == 0)) return l10n.dashboardPeakHourNone;
     final best = counts.entries.reduce((a, b) => b.value > a.value ? b : a);
-    return 'Heure de pointe : ${best.key}h';
+    return l10n.dashboardPeakHour(best.key);
   }
 }
 

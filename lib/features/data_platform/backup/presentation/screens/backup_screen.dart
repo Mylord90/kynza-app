@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../../core/models/backup_job_model.dart';
 import '../../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/backup_providers.dart';
@@ -14,12 +15,13 @@ class BackupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final jobsAsync = ref.watch(backupJobsProvider(salonId));
     final notifier = ref.watch(backupNotifierProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Sauvegardes de données')),
+      appBar: AppBar(title: Text(l10n.dataPlatformBackupTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -39,16 +41,15 @@ class BackupScreen extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger les sauvegardes.',
+                message: l10n.dataPlatformBackupLoadError,
                 onRetry: () => ref.invalidate(backupJobsProvider(salonId)),
               ),
               data: (jobs) => jobs.isEmpty
                   ? KynzaEmptyState(
                       icon: Icons.cloud_done_outlined,
-                      title: 'Aucune sauvegarde',
-                      subtitle:
-                          'Créez votre première sauvegarde pour archiver vos données.',
-                      ctaLabel: 'Créer une sauvegarde',
+                      title: l10n.dataPlatformBackupEmptyTitle,
+                      subtitle: l10n.dataPlatformBackupEmptySubtitle,
+                      ctaLabel: l10n.dataPlatformBackupCreateCta,
                       onCta: () => _startBackup(context, ref),
                     )
                   : ListView.builder(
@@ -65,24 +66,23 @@ class BackupScreen extends ConsumerWidget {
   }
 
   Future<void> _startBackup(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Créer une sauvegarde'),
-        content: const Text(
-          'Les données des 90 derniers jours (réservations, clients, prestations, personnel, avis, factures) seront exportées et stockées de manière sécurisée.',
-        ),
+        title: Text(l10n.dataPlatformBackupDialogTitle),
+        content: Text(l10n.dataPlatformBackupDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Confirmer',
-              style: TextStyle(color: AppColors.primary),
+            child: Text(
+              l10n.commonConfirm,
+              style: const TextStyle(color: AppColors.primary),
             ),
           ),
         ],
@@ -96,7 +96,7 @@ class BackupScreen extends ConsumerWidget {
       if (!context.mounted) return;
       showKynzaToast(
         context,
-        message: 'Sauvegarde créée avec succès.',
+        message: context.l10n.dataPlatformBackupCreateSuccess,
         level: ToastLevel.success,
       );
     } catch (e) {
@@ -118,29 +118,31 @@ class _BackupInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: KynzaCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.shield_outlined, color: AppColors.primary),
-                SizedBox(width: AppSpacing.sm),
-                Text('Sauvegarde sécurisée', style: AppTypography.h3),
+                const Icon(Icons.shield_outlined, color: AppColors.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Text(l10n.dataPlatformBackupSecureTitle,
+                    style: AppTypography.h3),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Exportez vos données dans un fichier JSON chiffré stocké sur nos serveurs. Une sauvegarde maximum toutes les 6 heures.',
+              l10n.dataPlatformBackupSecureSubtitle,
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             KynzaButton(
-              label: 'Créer une sauvegarde',
+              label: l10n.dataPlatformBackupCreateButton,
               isLoading: isLoading,
               onPressed: isLoading ? null : onBackup,
             ),
@@ -188,7 +190,7 @@ class _BackupJobTile extends StatelessWidget {
                     Text(
                       [
                         if (job.recordsExported != null)
-                          '${job.recordsExported} enregistrements',
+                          context.l10n.dataPlatformBackupRecordsExported(job.recordsExported!),
                         if (sizeLabel != null) sizeLabel,
                       ].join(' · '),
                       style: AppTypography.bodySmall.copyWith(

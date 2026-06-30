@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../core/utils/validators.dart';
@@ -49,7 +50,7 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
     if (_service == null || _practitioner == null) {
       showKynzaToast(
         context,
-        message: 'Service et praticien requis.',
+        message: context.l10n.bookingWalkInMissingFields,
         level: ToastLevel.warning,
       );
       return;
@@ -81,7 +82,7 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Une erreur est survenue.',
+          message: e is AppException ? e.message : context.l10n.errorGeneric,
           level: ToastLevel.error,
         );
       }
@@ -92,6 +93,7 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final servicesAsync = ref.watch(salonServicesProvider(widget.salonId));
     final staffAsync = ref.watch(salonStaffProvider(widget.salonId));
 
@@ -103,12 +105,12 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Nouveau RDV', style: AppTypography.h2),
+            Text(l10n.bookingWalkInTitle, style: AppTypography.h2),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Prénom du client *',
+              label: l10n.bookingWalkInClientNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, 'Prénom'),
+              validator: Validators.fullName,
             ),
             const SizedBox(height: AppSpacing.md),
             KynzaPhoneField(
@@ -118,12 +120,11 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
             const SizedBox(height: AppSpacing.md),
             servicesAsync.when(
               loading: () => const KynzaSkeleton(height: 52),
-              error: (_, __) =>
-                  const Text('Impossible de charger les services.'),
+              error: (_, __) => Text(l10n.bookingWalkInServicesLoadError),
               data: (services) {
                 final active = services.where((s) => s.isActive).toList();
                 return KynzaDropdown<ServiceModel>(
-                  label: 'Service *',
+                  label: l10n.bookingWalkInServiceLabel,
                   value: _service,
                   items: active,
                   itemLabel: (s) => '${s.name} (${s.formattedDuration})',
@@ -134,13 +135,13 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
             const SizedBox(height: AppSpacing.md),
             staffAsync.when(
               loading: () => const KynzaSkeleton(height: 52),
-              error: (_, __) => const Text("Impossible de charger l'équipe."),
+              error: (_, __) => Text(l10n.bookingWalkInStaffLoadError),
               data: (staff) {
                 final active = staff
                     .where((s) => s.isActive && !s.isPending)
                     .toList();
                 return KynzaDropdown<StaffProfileModel>(
-                  label: 'Praticien *',
+                  label: l10n.bookingWalkInPractitionerLabel,
                   value: _practitioner,
                   items: active,
                   itemLabel: (s) => s.displayName,
@@ -151,7 +152,7 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
             const SizedBox(height: AppSpacing.md),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Heure'),
+              title: Text(l10n.bookingWalkInTimeLabel),
               trailing: Text(
                 '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}',
                 style: AppTypography.mono,
@@ -160,7 +161,7 @@ class _WalkInBookingSheetState extends ConsumerState<WalkInBookingSheet> {
             ),
             const SizedBox(height: AppSpacing.xl),
             KynzaButton(
-              label: 'Créer le RDV',
+              label: l10n.bookingWalkInSubmitButton,
               isLoading: _isSaving,
               onPressed: _submit,
             ),

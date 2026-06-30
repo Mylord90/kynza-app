@@ -3,6 +3,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_spinner.dart';
 
 enum KynzaOAuthProvider { google, facebook, apple }
@@ -26,10 +27,10 @@ class KynzaOAuthButton extends StatefulWidget {
 class _KynzaOAuthButtonState extends State<KynzaOAuthButton> {
   bool _hovered = false;
 
-  String get _label => switch (widget.provider) {
-    KynzaOAuthProvider.google => 'Continuer avec Google',
-    KynzaOAuthProvider.facebook => 'Continuer avec Facebook',
-    KynzaOAuthProvider.apple => 'Continuer avec Apple',
+  String _label(BuildContext context) => switch (widget.provider) {
+    KynzaOAuthProvider.google => context.l10n.authOauthGoogleLabel,
+    KynzaOAuthProvider.facebook => context.l10n.authOauthFacebookLabel,
+    KynzaOAuthProvider.apple => context.l10n.authOauthAppleLabel,
   };
 
   Widget get _icon => switch (widget.provider) {
@@ -103,7 +104,7 @@ class _KynzaOAuthButtonState extends State<KynzaOAuthButton> {
                 widget.isLoading ? const KynzaSpinner(size: 20) : _icon,
                 const SizedBox(width: 12),
                 Text(
-                  _label,
+                  _label(context),
                   style: AppTypography.body.copyWith(
                     color: AppColors.textPrimary,
                   ),

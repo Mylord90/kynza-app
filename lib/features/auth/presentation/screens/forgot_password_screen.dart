@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -52,33 +53,34 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         children: [
           const KynzaOfflineBanner(),
           Expanded(
-            child: KynzaAuthCard(child: _sent ? _buildSuccess() : _buildForm()),
+            child: KynzaAuthCard(child: _sent ? _buildSuccess(context) : _buildForm(context)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildForm(BuildContext context) {
+    final l10n = context.l10n;
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Mot de passe oublié',
+          Text(
+            l10n.authForgotPasswordTitle,
             style: AppTypography.h1,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'Recevez un lien de réinitialisation par email',
+          Text(
+            l10n.authForgotPasswordSubtitle,
             style: AppTypography.body,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xl),
           KynzaTextField(
-            label: 'Email',
+            label: l10n.authForgotPasswordEmailLabel,
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
@@ -86,7 +88,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           KynzaButton(
-            label: 'Envoyer le lien →',
+            label: l10n.authForgotPasswordSubmitButton,
             onPressed: _submit,
             isLoading: _isSubmitting,
           ),
@@ -94,7 +96,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Center(
             child: TextButton(
               onPressed: () => context.pop(),
-              child: const Text('← Retour à la connexion'),
+              child: Text(l10n.authForgotPasswordBackLink),
             ),
           ),
         ],
@@ -102,27 +104,27 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildSuccess() {
+  Widget _buildSuccess(BuildContext context) {
+    final l10n = context.l10n;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         const Text('✉️', style: TextStyle(fontSize: 56)),
         const SizedBox(height: AppSpacing.lg),
-        const Text(
-          'Email envoyé !',
+        Text(
+          l10n.authForgotPasswordSuccessTitle,
           style: AppTypography.h1,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Si un compte existe pour ${_emailController.text.trim()}, vous recevrez un lien de '
-          'réinitialisation dans quelques instants.',
+          l10n.authForgotPasswordSuccessSubtitle(_emailController.text.trim()),
           style: AppTypography.body,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Text(
-          'Vérifiez vos spams.',
+        Text(
+          l10n.authForgotPasswordCheckSpam,
           style: AppTypography.bodySmall,
           textAlign: TextAlign.center,
         ),
@@ -130,7 +132,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         Center(
           child: TextButton(
             onPressed: () => context.pop(),
-            child: const Text('← Retour à la connexion'),
+            child: Text(l10n.authForgotPasswordBackLink),
           ),
         ),
       ],

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
@@ -42,6 +43,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     ref.listen(authNotifierProvider, (previous, next) {
       next.whenData((state) {
         state.whenOrNull(
@@ -77,20 +80,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Bon retour',
+                    Text(
+                      l10n.authLoginTitle,
                       style: AppTypography.h1,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    const Text(
-                      'Connectez-vous pour continuer',
+                    Text(
+                      l10n.authLoginSubtitle,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     KynzaTextField(
-                      label: 'Email',
+                      label: l10n.authLoginEmailLabel,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -108,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: TextButton(
                         onPressed: () =>
                             context.push(RouteNames.forgotPassword),
-                        child: const Text('Mot de passe oublié ?'),
+                        child: Text(l10n.authLoginForgotPasswordLink),
                       ),
                     ),
                     if (errorMessage != null) ...[
@@ -123,7 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(
-                      label: 'Se connecter →',
+                      label: l10n.authLoginSubmitButton,
                       onPressed: _submit,
                       isLoading: isLoading,
                     ),
@@ -136,17 +139,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           .signInWithGoogle(),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    const Tooltip(
-                      message: 'Disponible bientôt',
-                      child: KynzaOAuthButton(
+                    Tooltip(
+                      message: l10n.authOauthComingSoon,
+                      child: const KynzaOAuthButton(
                         provider: KynzaOAuthProvider.facebook,
                         onPressed: null,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    const Tooltip(
-                      message: 'Disponible bientôt',
-                      child: KynzaOAuthButton(
+                    Tooltip(
+                      message: l10n.authOauthComingSoon,
+                      child: const KynzaOAuthButton(
                         provider: KynzaOAuthProvider.apple,
                         onPressed: null,
                       ),
@@ -155,7 +158,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () => context.push(RouteNames.register),
-                        child: const Text('Pas encore de compte ? S\'inscrire'),
+                        child: Text(l10n.authLoginNoAccountLink),
                       ),
                     ),
                   ],

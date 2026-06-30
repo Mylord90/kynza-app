@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/automation_workflow_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/automation_providers.dart';
@@ -33,7 +34,7 @@ class WorkflowExecutionLogScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(workflowName ?? "Historique d'exécution")),
+      appBar: AppBar(title: Text(workflowName ?? context.l10n.automationLogHistoryTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -48,18 +49,17 @@ class WorkflowExecutionLogScreen extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: "Impossible de charger l'historique.",
+                message: context.l10n.automationLogLoadError,
                 onRetry: () =>
                     ref.invalidate(automationExecutionLogsProvider(query)),
               ),
               data: (logs) {
                 if (logs.isEmpty) {
-                  return const KynzaEmptyState(
+                  return KynzaEmptyState(
                     icon: Icons.history_outlined,
-                    title: 'Aucune exécution',
-                    subtitle:
-                        "Les exécutions de workflow apparaîtront ici dès qu'un déclencheur se produira.",
-                    ctaLabel: 'Retour',
+                    title: context.l10n.automationLogEmptyTitle,
+                    subtitle: context.l10n.automationLogEmptySubtitle,
+                    ctaLabel: context.l10n.commonBack,
                     onCta: _noop,
                   );
                 }
@@ -168,8 +168,8 @@ class _ActionRunsList extends ConsumerWidget {
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: runsAsync.when(
         loading: () => const KynzaSkeleton(height: 32),
-        error: (_, __) => const Text(
-          'Impossible de charger le détail.',
+        error: (_, __) => Text(
+          context.l10n.automationLogLoadDetailError,
           style: AppTypography.bodySmall,
         ),
         data: (runs) => Column(

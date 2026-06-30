@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -50,20 +51,20 @@ class _SalonCreationSuccessScreenState extends State<SalonCreationSuccessScreen>
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              const Text(
-                'Votre salon est créé ! 🎉',
+              Text(
+                context.l10n.salonCreationSuccessTitle,
                 style: AppTypography.h1,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'Ajoutez maintenant vos services',
+              Text(
+                context.l10n.salonCreationSuccessSubtitle,
                 style: AppTypography.body,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xxl),
               KynzaButton(
-                label: 'Configurer mes services →',
+                label: context.l10n.salonCreationSuccessCtaLabel,
                 onPressed: () => context.go(RouteNames.ownerServices),
               ),
             ],

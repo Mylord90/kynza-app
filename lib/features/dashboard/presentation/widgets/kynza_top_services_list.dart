@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/analytics/top_service_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -28,13 +29,13 @@ class KynzaTopServicesList extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Top services', style: AppTypography.h3),
+            Text(context.l10n.dashboardTopServicesTitle, style: AppTypography.h3),
             if (hasMore && onSeeAll != null)
               TextButton(
                 onPressed: onSeeAll,
-                child: const Text(
-                  'Voir tout',
-                  style: TextStyle(color: AppColors.primary),
+                child: Text(
+                  context.l10n.dashboardServiceSeeAll,
+                  style: const TextStyle(color: AppColors.primary),
                 ),
               ),
           ],
@@ -63,7 +64,7 @@ class KynzaTopServicesList extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          '${service.bookingCount} RDV',
+                          context.l10n.dashboardServiceRdvCount(service.bookingCount),
                           style: AppTypography.bodySmall,
                         ),
                         const SizedBox(height: AppSpacing.xs),

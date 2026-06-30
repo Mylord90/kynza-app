@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/user_role.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/booking_model.dart';
 import '../../../../core/models/staff_commission_model.dart';
 import '../../../../core/models/staff_profile_model.dart';
@@ -103,14 +104,16 @@ class StaffDetailScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(staff.displayName, style: AppTypography.h2),
                         Text(
-                          staff.role == 'manager' ? 'Manager' : 'Staff',
+                          staff.role == 'manager'
+                              ? context.l10n.staffRoleManager
+                              : context.l10n.staffRoleStaff,
                           style: AppTypography.bodySmall,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  const Text('Performance ce mois', style: AppTypography.h3),
+                  Text(context.l10n.staffDetailPerformanceMonth, style: AppTypography.h3),
                   const SizedBox(height: AppSpacing.md),
                   monthlyAsync.when(
                     loading: () => const KynzaSkeleton(height: 180),
@@ -134,7 +137,7 @@ class StaffDetailScreen extends ConsumerWidget {
                   ),
                   if (isOwner) ...[
                     const SizedBox(height: AppSpacing.xl),
-                    const Text('Commissions ce mois', style: AppTypography.h3),
+                    Text(context.l10n.staffDetailCommissionsMonth, style: AppTypography.h3),
                     const SizedBox(height: AppSpacing.md),
                     commissionsAsync!.when(
                       loading: () => const KynzaSkeleton(height: 56),
@@ -150,18 +153,21 @@ class StaffDetailScreen extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: _StatTile(
-                                label: 'Gagné',
+                                label: context.l10n.staffDetailCommissionsEarned,
                                 amountBif: paid + pending,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
-                              child: _StatTile(label: 'Payé', amountBif: paid),
+                              child: _StatTile(
+                                label: context.l10n.staffDetailCommissionsPaid,
+                                amountBif: paid,
+                              ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: _StatTile(
-                                label: 'En attente',
+                                label: context.l10n.staffDetailCommissionsPending,
                                 amountBif: pending,
                               ),
                             ),
@@ -171,11 +177,11 @@ class StaffDetailScreen extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.xl),
-                  const Text('Services proposés', style: AppTypography.h3),
+                  Text(context.l10n.staffDetailServicesTitle, style: AppTypography.h3),
                   const SizedBox(height: AppSpacing.sm),
                   staff.specialties.isEmpty
-                      ? const Text(
-                          'Aucune spécialité.',
+                      ? Text(
+                          context.l10n.staffDetailNoSpecialty,
                           style: AppTypography.bodySmall,
                         )
                       : Wrap(
@@ -190,26 +196,26 @@ class StaffDetailScreen extends ConsumerWidget {
                     onTap: () => context.push(
                       RouteNames.ownerAvailabilityStaffPath(staff.id!),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.schedule_outlined, color: AppColors.primary),
-                        SizedBox(width: AppSpacing.md),
+                        const Icon(Icons.schedule_outlined, color: AppColors.primary),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
-                          child: Text('Horaires', style: AppTypography.h3),
+                          child: Text(context.l10n.staffDetailScheduleLabel, style: AppTypography.h3),
                         ),
-                        Icon(Icons.chevron_right, color: AppColors.textMuted),
+                        const Icon(Icons.chevron_right, color: AppColors.textMuted),
                       ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  const Text('Derniers RDV', style: AppTypography.h3),
+                  Text(context.l10n.staffDetailLastBookings, style: AppTypography.h3),
                   const SizedBox(height: AppSpacing.sm),
                   recentAsync.when(
                     loading: () => const KynzaSkeleton(height: 48, count: 3),
                     error: (_, __) => const SizedBox.shrink(),
                     data: (bookings) => bookings.isEmpty
-                        ? const Text(
-                            'Aucun RDV pour le moment.',
+                        ? Text(
+                            context.l10n.staffDetailNoBookings,
                             style: AppTypography.bodySmall,
                           )
                         : Column(
@@ -229,6 +235,7 @@ class StaffDetailScreen extends ConsumerWidget {
                                           ),
                                         ),
                                         Text(
+                                          // b.status.name is an enum raw value — not translated
                                           b.status.name,
                                           style: AppTypography.bodySmall,
                                         ),
@@ -242,7 +249,9 @@ class StaffDetailScreen extends ConsumerWidget {
                   if (isOwner) ...[
                     const SizedBox(height: AppSpacing.xl),
                     KynzaButton(
-                      label: staff.isActive ? 'Désactiver' : 'Réactiver',
+                      label: staff.isActive
+                          ? context.l10n.staffDetailDeactivate
+                          : context.l10n.staffDetailReactivate,
                       variant: KynzaButtonVariant.secondary,
                       onPressed: () => ref
                           .read(staffNotifierProvider.notifier)
@@ -252,8 +261,8 @@ class StaffDetailScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(
                       label: staff.role == 'manager'
-                          ? 'Rétrograder en staff'
-                          : 'Promouvoir manager',
+                          ? context.l10n.staffDetailDemote
+                          : context.l10n.staffDetailPromote,
                       variant: KynzaButtonVariant.secondary,
                       onPressed: () => ref
                           .read(staffNotifierProvider.notifier)
@@ -268,14 +277,13 @@ class StaffDetailScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(
-                      label: 'Retirer du salon',
+                      label: context.l10n.staffDetailRemoveButton,
                       variant: KynzaButtonVariant.destructive,
                       onPressed: () async {
                         final confirmed = await showKynzaConfirmDialog(
                           context,
-                          title: 'Retirer ce membre ?',
-                          message:
-                              '${staff.displayName} ne pourra plus accéder à ce salon.',
+                          title: context.l10n.staffDetailRemoveConfirmTitle,
+                          message: context.l10n.staffDetailRemoveConfirmMessage(staff.displayName),
                         );
                         if (!confirmed) return;
                         try {
@@ -289,7 +297,7 @@ class StaffDetailScreen extends ConsumerWidget {
                               context,
                               message: e is AppException
                                   ? e.message
-                                  : 'Une erreur est survenue.',
+                                  : context.l10n.errorGeneric,
                               level: ToastLevel.error,
                             );
                           }

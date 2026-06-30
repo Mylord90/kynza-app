@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 
 class KynzaAuthDivider extends StatelessWidget {
-  const KynzaAuthDivider({super.key, this.label = 'ou continuer avec'});
+  const KynzaAuthDivider({super.key, this.label});
 
-  final String label;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
+    final text = label ?? context.l10n.authDividerLabel;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
       child: Row(
@@ -17,7 +19,7 @@ class KynzaAuthDivider extends StatelessWidget {
           const Expanded(child: Divider(color: AppColors.border)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Text(label, style: AppTypography.bodySmall),
+            child: Text(text, style: AppTypography.bodySmall),
           ),
           const Expanded(child: Divider(color: AppColors.border)),
         ],

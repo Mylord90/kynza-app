@@ -121,4 +121,7 @@ abstract class RouteNames {
 
   // Branding — À propos
   static const ownerAbout = '/owner/about';
+
+  // i18n — Language settings
+  static const ownerLanguage = '/owner/language';
 }

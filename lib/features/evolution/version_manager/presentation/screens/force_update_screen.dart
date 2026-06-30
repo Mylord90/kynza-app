@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../../core/constants/app_version.dart';
+import '../../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../../core/models/app_version_check_model.dart';
 import '../../application/providers/version_providers.dart';
 
@@ -33,16 +34,14 @@ class ForceUpdateScreen extends ConsumerWidget {
                   color: AppColors.primary,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text(
-                  'Mise à jour requise',
+                Text(
+                  context.l10n.evolutionForceUpdateTitle,
                   style: AppTypography.h1,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  check?.message ??
-                      'Cette version de l\'application n\'est plus supportée. '
-                          'Veuillez mettre à jour pour continuer.',
+                  check?.message ?? context.l10n.evolutionForceUpdateDefaultMessage,
                   style: AppTypography.body.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -58,7 +57,7 @@ class ForceUpdateScreen extends ConsumerWidget {
                 TextButton.icon(
                   onPressed: () => ref.invalidate(appVersionCheckProvider),
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text('Vérifier à nouveau'),
+                  label: Text(context.l10n.evolutionForceUpdateCheckButton),
                 ),
               ],
             ),
@@ -87,7 +86,7 @@ class _VersionChip extends StatelessWidget {
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Text(
-        'Version disponible : $version',
+        context.l10n.evolutionForceUpdateVersionLabel(version),
         style: AppTypography.label.copyWith(color: AppColors.primary),
       ),
     );
@@ -134,7 +133,7 @@ class _UpdateButtonState extends State<_UpdateButton> {
                 ),
               )
             : const Icon(Icons.download_rounded),
-        label: const Text('Mettre à jour'),
+        label: Text(context.l10n.evolutionForceUpdateButton),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.background,

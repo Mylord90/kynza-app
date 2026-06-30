@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -43,6 +44,13 @@ class _LoyaltyScanScreenState extends State<LoyaltyScanScreen> {
         : capture.barcodes.first.rawValue;
     if (raw == null || raw.isEmpty) return;
 
+    // Capture l10n strings before any async gap.
+    final l10n = context.l10n;
+    final invalidMsg = l10n.loyaltyScanQrInvalidError;
+    final rewardMsg = '✅ ${l10n.loyaltyStampRewardValidated}!';
+    final stampMsg = '✅ ${l10n.loyaltyStampAdded}!';
+    final connectionMsg = l10n.loyaltyScanConnectionError;
+
     setState(() => _busy = true);
     try {
       final res = await SupabaseService.client.functions.invoke(
@@ -51,10 +59,11 @@ class _LoyaltyScanScreenState extends State<LoyaltyScanScreen> {
       );
       final data = res.data is Map ? res.data as Map : null;
       if (res.status != 200 || data?['success'] != true) {
+        if (!mounted) return;
         _showResult(
           _ScanResult(
             _ScanResultKind.error,
-            data?['message'] as String? ?? 'QR invalide ou expiré.',
+            data?['message'] as String? ?? invalidMsg,
           ),
         );
         return;
@@ -62,20 +71,17 @@ class _LoyaltyScanScreenState extends State<LoyaltyScanScreen> {
       final action = data?['action'];
       final clientName = data?['clientName'] as String? ?? '';
       final name = clientName.isEmpty ? '' : ' — $clientName';
+      if (!mounted) return;
       _showResult(
         _ScanResult(
           _ScanResultKind.success,
-          action == 'redeemed'
-              ? '✅ Récompense validée !$name'
-              : '✅ Tampon ajouté !$name',
+          action == 'redeemed' ? '$rewardMsg$name' : '$stampMsg$name',
         ),
       );
     } catch (_) {
+      if (!mounted) return;
       _showResult(
-        const _ScanResult(
-          _ScanResultKind.error,
-          'Connexion impossible. Réessayez.',
-        ),
+        _ScanResult(_ScanResultKind.error, connectionMsg),
       );
     }
   }
@@ -100,7 +106,7 @@ class _LoyaltyScanScreenState extends State<LoyaltyScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Scanner fidélité')),
+      appBar: AppBar(title: Text(context.l10n.loyaltyScanTitle)),
       body: Stack(
         fit: StackFit.expand,
         children: [

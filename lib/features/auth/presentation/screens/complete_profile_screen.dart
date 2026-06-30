@@ -5,11 +5,13 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/user_role.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/utils/auth_errors.dart';
 import '../../../../core/utils/auth_redirect.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../widgets/kynza_auth_card.dart';
 
@@ -21,10 +23,25 @@ class _RoleOption {
   final String subtitle;
 }
 
-const _roleOptions = [
-  _RoleOption(UserRole.client, '👤', 'Client', 'Réservez des soins'),
-  _RoleOption(UserRole.staff, '✂️', 'Staff', 'Praticien dans un salon'),
-  _RoleOption(UserRole.owner, '🏪', 'Propriétaire', 'Gérez votre salon'),
+List<_RoleOption> _buildRoleOptions(AppLocalizations l10n) => [
+  _RoleOption(
+    UserRole.client,
+    '👤',
+    l10n.authCompleteProfileRoleClientLabel,
+    l10n.authCompleteProfileRoleClientSubtitle,
+  ),
+  _RoleOption(
+    UserRole.staff,
+    '✂️',
+    l10n.authCompleteProfileRoleStaffLabel,
+    l10n.authCompleteProfileRoleStaffSubtitle,
+  ),
+  _RoleOption(
+    UserRole.owner,
+    '🏪',
+    l10n.authCompleteProfileRoleOwnerLabel,
+    l10n.authCompleteProfileRoleOwnerSubtitle,
+  ),
 ];
 
 class CompleteProfileScreen extends ConsumerStatefulWidget {
@@ -119,6 +136,9 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final roleOptions = _buildRoleOptions(l10n);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -131,27 +151,27 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Finalisez votre profil',
+                    Text(
+                      l10n.authCompleteProfileTitle,
                       style: AppTypography.h1,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    const Text(
-                      'Quelques informations pour démarrer',
+                    Text(
+                      l10n.authCompleteProfileSubtitle,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     KynzaTextField(
-                      label: 'Nom complet',
+                      label: l10n.authCompleteProfileFullNameLabel,
                       controller: _fullNameController,
                       validator: Validators.fullName,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     KynzaPhoneField(controller: _phoneController),
                     const SizedBox(height: AppSpacing.lg),
-                    for (final option in _roleOptions) ...[
+                    for (final option in roleOptions) ...[
                       KynzaCard(
                         isSelected: _selectedRole == option.role,
                         onTap: () =>
@@ -187,7 +207,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                     ],
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(
-                      label: 'Commencer →',
+                      label: l10n.authCompleteProfileSubmitButton,
                       isLoading: _isSubmitting,
                       onPressed: _submit,
                     ),

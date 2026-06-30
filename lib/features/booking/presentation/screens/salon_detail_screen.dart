@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../reviews/presentation/widgets/salon_reviews_tab.dart';
@@ -35,6 +36,7 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final salonAsync = ref.watch(salonByIdProvider(widget.salonId));
 
     return Scaffold(
@@ -42,13 +44,13 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
       body: salonAsync.when(
         loading: () => const Center(child: KynzaSpinner()),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger ce salon.',
+          message: l10n.bookingSalonDetailLoadError,
           onRetry: () => ref.invalidate(salonByIdProvider(widget.salonId)),
         ),
         data: (salon) {
           if (salon == null) {
             return KynzaErrorState(
-              message: 'Salon introuvable.',
+              message: l10n.bookingSalonNotFound,
               onRetry: () => Navigator.of(context).pop(),
             );
           }
@@ -106,10 +108,10 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
                       controller: _tabController,
                       labelColor: AppColors.primary,
                       indicatorColor: AppColors.primary,
-                      tabs: const [
-                        Tab(text: 'Services'),
-                        Tab(text: 'Info'),
-                        Tab(text: 'Avis'),
+                      tabs: [
+                        Tab(text: l10n.bookingSalonDetailServicesTab),
+                        Tab(text: l10n.bookingSalonDetailInfoTab),
+                        Tab(text: l10n.bookingSalonDetailReviewsTab),
                       ],
                     ),
                   ),
@@ -128,7 +130,7 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
                 right: AppSpacing.lg,
                 bottom: AppSpacing.lg,
                 child: KynzaButton(
-                  label: 'Réserver →',
+                  label: l10n.bookingSalonDetailReserveButton,
                   onPressed: () {
                     ref.read(bookingFlowProvider.notifier).selectSalon(salon);
                     Navigator.of(context).push(
@@ -156,6 +158,7 @@ class _ServicesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final servicesAsync = ref.watch(salonServicesProvider(salon.id as String));
 
     return servicesAsync.when(
@@ -173,18 +176,18 @@ class _ServicesTab extends ConsumerWidget {
         ),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger les services.',
+        message: l10n.bookingSalonDetailServicesLoadError,
         onRetry: () =>
             ref.invalidate(salonServicesProvider(salon.id as String)),
       ),
       data: (services) {
         final active = services.where((s) => s.isActive).toList();
         if (active.isEmpty) {
-          return const KynzaEmptyState(
+          return KynzaEmptyState(
             icon: Icons.content_cut,
-            title: 'Aucun service disponible',
-            subtitle: 'Revenez plus tard.',
-            ctaLabel: 'Retour',
+            title: l10n.bookingSelectServiceEmptyTitle,
+            subtitle: l10n.bookingSalonDetailServicesEmptySubtitle,
+            ctaLabel: l10n.commonBack,
             onCta: _noop,
           );
         }

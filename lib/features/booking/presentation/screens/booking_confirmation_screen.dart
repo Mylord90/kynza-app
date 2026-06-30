@@ -10,6 +10,7 @@ import '../../../../core/models/booking_model.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../application/providers/booking_flow_provider.dart';
 import '../widgets/booking_summary_card.dart';
 
@@ -69,15 +70,15 @@ class _BookingConfirmationScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
-              '✅ Payé ! Votre place est réservée.',
+            Text(
+              context.l10n.bookingConfirmationTitle,
               style: AppTypography.h1,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Center(
               child: Text(
-                'Réf. ${widget.booking.id?.substring(0, 8).toUpperCase()}',
+                '${context.l10n.bookingConfirmationRef} ${widget.booking.id?.substring(0, 8).toUpperCase()}',
                 style: AppTypography.mono,
               ),
             ),
@@ -85,7 +86,7 @@ class _BookingConfirmationScreenState
             BookingSummaryCard(state: flowState, compact: true),
             const SizedBox(height: AppSpacing.lg),
             KynzaButton(
-              label: 'Ajouter au calendrier',
+              label: context.l10n.bookingAddToCalendar,
               variant: KynzaButtonVariant.secondary,
               onPressed: () => launchUrl(
                 Uri.parse(
@@ -99,7 +100,7 @@ class _BookingConfirmationScreenState
                 flowState.selectedService != null) ...[
               const SizedBox(height: AppSpacing.md),
               KynzaButton(
-                label: 'Partager',
+                label: context.l10n.commonShare,
                 variant: KynzaButtonVariant.ghost,
                 onPressed: () => ShareService.shareBooking(
                   booking: widget.booking,
@@ -111,7 +112,7 @@ class _BookingConfirmationScreenState
             ],
             const SizedBox(height: AppSpacing.md),
             KynzaButton(
-              label: "Retour à l'accueil",
+              label: context.l10n.bookingReturnHome,
               variant: KynzaButtonVariant.ghost,
               onPressed: () {
                 ref.read(bookingFlowProvider.notifier).reset();

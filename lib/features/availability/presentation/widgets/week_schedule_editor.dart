@@ -3,9 +3,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/availability_override_model.dart';
-
-const _dayShortLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 /// Horizontal strip of the next 14 days — gold border = today,
 /// red fill = blocked override, tap any day to edit it.
@@ -26,6 +25,16 @@ class WeekScheduleEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
+    final l10n = context.l10n;
+    final dayShortLabels = [
+      l10n.weekdayMondayShort,
+      l10n.weekdayTuesdayShort,
+      l10n.weekdayWednesdayShort,
+      l10n.weekdayThursdayShort,
+      l10n.weekdayFridayShort,
+      l10n.weekdaySaturdayShort,
+      l10n.weekdaySundayShort,
+    ];
 
     return SizedBox(
       height: 84,
@@ -63,7 +72,7 @@ class WeekScheduleEditor extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _dayShortLabels[date.weekday - 1],
+                      dayShortLabels[date.weekday - 1],
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),

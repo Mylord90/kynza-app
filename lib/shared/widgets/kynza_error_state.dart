@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/extensions/build_context_l10n_extension.dart';
 import 'kynza_button.dart';
 
 class KynzaErrorState extends StatelessWidget {
@@ -31,7 +32,7 @@ class KynzaErrorState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaButton(
-              label: 'Réessayer',
+              label: context.l10n.commonRetry,
               onPressed: onRetry,
               variant: KynzaButtonVariant.secondary,
             ),

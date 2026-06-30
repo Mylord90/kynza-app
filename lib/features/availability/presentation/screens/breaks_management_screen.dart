@@ -4,20 +4,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_break_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
 import '../widgets/break_editor_widget.dart';
-
-const _dayLabels = [
-  'Lundi',
-  'Mardi',
-  'Mercredi',
-  'Jeudi',
-  'Vendredi',
-  'Samedi',
-  'Dimanche',
-];
 
 class BreaksManagementScreen extends ConsumerWidget {
   const BreaksManagementScreen({
@@ -34,10 +25,20 @@ class BreaksManagementScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final breaksAsync = ref.watch(staffBreaksProvider(staffId));
+    final l10n = context.l10n;
+    final dayLabels = [
+      l10n.weekdayMonday,
+      l10n.weekdayTuesday,
+      l10n.weekdayWednesday,
+      l10n.weekdayThursday,
+      l10n.weekdayFriday,
+      l10n.weekdaySaturday,
+      l10n.weekdaySunday,
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text('Pauses de $staffName')),
+      appBar: AppBar(title: Text(l10n.availabilityBreaksTitle(staffName))),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () => showKynzaBottomSheet(
@@ -56,7 +57,7 @@ class BreaksManagementScreen extends ConsumerWidget {
                     context,
                     message: e is AppException
                         ? e.message
-                        : "Échec de l'enregistrement.",
+                        : l10n.availabilitySaveFailed,
                     level: ToastLevel.error,
                   );
                 }
@@ -76,16 +77,16 @@ class BreaksManagementScreen extends ConsumerWidget {
           ),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger les pauses.',
+          message: l10n.availabilityBreaksLoadError,
           onRetry: () => ref.invalidate(staffBreaksProvider(staffId)),
         ),
         data: (breaks) {
           if (breaks.isEmpty) {
             return KynzaEmptyState(
               icon: Icons.free_breakfast_outlined,
-              title: 'Aucune pause',
-              subtitle: 'Ajoutez les pauses récurrentes de $staffName.',
-              ctaLabel: 'Ajouter une pause',
+              title: l10n.availabilityNoBreaksTitle,
+              subtitle: l10n.availabilityNoBreaksSubtitle(staffName),
+              ctaLabel: l10n.availabilityAddBreakCta,
               onCta: () => showKynzaBottomSheet(
                 context,
                 builder: (_) => BreakEditorWidget(
@@ -102,7 +103,7 @@ class BreaksManagementScreen extends ConsumerWidget {
                           context,
                           message: e is AppException
                               ? e.message
-                              : "Échec de l'enregistrement.",
+                              : l10n.availabilitySaveFailed,
                           level: ToastLevel.error,
                         );
                       }
@@ -145,7 +146,7 @@ class BreaksManagementScreen extends ConsumerWidget {
                           context,
                           message: e is AppException
                               ? e.message
-                              : 'Échec de la suppression.',
+                              : l10n.availabilityDeleteFailed,
                           level: ToastLevel.error,
                         );
                       }
@@ -164,7 +165,7 @@ class BreaksManagementScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(AppSpacing.xs),
                           ),
                           child: Text(
-                            _dayLabels[b.dayOfWeek],
+                            dayLabels[b.dayOfWeek],
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.warning,
                             ),

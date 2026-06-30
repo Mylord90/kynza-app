@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/working_hour_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
@@ -28,14 +29,14 @@ class _SalonHoursScreenState extends ConsumerState<SalonHoursScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Horaires du salon')),
+      appBar: AppBar(title: Text(context.l10n.availabilitySalonHoursTitle)),
       body: salonAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AppSpacing.lg),
           child: KynzaSkeleton(height: 400),
         ),
         error: (_, __) => KynzaErrorState(
-          message: "Impossible de charger les horaires.",
+          message: context.l10n.availabilitySalonHoursLoadError,
           onRetry: () => ref.invalidate(salonNotifierProvider),
         ),
         data: (salon) {
@@ -62,7 +63,7 @@ class _SalonHoursScreenState extends ConsumerState<SalonHoursScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               KynzaButton(
-                label: 'Enregistrer',
+                label: context.l10n.commonSave,
                 isLoading: saving,
                 onPressed: () async {
                   await ref
@@ -71,7 +72,7 @@ class _SalonHoursScreenState extends ConsumerState<SalonHoursScreen> {
                   if (context.mounted) {
                     showKynzaToast(
                       context,
-                      message: 'Horaires enregistrés.',
+                      message: context.l10n.availabilitySalonHoursSaveSuccess,
                       level: ToastLevel.success,
                     );
                   }

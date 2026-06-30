@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/analytics/cohort_retention_model.dart';
 
 const _offsets = [0, 1, 2, 3];
@@ -17,8 +18,8 @@ class KynzaCohortTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (rows.isEmpty) {
-      return const Text(
-        'Pas encore de données de cohortes.',
+      return Text(
+        context.l10n.dashboardNoCohortData,
         style: AppTypography.bodySmall,
       );
     }
@@ -33,9 +34,9 @@ class KynzaCohortTable extends StatelessWidget {
       children: [
         TableRow(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(AppSpacing.sm),
-              child: Text('Cohorte', style: AppTypography.bodySmall),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Text(context.l10n.dashboardCohortHeader, style: AppTypography.bodySmall),
             ),
             for (final offset in _offsets)
               Padding(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_durations.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../core/providers/app_providers.dart';
 
 /// Non-blocking banner (R03 offline-first). Shows "Hors connexion" while
@@ -40,6 +41,7 @@ class _KynzaOfflineBannerState extends ConsumerState<KynzaOfflineBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final connectivity = ref.watch(connectivityProvider);
     final isConnected = connectivity.valueOrNull ?? true;
 
@@ -61,8 +63,8 @@ class _KynzaOfflineBannerState extends ConsumerState<KynzaOfflineBanner> {
                 alignment: Alignment.center,
                 child: Text(
                   isConnected
-                      ? '✓ Synchronisé'
-                      : '📴 Hors connexion • Données en cache',
+                      ? l10n.offlineBannerSynced
+                      : l10n.offlineBannerMessage,
                   style: AppTypography.bodySmall,
                 ),
               )

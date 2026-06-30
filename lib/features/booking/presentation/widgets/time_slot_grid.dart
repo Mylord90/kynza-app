@@ -4,6 +4,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/slot_availability.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/time_slot_model.dart';
 import '../../../../core/utils/haptics.dart';
 
@@ -66,9 +67,9 @@ class TimeSlotGrid extends StatelessWidget {
                   ),
                 ),
                 if (isRare && !isSelected)
-                  const Text(
-                    'Dernière place !',
-                    style: TextStyle(fontSize: 11, color: AppColors.primary),
+                  Text(
+                    context.l10n.bookingLastSlot,
+                    style: const TextStyle(fontSize: 11, color: AppColors.primary),
                   ),
               ],
             ),

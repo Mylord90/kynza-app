@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -96,7 +97,7 @@ class _ReferralClaimScreenState extends ConsumerState<ReferralClaimScreen>
     if (!mounted) return;
     setState(() {
       _status = _ClaimStatus.error;
-      _errorMessage = "Lien d'invitation invalide ou déjà utilisé.";
+      _errorMessage = context.l10n.referralInvalidLink;
     });
   }
 
@@ -105,8 +106,8 @@ class _ReferralClaimScreenState extends ConsumerState<ReferralClaimScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: switch (_status) {
-        _ClaimStatus.verifying => const KynzaLoadingOverlay(
-          message: "Vérification de l'invitation...",
+        _ClaimStatus.verifying => KynzaLoadingOverlay(
+          message: context.l10n.referralClaimVerifying,
         ),
         _ClaimStatus.error => KynzaErrorState(
           message: _errorMessage,
@@ -130,8 +131,8 @@ class _ReferralClaimScreenState extends ConsumerState<ReferralClaimScreen>
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text(
-                  'Bienvenue sur KYNZA ! 🎉',
+                Text(
+                  context.l10n.referralWelcomeTitle,
                   style: AppTypography.h1,
                   textAlign: TextAlign.center,
                 ),
@@ -139,8 +140,8 @@ class _ReferralClaimScreenState extends ConsumerState<ReferralClaimScreen>
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     _salonName == null
-                        ? 'Un tampon de fidélité vous a été offert !'
-                        : 'Un tampon de fidélité chez $_salonName vous a été offert !',
+                        ? context.l10n.referralStampGranted
+                        : context.l10n.referralStampGrantedWithSalon(_salonName!),
                     style: AppTypography.body,
                     textAlign: TextAlign.center,
                   ),

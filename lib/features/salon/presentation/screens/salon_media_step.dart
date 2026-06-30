@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/salon_media_model.dart';
 import '../widgets/media_upload_button.dart';
 
@@ -30,10 +31,11 @@ class SalonMediaStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        const Text('Logo', style: AppTypography.h3),
+        Text(l10n.salonMediaStepLogoLabel, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.sm),
         Center(
           child: MediaUploadButton(
@@ -45,18 +47,18 @@ class SalonMediaStep extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        const Text('Photo de couverture', style: AppTypography.h3),
+        Text(l10n.salonMediaStepCoverLabel, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.sm),
         AspectRatio(
           aspectRatio: 16 / 9,
           child: MediaUploadButton(
             previewBytes: coverBytes,
             onPicked: onCoverPicked,
-            label: 'Ajouter une couverture',
+            label: l10n.salonMediaStepAddCoverLabel,
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        Text('Galerie (${portfolio.length}/20)', style: AppTypography.h3),
+        Text(l10n.salonMediaStepGalleryLabel(portfolio.length, 20), style: AppTypography.h3),
         const SizedBox(height: AppSpacing.sm),
         GridView.builder(
           shrinkWrap: true,

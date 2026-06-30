@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/auth_providers.dart';
@@ -61,26 +62,26 @@ class _HomeClientScreenState extends ConsumerState<HomeClientScreen> {
         currentIndex: _tabIndex,
         onTap: (index) => setState(() => _tabIndex = index),
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            label: context.l10n.navHome,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            label: 'Explorer',
+            icon: const Icon(Icons.explore_outlined),
+            label: context.l10n.homeClientNavExplorer,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.event_note_outlined),
-            label: 'Mes RDV',
+            icon: const Icon(Icons.event_note_outlined),
+            label: context.l10n.homeClientNavMyBookings,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.star_outline),
-            label: 'Fidélité',
+            icon: const Icon(Icons.star_outline),
+            label: context.l10n.homeClientNavMyLoyalties,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
+            icon: const Icon(Icons.person_outline),
+            label: context.l10n.navProfile,
           ),
         ],
       ),
@@ -88,11 +89,11 @@ class _HomeClientScreenState extends ConsumerState<HomeClientScreen> {
   }
 
   String _titleFor(int index, String? firstName) => switch (index) {
-    0 => 'Bonjour ${firstName ?? ''} 👋',
-    1 => 'Explorer',
-    2 => 'Mes RDV',
-    3 => 'Mes Fidélités',
-    _ => 'Profil',
+    0 => context.l10n.homeClientGreeting(firstName ?? ''),
+    1 => context.l10n.homeClientNavExplorer,
+    2 => context.l10n.homeClientNavMyBookings,
+    3 => context.l10n.homeClientNavMyLoyalties,
+    _ => context.l10n.navProfile,
   };
 }
 
@@ -113,23 +114,23 @@ class _HomeTab extends ConsumerWidget {
         ),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger les salons.',
+        message: context.l10n.homeClientCannotLoadSalons,
         onRetry: () => ref.invalidate(discoverSalonsProvider),
       ),
       data: (salons) {
         if (salons.isEmpty) {
-          return const KynzaEmptyState(
+          return KynzaEmptyState(
             icon: Icons.storefront_outlined,
-            title: 'Découvrez les salons',
-            subtitle: 'Aucun salon disponible pour le moment.',
-            ctaLabel: 'Actualiser',
+            title: context.l10n.homeClientDiscoverTitle,
+            subtitle: context.l10n.homeClientNoSalonsSubtitle,
+            ctaLabel: context.l10n.commonRefresh,
             onCta: _noop,
           );
         }
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            const Text('Salons près de vous', style: AppTypography.h3),
+            Text(context.l10n.homeClientSalonsNearYou, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.md),
             for (final salon in salons.take(10))
               Padding(

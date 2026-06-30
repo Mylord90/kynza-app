@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -53,12 +54,12 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner_outlined),
-            tooltip: 'Scanner fidélité',
+            tooltip: context.l10n.homeStaffScanLoyaltyTooltip,
             onPressed: () => context.push(RouteNames.ownerLoyaltyScan),
           ),
           IconButton(
             icon: const Icon(Icons.schedule_outlined),
-            tooltip: 'Mes disponibilités',
+            tooltip: context.l10n.homeStaffAvailabilityTooltip,
             onPressed: () => context.push(RouteNames.staffAvailability),
           ),
           const UnreadCountBadge(),
@@ -70,18 +71,16 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
           child: KynzaSkeleton(height: 200),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger votre profil.',
+          message: context.l10n.errorLoadFailed,
           onRetry: () => ref.invalidate(myStaffProfileProvider),
         ),
         data: (staff) {
           if (staff == null) {
-            return const KynzaEmptyState(
+            return KynzaEmptyState(
               icon: Icons.person_off_outlined,
-              title: 'Profil non lié',
-              subtitle:
-                  "Votre compte n'est pas encore associé à une équipe. "
-                  'Demandez une invitation à votre Owner.',
-              ctaLabel: 'Actualiser',
+              title: context.l10n.homeStaffProfileNotLinked,
+              subtitle: context.l10n.homeStaffProfileNotLinkedSubtitle,
+              ctaLabel: context.l10n.commonRefresh,
               onCta: _noop,
             );
           }
@@ -103,22 +102,22 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _tabIndex,
         onTap: (index) => setState(() => _tabIndex = index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.today_outlined),
-            label: "Aujourd'hui",
+            icon: const Icon(Icons.today_outlined),
+            label: context.l10n.navToday,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'Agenda',
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: context.l10n.navCalendar,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            label: 'Mes Clients',
+            icon: const Icon(Icons.people_outline),
+            label: context.l10n.navClients,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            label: 'Ma Perf',
+            icon: const Icon(Icons.bar_chart_outlined),
+            label: context.l10n.navPerformance,
           ),
         ],
       ),
@@ -126,10 +125,10 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
   }
 
   String _titleFor(int index) => switch (index) {
-    0 => "Aujourd'hui",
-    1 => 'Agenda',
-    2 => 'Mes Clients',
-    _ => 'Ma Perf',
+    0 => context.l10n.navToday,
+    1 => context.l10n.navCalendar,
+    2 => context.l10n.navClients,
+    _ => context.l10n.navPerformance,
   };
 }
 
@@ -150,7 +149,7 @@ class _TodayTab extends ConsumerWidget {
         child: KynzaSkeleton(height: 200),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger votre agenda.',
+        message: context.l10n.homeOwnerCalendarError,
         onRetry: () => ref.invalidate(_todayBookingsWithJoinsProvider(staffId)),
       ),
       data: (bookings) {
@@ -161,11 +160,11 @@ class _TodayTab extends ConsumerWidget {
             )
             .toList();
         if (upcoming.isEmpty) {
-          return const KynzaEmptyState(
+          return KynzaEmptyState(
             icon: Icons.event_available_outlined,
-            title: "Aucun RDV aujourd'hui",
-            subtitle: 'Profitez de votre journée libre !',
-            ctaLabel: 'Actualiser',
+            title: context.l10n.homeStaffNoApptTodayTitle,
+            subtitle: context.l10n.homeStaffFreeDay,
+            ctaLabel: context.l10n.commonRetry,
             onCta: _noop,
           );
         }
@@ -188,8 +187,8 @@ class _TodayTab extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Plus tard aujourd\'hui',
+                    Text(
+                      context.l10n.homeStaffLaterToday,
                       style: AppTypography.h3,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -267,18 +266,18 @@ class _AgendaTabState extends ConsumerState<_AgendaTab> {
               ),
             ),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger ce jour.',
+              message: context.l10n.homeOwnerCalendarError,
               onRetry: () => ref.invalidate(
                 practitionerBookingsProvider((widget.staffId, _selectedDate)),
               ),
             ),
             data: (bookings) {
               if (bookings.isEmpty) {
-                return const KynzaEmptyState(
+                return KynzaEmptyState(
                   icon: Icons.event_busy_outlined,
-                  title: 'Aucun RDV ce jour',
-                  subtitle: 'Rien de prévu pour cette date.',
-                  ctaLabel: "Aujourd'hui",
+                  title: context.l10n.homeOwnerCalendarEmptyTitle,
+                  subtitle: context.l10n.homeStaffNothingScheduled,
+                  ctaLabel: context.l10n.commonToday,
                   onCta: _noop,
                 );
               }
@@ -339,16 +338,16 @@ class _MyClientsTab extends ConsumerWidget {
         ),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger vos clients.',
+        message: context.l10n.homeOwnerClientsError,
         onRetry: () => ref.invalidate(_myClientsProvider(staffId)),
       ),
       data: (clients) {
         if (clients.isEmpty) {
-          return const KynzaEmptyState(
+          return KynzaEmptyState(
             icon: Icons.people_outline,
-            title: 'Aucun client encore',
-            subtitle: 'Vos clients apparaîtront ici après vos premiers RDV.',
-            ctaLabel: 'Retour',
+            title: context.l10n.homeOwnerClientsEmptyTitle,
+            subtitle: context.l10n.homeOwnerClientsEmptySubtitle,
+            ctaLabel: context.l10n.commonBack,
             onCta: _noop,
           );
         }
@@ -364,7 +363,7 @@ class _MyClientsTab extends ConsumerWidget {
                   children: [
                     KynzaAvatar(fullName: c['fullName'] as String? ?? ''),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: Text(c['fullName'] as String? ?? 'Client')),
+                    Expanded(child: Text(c['fullName'] as String? ?? context.l10n.homeOwnerClientFallbackName)),
                   ],
                 ),
               ),

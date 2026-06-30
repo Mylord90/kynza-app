@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/models/booking_model.dart';
@@ -74,9 +75,9 @@ class _ClientBookingsScreenState extends ConsumerState<ClientBookingsScreen> {
         Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: true, label: Text('À venir')),
-              ButtonSegment(value: false, label: Text('Passés')),
+            segments: [
+              ButtonSegment(value: true, label: Text(context.l10n.bookingUpcomingTab)),
+              ButtonSegment(value: false, label: Text(context.l10n.bookingPastTab)),
             ],
             selected: {_showUpcoming},
             onSelectionChanged: (s) => setState(() => _showUpcoming = s.first),
@@ -93,7 +94,7 @@ class _ClientBookingsScreenState extends ConsumerState<ClientBookingsScreen> {
               ),
             ),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger vos RDV.',
+              message: context.l10n.errorLoadFailed,
               onRetry: () => ref.invalidate(clientBookingsProvider(profile.id)),
             ),
             data: (bookings) {
@@ -114,11 +115,11 @@ class _ClientBookingsScreenState extends ConsumerState<ClientBookingsScreen> {
               if (filtered.isEmpty) {
                 return KynzaEmptyState(
                   icon: Icons.event_note_outlined,
-                  title: 'Aucun RDV',
+                  title: context.l10n.homeOwnerCalendarEmptyTitle,
                   subtitle: _showUpcoming
-                      ? 'Réservez votre prochain rendez-vous beauté.'
+                      ? context.l10n.homeClientBookNextBeautyAppt
                       : "Vous n'avez pas encore d'historique.",
-                  ctaLabel: 'Découvrir les salons',
+                  ctaLabel: context.l10n.bookingDiscoveryTitle,
                   onCta: () => context.go(RouteNames.clientDiscover),
                 );
               }
@@ -177,20 +178,20 @@ class _PastBookingActions extends ConsumerWidget {
         children: [
           if (canReviewAsync.valueOrNull == true)
             KynzaButton(
-              label: 'Laisser un avis',
+              label: context.l10n.bookingLeaveReview,
               height: 36,
               onPressed: () =>
                   context.push(RouteNames.clientReviewPath(booking.id!)),
             ),
           KynzaButton(
-            label: 'Réserver à nouveau',
+            label: context.l10n.bookingRebookButton,
             height: 36,
             variant: KynzaButtonVariant.secondary,
             onPressed: onRebook,
           ),
           if (booking.isPaid)
             KynzaButton(
-              label: 'Voir le reçu',
+              label: context.l10n.bookingViewReceiptButton,
               height: 36,
               variant: KynzaButtonVariant.ghost,
               onPressed: onReceipt,
@@ -225,28 +226,28 @@ class _ReceiptSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Reçu', style: AppTypography.h2),
+          Text(context.l10n.bookingReceiptTitle, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.lg),
-          _ReceiptRow(label: 'Salon', value: salonName),
+          _ReceiptRow(label: context.l10n.bookingReceiptSalon, value: salonName),
           if (serviceName != null)
-            _ReceiptRow(label: 'Service', value: serviceName!),
+            _ReceiptRow(label: context.l10n.bookingReceiptService, value: serviceName!),
           _ReceiptRow(
-            label: 'Date',
+            label: context.l10n.bookingReceiptDate,
             value:
                 '${booking.startTime.day}/${booking.startTime.month}/${booking.startTime.year}',
           ),
           _ReceiptRow(
-            label: 'Heure',
+            label: context.l10n.bookingReceiptTime,
             value:
                 '${booking.startTime.hour.toString().padLeft(2, '0')}:${booking.startTime.minute.toString().padLeft(2, '0')}',
           ),
           if (booking.paymentMethod != null)
-            _ReceiptRow(label: 'Méthode', value: booking.paymentMethod!),
+            _ReceiptRow(label: context.l10n.bookingPaymentMethodLabel, value: booking.paymentMethod!),
           const Divider(color: AppColors.border),
           KynzaAmountWidget(amountBif: booking.amountBif),
           const SizedBox(height: AppSpacing.xl),
           KynzaButton(
-            label: 'Partager le reçu',
+            label: context.l10n.bookingShareReceiptButton,
             onPressed: () => Share.share(
               '🧾 Reçu KYNZA — $salonName\n'
               '💰 ${CurrencyFormatter.formatBif(booking.amountBif)}\n'

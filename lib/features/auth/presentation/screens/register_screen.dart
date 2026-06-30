@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
@@ -50,6 +51,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     ref.listen(authNotifierProvider, (previous, next) {
       next.whenData((state) {
         state.whenOrNull(
@@ -85,27 +88,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Créer un compte',
+                    Text(
+                      l10n.authRegisterTitle,
                       style: AppTypography.h1,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    const Text(
-                      'Rejoignez KYNZA en quelques secondes',
+                    Text(
+                      l10n.authRegisterSubtitle,
                       style: AppTypography.body,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     KynzaTextField(
-                      label: 'Nom complet',
+                      label: l10n.authRegisterFullNameLabel,
                       controller: _fullNameController,
                       textInputAction: TextInputAction.next,
                       validator: Validators.fullName,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     KynzaTextField(
-                      label: 'Email',
+                      label: l10n.authRegisterEmailLabel,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -120,7 +123,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     KynzaPasswordField(
-                      label: 'Confirmer le mot de passe',
+                      label: l10n.authRegisterConfirmPasswordLabel,
                       controller: _confirmController,
                       textInputAction: TextInputAction.done,
                       validator: (v) => Validators.confirmPassword(
@@ -140,7 +143,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ],
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(
-                      label: 'Créer mon compte →',
+                      label: l10n.authRegisterSubmitButton,
                       onPressed: _submit,
                       isLoading: isLoading,
                     ),
@@ -153,17 +156,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           .signInWithGoogle(),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    const Tooltip(
-                      message: 'Disponible bientôt',
-                      child: KynzaOAuthButton(
+                    Tooltip(
+                      message: l10n.authOauthComingSoon,
+                      child: const KynzaOAuthButton(
                         provider: KynzaOAuthProvider.facebook,
                         onPressed: null,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    const Tooltip(
-                      message: 'Disponible bientôt',
-                      child: KynzaOAuthButton(
+                    Tooltip(
+                      message: l10n.authOauthComingSoon,
+                      child: const KynzaOAuthButton(
                         provider: KynzaOAuthProvider.apple,
                         onPressed: null,
                       ),
@@ -176,7 +179,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         // redirecting an unauthenticated staff member here),
                         // leaving nothing to pop back to.
                         onPressed: () => context.go(RouteNames.login),
-                        child: const Text('Déjà un compte ? Se connecter'),
+                        child: Text(l10n.authRegisterAlreadyHaveAccountLink),
                       ),
                     ),
                   ],

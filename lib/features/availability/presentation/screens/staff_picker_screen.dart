@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../staff/application/providers/staff_providers.dart';
@@ -39,16 +40,16 @@ class StaffPickerScreen extends ConsumerWidget {
           ),
         ),
         error: (_, __) => KynzaErrorState(
-          message: "Impossible de charger l'équipe.",
+          message: context.l10n.availabilityStaffLoadError,
           onRetry: () => ref.invalidate(salonStaffProvider(salonId)),
         ),
         data: (staff) {
           if (staff.isEmpty) {
-            return const KynzaEmptyState(
+            return KynzaEmptyState(
               icon: Icons.people_outline,
-              title: 'Aucun staff',
-              subtitle: 'Invitez votre équipe pour configurer leurs horaires.',
-              ctaLabel: 'Retour',
+              title: context.l10n.availabilityNoStaffTitle,
+              subtitle: context.l10n.availabilityNoStaffSubtitle,
+              ctaLabel: context.l10n.commonBack,
               onCta: _noop,
             );
           }

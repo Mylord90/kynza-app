@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -49,27 +50,26 @@ class _UpgradeSuccessScreenState extends State<UpgradeSuccessScreen>
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              const Text(
-                'Demande envoyée ! 🎉',
+              Text(
+                context.l10n.upgradeSuccessTitle,
                 style: AppTypography.h1,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'Notre équipe va vous contacter sous 24h pour finaliser '
-                'votre mise à niveau.',
+              Text(
+                context.l10n.upgradeSuccessSubtitle,
                 style: AppTypography.body,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'En attendant, vous pouvez continuer à utiliser KYNZA.',
+              Text(
+                context.l10n.upgradeSuccessNote,
                 style: AppTypography.bodySmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
               KynzaButton(
-                label: 'Retour au dashboard',
+                label: context.l10n.upgradeSuccessBackButton,
                 onPressed: () => context.go(RouteNames.homeOwner),
               ),
             ],

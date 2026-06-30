@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../../core/models/feature_flag_model.dart';
 import '../../../../../core/models/salon_feature_override_model.dart';
 import '../../../../../shared/widgets/kynza_widgets.dart';
@@ -20,7 +21,7 @@ class FeatureFlagScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Drapeaux de fonctionnalités')),
+      appBar: AppBar(title: Text(context.l10n.evolutionFeatureFlagsTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -39,7 +40,7 @@ class FeatureFlagScreen extends ConsumerWidget {
                 }
                 if (flagsAsync.hasError || overridesAsync.hasError) {
                   return KynzaErrorState(
-                    message: 'Impossible de charger les drapeaux.',
+                    message: context.l10n.errorLoadFailed,
                     onRetry: () {
                       ref.invalidate(featureFlagsProvider);
                       ref.invalidate(salonFeatureOverridesProvider(salonId));
@@ -56,10 +57,9 @@ class FeatureFlagScreen extends ConsumerWidget {
                 if (flags.isEmpty) {
                   return KynzaEmptyState(
                     icon: Icons.flag_outlined,
-                    title: 'Aucun drapeau configuré',
-                    subtitle:
-                        'Les drapeaux de fonctionnalités apparaîtront ici.',
-                    ctaLabel: 'Rafraîchir',
+                    title: context.l10n.evolutionFeatureFlagsEmptyTitle,
+                    subtitle: context.l10n.evolutionFeatureFlagsEmptySubtitle,
+                    ctaLabel: context.l10n.commonRetry,
                     onCta: () => ref.invalidate(featureFlagsProvider),
                   );
                 }
@@ -102,8 +102,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              'Activez ou désactivez des fonctionnalités pour ce salon. '
-              'Les overrides locaux priment sur les paramètres globaux.',
+              context.l10n.evolutionFeatureFlagsInfoText,
               style: AppTypography.bodySmall
                   .copyWith(color: AppColors.textSecondary),
             ),
@@ -160,7 +159,7 @@ class _FlagTile extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.close, size: 18),
                   color: AppColors.textMuted,
-                  tooltip: 'Réinitialiser (suivre global)',
+                  tooltip: context.l10n.evolutionFeatureFlagsResetTooltip,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => notifier.removeOverride(
@@ -189,7 +188,7 @@ class _FlagTile extends ConsumerWidget {
                 _GlobalBadge(flag: flag),
                 if (_hasOverride) ...[
                   const SizedBox(width: AppSpacing.xs),
-                  const KynzaBadge(label: 'OVERRIDE'),
+                  KynzaBadge(label: context.l10n.evolutionFeatureFlagsOverrideBadge),
                 ],
               ],
             ),
@@ -208,11 +207,11 @@ class _GlobalBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!flag.isEnabled) {
-      return const KynzaBadge(label: 'GLOBAL: DÉSACTIVÉ');
+      return KynzaBadge(label: context.l10n.evolutionFeatureFlagsDisabledBadge);
     }
     if (flag.rolloutPercentage < 100) {
-      return KynzaBadge(label: 'GLOBAL: ${flag.rolloutPercentage}%');
+      return KynzaBadge(label: context.l10n.evolutionFeatureFlagsRollout(flag.rolloutPercentage));
     }
-    return const KynzaBadge(label: 'GLOBAL: ACTIVÉ');
+    return KynzaBadge(label: context.l10n.evolutionFeatureFlagsEnabledBadge);
   }
 }

@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
 import '../widgets/exception_form_widget.dart';
@@ -24,7 +25,7 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Jours exceptionnels')),
+      appBar: AppBar(title: Text(context.l10n.availabilityExceptionsTitle)),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () => showKynzaBottomSheet(
@@ -42,7 +43,7 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
                     context,
                     message: e is AppException
                         ? e.message
-                        : "Échec de l'enregistrement.",
+                        : context.l10n.availabilitySaveFailed,
                     level: ToastLevel.error,
                   );
                 }
@@ -58,16 +59,16 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
           exceptionsAsync.when(
             loading: () => const KynzaSkeleton(height: 200),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger les jours exceptionnels.',
+              message: context.l10n.availabilityExceptionsLoadError,
               onRetry: () => ref.invalidate(salonExceptionsProvider(salonId)),
             ),
             data: (exceptions) {
               if (exceptions.isEmpty) {
                 return KynzaEmptyState(
                   icon: Icons.event_note_outlined,
-                  title: 'Aucun jour exceptionnel',
-                  subtitle: 'Ajoutez vos vacances ou fermetures spéciales.',
-                  ctaLabel: 'Ajouter',
+                  title: context.l10n.availabilityNoExceptionsTitle,
+                  subtitle: context.l10n.availabilityNoExceptionsSubtitle,
+                  ctaLabel: context.l10n.commonAdd,
                   onCta: () => showKynzaBottomSheet(
                     context,
                     builder: (_) => ExceptionFormWidget(
@@ -83,7 +84,7 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
                               context,
                               message: e is AppException
                                   ? e.message
-                                  : "Échec de l'enregistrement.",
+                                  : context.l10n.availabilitySaveFailed,
                               level: ToastLevel.error,
                             );
                           }
@@ -111,7 +112,7 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
                                 context,
                                 message: e is AppException
                                     ? e.message
-                                    : 'Échec de la suppression.',
+                                    : context.l10n.availabilityDeleteFailed,
                                 level: ToastLevel.error,
                               );
                             }
@@ -124,14 +125,14 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Jours fériés', style: AppTypography.h3),
+          Text(context.l10n.availabilityPublicHolidaysHeading, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
           holidaysAsync.when(
             loading: () => const KynzaSkeleton(height: 100),
             error: (_, __) => const SizedBox.shrink(),
             data: (holidays) => holidays.isEmpty
-                ? const Text(
-                    'Aucun jour férié configuré.',
+                ? Text(
+                    context.l10n.availabilityNoPublicHolidays,
                     style: AppTypography.bodySmall,
                   )
                 : Column(

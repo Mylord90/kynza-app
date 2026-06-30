@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/review_providers.dart';
@@ -63,16 +64,16 @@ class SalonReviewsTab extends ConsumerWidget {
               ],
             ),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger les avis.',
+              message: context.l10n.reviewsSalonLoadError,
               onRetry: () => ref.invalidate(salonReviewsProvider(salonId)),
             ),
             data: (reviews) {
               if (reviews.isEmpty) {
-                return const KynzaEmptyState(
+                return KynzaEmptyState(
                   icon: Icons.rate_review_outlined,
-                  title: 'Soyez le premier à laisser un avis !',
-                  subtitle: 'Réservez puis partagez votre expérience.',
-                  ctaLabel: 'Retour',
+                  title: context.l10n.reviewsFirstTitle,
+                  subtitle: context.l10n.reviewsFirstSubtitle,
+                  ctaLabel: context.l10n.reviewsEmptyCta,
                   onCta: _noop,
                 );
               }

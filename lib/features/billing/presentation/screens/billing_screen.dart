@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 
-const _planNames = {'free': 'Gratuit', 'pro': 'Pro', 'premium': 'Premium'};
+Map<String, String> _planNames(BuildContext context) => {
+  'free': context.l10n.billingPlanNameFree,
+  'pro': context.l10n.billingPlanNamePro,
+  'premium': context.l10n.billingPlanNamePremium,
+};
 
 class BillingScreen extends ConsumerWidget {
   const BillingScreen({super.key});
@@ -19,7 +24,7 @@ class BillingScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Facturation')),
+      appBar: AppBar(title: Text(context.l10n.billingTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -33,18 +38,18 @@ class BillingScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Plan actuel',
+                            Text(
+                              context.l10n.billingCurrentPlanLabel,
                               style: AppTypography.bodySmall,
                             ),
                             Text(
-                              _planNames[salon.plan] ?? salon.plan,
+                              _planNames(context)[salon.plan] ?? salon.plan,
                               style: AppTypography.h1,
                             ),
                             const SizedBox(height: AppSpacing.md),
                             if (salon.planStartedAt != null) ...[
-                              const Text(
-                                'Période en cours',
+                              Text(
+                                context.l10n.billingCurrentPeriodLabel,
                                 style: AppTypography.bodySmall,
                               ),
                               Text(
@@ -53,15 +58,15 @@ class BillingScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: AppSpacing.sm),
                             ],
-                            const Text(
-                              'Méthode de paiement : Manuelle (virement bancaire)',
+                            Text(
+                              context.l10n.billingPaymentMethodManual,
                               style: AppTypography.bodySmall,
                             ),
                             if (salon.plan != 'free' &&
                                 salon.planStartedAt != null) ...[
                               const SizedBox(height: AppSpacing.sm),
                               Text(
-                                'Prochaine facturation : ${_nextBillingLabel(salon.plan, salon.planStartedAt!)}',
+                                context.l10n.billingNextBillingLabel(_nextBillingLabel(salon.plan, salon.planStartedAt!)),
                                 style: AppTypography.bodySmall,
                               ),
                             ],
@@ -71,20 +76,20 @@ class BillingScreen extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.lg),
                       KynzaCard(
                         onTap: () => context.push(RouteNames.ownerSubscription),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.workspace_premium_outlined,
                               color: AppColors.primary,
                             ),
-                            SizedBox(width: AppSpacing.md),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Text(
-                                'Gérer mon abonnement',
+                                context.l10n.billingManageSubscriptionButton,
                                 style: AppTypography.h3,
                               ),
                             ),
-                            Icon(
+                            const Icon(
                               Icons.chevron_right,
                               color: AppColors.textMuted,
                             ),
@@ -95,20 +100,20 @@ class BillingScreen extends ConsumerWidget {
                       KynzaCard(
                         onTap: () =>
                             context.push(RouteNames.ownerBillingInvoices),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.receipt_long_outlined,
                               color: AppColors.primary,
                             ),
-                            SizedBox(width: AppSpacing.md),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Text(
-                                'Historique des factures',
+                                context.l10n.billingInvoiceHistoryButton,
                                 style: AppTypography.h3,
                               ),
                             ),
-                            Icon(
+                            const Icon(
                               Icons.chevron_right,
                               color: AppColors.textMuted,
                             ),

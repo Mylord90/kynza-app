@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
 
@@ -17,7 +18,7 @@ class BlockedSlotsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Jours bloqués')),
+      appBar: AppBar(title: Text(context.l10n.availabilityBlockedSlotsTitle)),
       body: overridesAsync.when(
         loading: () => ListView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -28,7 +29,7 @@ class BlockedSlotsScreen extends ConsumerWidget {
           ),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger les jours bloqués.',
+          message: context.l10n.availabilityBlockedSlotsLoadError,
           onRetry: () => ref.invalidate(salonOverridesProvider(salonId)),
         ),
         data: (overrides) {
@@ -38,9 +39,9 @@ class BlockedSlotsScreen extends ConsumerWidget {
           if (blocked.isEmpty) {
             return KynzaEmptyState(
               icon: Icons.event_available_outlined,
-              title: 'Aucun jour bloqué',
-              subtitle: "Tous vos jours d'ouverture habituels sont actifs.",
-              ctaLabel: 'Retour',
+              title: context.l10n.availabilityNoBlockedDaysTitle,
+              subtitle: context.l10n.availabilityNoBlockedDaysSubtitle,
+              ctaLabel: context.l10n.commonBack,
               onCta: () => Navigator.of(context).pop(),
             );
           }
@@ -74,9 +75,8 @@ class BlockedSlotsScreen extends ConsumerWidget {
                         onPressed: () async {
                           final confirmed = await showKynzaConfirmDialog(
                             context,
-                            title: 'Débloquer ce jour ?',
-                            message:
-                                'Ce jour redeviendra ouvert selon vos horaires habituels.',
+                            title: context.l10n.availabilityBlockedSlotsConfirmTitle,
+                            message: context.l10n.availabilityUnblockMessage,
                             isDestructive: false,
                           );
                           if (!confirmed) return;
@@ -90,7 +90,7 @@ class BlockedSlotsScreen extends ConsumerWidget {
                                 context,
                                 message: e is AppException
                                     ? e.message
-                                    : 'Échec du déblocage.',
+                                    : context.l10n.availabilityUnblockFailed,
                                 level: ToastLevel.error,
                               );
                             }

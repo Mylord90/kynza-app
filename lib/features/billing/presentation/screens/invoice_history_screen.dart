@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/billing/invoice_model.dart';
 import '../../../../core/services/export_service.dart';
 import '../../../../core/services/share_service.dart';
@@ -12,7 +13,11 @@ import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/billing_providers.dart';
 
-const _planNames = {'free': 'Gratuit', 'pro': 'Pro', 'premium': 'Premium'};
+Map<String, String> _planNames(BuildContext context) => {
+  'free': context.l10n.billingPlanNameFree,
+  'pro': context.l10n.billingPlanNamePro,
+  'premium': context.l10n.billingPlanNamePremium,
+};
 
 class InvoiceHistoryScreen extends ConsumerWidget {
   const InvoiceHistoryScreen({super.key});
@@ -23,7 +28,7 @@ class InvoiceHistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Historique des factures')),
+      appBar: AppBar(title: Text(context.l10n.billingInvoicesTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -57,17 +62,16 @@ class _InvoiceList extends ConsumerWidget {
         ),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger les factures.',
+        message: context.l10n.billingInvoicesLoadError,
         onRetry: () => ref.invalidate(salonInvoicesProvider(salonId)),
       ),
       data: (invoices) {
         if (invoices.isEmpty) {
-          return const KynzaEmptyState(
+          return KynzaEmptyState(
             icon: Icons.receipt_long_outlined,
-            title: 'Aucune facture',
-            subtitle:
-                'Vos factures apparaîtront ici après une demande de mise à niveau.',
-            ctaLabel: 'Retour',
+            title: context.l10n.billingInvoicesEmptyTitle,
+            subtitle: context.l10n.billingInvoicesEmptySubtitle,
+            ctaLabel: context.l10n.commonBack,
             onCta: _noop,
           );
         }
@@ -94,7 +98,7 @@ class _InvoiceList extends ConsumerWidget {
                             Text(invoice.reference, style: AppTypography.mono),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
-                              _planNames[invoice.planKey] ?? invoice.planKey,
+                              _planNames(context)[invoice.planKey] ?? invoice.planKey,
                               style: AppTypography.bodySmall,
                             ),
                           ],
@@ -133,10 +137,10 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, variant) = switch (status) {
-      'paid' => ('PAYÉE', KynzaBadgeVariant.success),
-      'overdue' => ('EN RETARD', KynzaBadgeVariant.error),
-      'void' => ('ANNULÉE', KynzaBadgeVariant.neutral),
-      _ => ('EN ATTENTE', KynzaBadgeVariant.warning),
+      'paid' => (context.l10n.billingInvoiceStatusPaid, KynzaBadgeVariant.success),
+      'overdue' => (context.l10n.billingInvoiceStatusOverdue, KynzaBadgeVariant.error),
+      'void' => (context.l10n.billingInvoiceStatusVoid, KynzaBadgeVariant.neutral),
+      _ => (context.l10n.billingInvoiceStatusPending, KynzaBadgeVariant.warning),
     };
     return KynzaBadge(label: label, variant: variant);
   }
@@ -158,15 +162,17 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
   Future<void> _exportPdf(InvoiceModel invoice) async {
     final salon = ref.read(ownerSalonProvider).valueOrNull;
     if (salon == null) return;
+    final planName = _planNames(context)[invoice.planKey] ?? invoice.planKey;
     final bytes = await ExportService.generateInvoicePdf(
       invoice: invoice,
       salonName: salon.name,
-      planName: _planNames[invoice.planKey] ?? invoice.planKey,
+      planName: planName,
     );
     await ExportService.sharePdf(bytes, '${invoice.reference}.pdf');
   }
 
   Future<void> _markPaid() async {
+    final l10n = context.l10n;
     final salon = ref.read(ownerSalonProvider).valueOrNull;
     if (salon == null) return;
     setState(() => _isMarking = true);
@@ -180,7 +186,7 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Une erreur est survenue.',
+          message: e is AppException ? e.message : l10n.errorGeneric,
           level: ToastLevel.error,
         );
       }
@@ -206,7 +212,7 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
           Text(invoice.reference, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            _planNames[invoice.planKey] ?? invoice.planKey,
+            _planNames(context)[invoice.planKey] ?? invoice.planKey,
             style: AppTypography.body,
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -218,7 +224,7 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
           _StatusChip(status: invoice.status),
           if (invoice.isPending && invoice.paymentInstructions != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            const Text('Instructions de paiement', style: AppTypography.h3),
+            Text(context.l10n.billingInvoicePaymentInstructionsTitle, style: AppTypography.h3),
             const SizedBox(height: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -234,17 +240,17 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
           ],
           const SizedBox(height: AppSpacing.lg),
           KynzaButton(
-            label: 'Exporter facture PDF',
+            label: context.l10n.billingInvoiceExportPdfButton,
             variant: KynzaButtonVariant.secondary,
             onPressed: () => _exportPdf(invoice),
           ),
           const SizedBox(height: AppSpacing.md),
           KynzaButton(
-            label: 'Partager la facture',
+            label: context.l10n.billingInvoiceShareButton,
             variant: KynzaButtonVariant.secondary,
             onPressed: () => ShareService.shareInvoice(
               reference: invoice.reference,
-              planName: _planNames[invoice.planKey] ?? invoice.planKey,
+              planName: _planNames(context)[invoice.planKey] ?? invoice.planKey,
               formattedAmount: CurrencyFormatter.formatBif(invoice.amountBif),
               instructions: invoice.paymentInstructions ?? '',
             ),
@@ -252,7 +258,7 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
           if (invoice.isPending) ...[
             const SizedBox(height: AppSpacing.md),
             KynzaButton(
-              label: 'Marquer comme payé',
+              label: context.l10n.billingInvoiceMarkPaidButton,
               isLoading: _isMarking,
               onPressed: _markPaid,
             ),

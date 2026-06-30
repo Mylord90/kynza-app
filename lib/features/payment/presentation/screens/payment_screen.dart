@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/booking_model.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -44,7 +45,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     if (Validators.phone(_phoneCtrl.text) != null) {
       showKynzaToast(
         context,
-        message: 'Numéro invalide.',
+        message: context.l10n.paymentInvalidPhone,
         level: ToastLevel.warning,
       );
       return;
@@ -123,7 +124,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Paiement')),
+      appBar: AppBar(title: Text(context.l10n.paymentTitle)),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Center(child: _buildPhase()),
@@ -142,14 +143,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
-              "Ce paiement n'a pas abouti. Aucun argent débité.",
+            Text(
+              context.l10n.paymentFailedMessage,
               style: AppTypography.body,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
             KynzaButton(
-              label: 'Réessayer',
+              label: context.l10n.paymentRetryButton,
               onPressed: () =>
                   setState(() => _phase = _PaymentPhase.selectMethod),
             ),
@@ -160,18 +161,18 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Méthode de paiement', style: AppTypography.h3),
+              Text(context.l10n.paymentMethodTitle, style: AppTypography.h3),
               const SizedBox(height: AppSpacing.md),
               Wrap(
                 spacing: AppSpacing.sm,
                 children: [
                   ChoiceChip(
-                    label: const Text('Lumicash'),
+                    label: Text(context.l10n.paymentMethodLumicash),
                     selected: _method == 'lumicash',
                     onSelected: (_) => setState(() => _method = 'lumicash'),
                   ),
                   ChoiceChip(
-                    label: const Text('EcoCash'),
+                    label: Text(context.l10n.paymentMethodEcocash),
                     selected: _method == 'ecocash',
                     onSelected: (_) => setState(() => _method = 'ecocash'),
                   ),
@@ -196,15 +197,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   color: AppColors.warningBg,
                   borderRadius: BorderRadius.circular(AppSpacing.md),
                 ),
-                child: const Text(
-                  'Vous allez recevoir une demande USSD sur votre téléphone. '
-                  'Entrez votre code PIN pour confirmer.',
+                child: Text(
+                  context.l10n.paymentUssdInstruction,
                   style: AppTypography.bodySmall,
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
               KynzaButton(
-                label: 'Payer →',
+                label: context.l10n.paymentSubmitButton,
                 isLoading: _isInitiating,
                 onPressed: _pay,
               ),

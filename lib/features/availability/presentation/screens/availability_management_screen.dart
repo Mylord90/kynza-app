@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/availability_providers.dart';
@@ -29,7 +30,7 @@ class AvailabilityManagementScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Disponibilités')),
+      appBar: AppBar(title: Text(context.l10n.availabilityManagementTitle)),
       body: salon == null
           ? const Padding(
               padding: EdgeInsets.all(AppSpacing.lg),
@@ -40,19 +41,19 @@ class AvailabilityManagementScreen extends ConsumerWidget {
               children: [
                 _HubRow(
                   icon: Icons.store_outlined,
-                  label: 'Horaires du salon',
+                  label: context.l10n.availabilitySalonHoursTitle,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const SalonHoursScreen()),
                   ),
                 ),
                 _HubRow(
                   icon: Icons.badge_outlined,
-                  label: 'Horaires par staff',
+                  label: context.l10n.availabilityHubStaffHoursLabel,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => StaffPickerScreen(
                         salonId: salon.id,
-                        title: 'Horaires par staff',
+                        title: context.l10n.availabilityHubStaffHoursLabel,
                         onSelect: (member) => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => StaffHoursScreen(
@@ -68,12 +69,12 @@ class AvailabilityManagementScreen extends ConsumerWidget {
                 ),
                 _HubRow(
                   icon: Icons.free_breakfast_outlined,
-                  label: 'Pauses & absences',
+                  label: context.l10n.availabilityHubBreaksLabel,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => StaffPickerScreen(
                         salonId: salon.id,
-                        title: 'Pauses & absences',
+                        title: context.l10n.availabilityHubBreaksLabel,
                         onSelect: (member) => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => BreaksManagementScreen(
@@ -89,7 +90,7 @@ class AvailabilityManagementScreen extends ConsumerWidget {
                 ),
                 _HubRow(
                   icon: Icons.event_note_outlined,
-                  label: 'Jours exceptionnels & jours fériés',
+                  label: context.l10n.availabilityExceptionsLabel,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) =>
@@ -99,7 +100,7 @@ class AvailabilityManagementScreen extends ConsumerWidget {
                 ),
                 _HubRow(
                   icon: Icons.event_busy_outlined,
-                  label: 'Jours bloqués (ponctuel)',
+                  label: context.l10n.availabilityBlockedLabel,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => BlockedSlotsScreen(salonId: salon.id),
@@ -107,8 +108,8 @@ class AvailabilityManagementScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text(
-                  'Touchez un jour pour le fermer ou le rouvrir exceptionnellement.',
+                Text(
+                  context.l10n.availabilityHubTouchHint,
                   style: AppTypography.body,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -157,7 +158,7 @@ class _OverridesStrip extends ConsumerWidget {
     return overridesAsync.when(
       loading: () => const KynzaSkeleton(height: 84),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger les disponibilités.',
+        message: context.l10n.availabilityLoadError,
         onRetry: () => ref.invalidate(salonOverridesProvider(salonId)),
       ),
       data: (overrides) => WeekScheduleEditor(
@@ -179,7 +180,7 @@ class _OverridesStrip extends ConsumerWidget {
                     context,
                     message: e is AppException
                         ? e.message
-                        : "Échec de l'enregistrement.",
+                        : context.l10n.availabilitySaveFailed,
                     level: ToastLevel.error,
                   );
                 }

@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/enums/user_role.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/utils/validators.dart';
@@ -66,7 +67,7 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : "Échec de l'invitation.",
+          message: e is AppException ? e.message : context.l10n.staffInviteError,
           level: ToastLevel.error,
         );
       }
@@ -82,16 +83,16 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Inviter un membre')),
+      appBar: AppBar(title: Text(context.l10n.staffInviteTitle)),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
             KynzaTextField(
-              label: 'Nom *',
+              label: context.l10n.staffInviteNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, 'Nom'),
+              validator: (v) => Validators.required(v, context.l10n.staffInviteNameLabel),
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaPhoneField(
@@ -101,16 +102,16 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
             const SizedBox(height: AppSpacing.lg),
             SegmentedButton<String>(
               segments: [
-                const ButtonSegment(value: 'staff', label: Text('Staff')),
+                ButtonSegment(value: 'staff', label: Text(context.l10n.staffInviteRoleStaff)),
                 if (canAssignManager)
-                  const ButtonSegment(value: 'manager', label: Text('Manager')),
+                  ButtonSegment(value: 'manager', label: Text(context.l10n.staffInviteRoleManager)),
               ],
               selected: {_role},
               onSelectionChanged: (s) => setState(() => _role = s.first),
             ),
             const SizedBox(height: AppSpacing.xxl),
             KynzaButton(
-              label: "Envoyer l'invitation",
+              label: context.l10n.staffInviteSubmitButton,
               isLoading: _isSending,
               onPressed: _send,
             ),

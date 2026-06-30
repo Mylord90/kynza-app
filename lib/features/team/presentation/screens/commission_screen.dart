@@ -3,25 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/models/staff_commission_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../staff/application/providers/staff_providers.dart';
 import '../../application/providers/commission_providers.dart';
 
-const _monthLabels = [
-  'Janvier',
-  'Février',
-  'Mars',
-  'Avril',
-  'Mai',
-  'Juin',
-  'Juillet',
-  'Août',
-  'Septembre',
-  'Octobre',
-  'Novembre',
-  'Décembre',
-];
+String _monthLabel(AppLocalizations l10n, int month) => switch (month) {
+  1 => l10n.commonMonthJanuary,
+  2 => l10n.commonMonthFebruary,
+  3 => l10n.commonMonthMarch,
+  4 => l10n.commonMonthApril,
+  5 => l10n.commonMonthMay,
+  6 => l10n.commonMonthJune,
+  7 => l10n.commonMonthJuly,
+  8 => l10n.commonMonthAugust,
+  9 => l10n.commonMonthSeptember,
+  10 => l10n.commonMonthOctober,
+  11 => l10n.commonMonthNovember,
+  _ => l10n.commonMonthDecember,
+};
 
 class CommissionScreen extends ConsumerWidget {
   const CommissionScreen({super.key, required this.salonId});
@@ -30,6 +32,7 @@ class CommissionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final month = ref.watch(selectedCommissionMonthProvider);
     final summaryAsync = ref.watch(commissionSummaryProvider(salonId));
     final commissionsAsync = ref.watch(salonCommissionsProvider(salonId));
@@ -38,7 +41,7 @@ class CommissionScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Commissions'),
+        title: Text(l10n.staffCommissionsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
@@ -67,7 +70,7 @@ class CommissionScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   Text(
-                    '${_monthLabels[month.month - 1]} ${month.year}',
+                    '${_monthLabel(l10n, month.month)} ${month.year}',
                     style: AppTypography.h2,
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -78,21 +81,21 @@ class CommissionScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: _SummaryTile(
-                            label: 'Gagné',
+                            label: l10n.staffDetailCommissionsEarned,
                             amountBif: summary.earnedBif,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _SummaryTile(
-                            label: 'Payé',
+                            label: l10n.staffDetailCommissionsPaid,
                             amountBif: summary.paidBif,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _SummaryTile(
-                            label: 'En attente',
+                            label: l10n.staffDetailCommissionsPending,
                             amountBif: summary.pendingBif,
                           ),
                         ),
@@ -113,18 +116,17 @@ class CommissionScreen extends ConsumerWidget {
                       ],
                     ),
                     error: (_, __) => KynzaErrorState(
-                      message: 'Impossible de charger les commissions.',
+                      message: l10n.commissionLoadError,
                       onRetry: () =>
                           ref.invalidate(salonCommissionsProvider(salonId)),
                     ),
                     data: (commissions) {
                       if (commissions.isEmpty) {
-                        return const KynzaEmptyState(
+                        return KynzaEmptyState(
                           icon: Icons.payments_outlined,
-                          title: 'Aucune commission ce mois',
-                          subtitle:
-                              'Les commissions apparaîtront après les RDV terminés.',
-                          ctaLabel: 'Retour',
+                          title: l10n.commissionEmptyTitle,
+                          subtitle: l10n.commissionEmptySubtitle,
+                          ctaLabel: l10n.commonBack,
                           onCta: _noop,
                         );
                       }
@@ -144,7 +146,7 @@ class CommissionScreen extends ConsumerWidget {
                                 bottom: AppSpacing.md,
                               ),
                               child: KynzaButton(
-                                label: 'Tout marquer payé',
+                                label: l10n.commissionMarkAllPaid,
                                 onPressed: () => ref
                                     .read(commissionNotifierProvider.notifier)
                                     .markPaid(salonId, pendingIds)
@@ -162,7 +164,7 @@ class CommissionScreen extends ConsumerWidget {
                                     Expanded(
                                       child: Text(
                                         staffById[c.staffId]?.displayName ??
-                                            'Staff',
+                                            l10n.commissionStaffFallback,
                                         style: AppTypography.body,
                                       ),
                                     ),
@@ -172,7 +174,9 @@ class CommissionScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
                                     KynzaBadge(
-                                      label: c.isPaid ? 'PAYÉ' : 'EN ATTENTE',
+                                      label: c.isPaid
+                                          ? l10n.commissionBadgePaid
+                                          : l10n.commissionBadgePending,
                                       variant: c.isPaid
                                           ? KynzaBadgeVariant.success
                                           : KynzaBadgeVariant.warning,

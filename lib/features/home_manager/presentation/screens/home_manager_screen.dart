@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -21,7 +22,7 @@ class _HomeManagerScreenState extends ConsumerState<HomeManagerScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('📊 Dashboard Manager'),
+        title: Text('📊 ${context.l10n.homeManagerDashboardTitle}'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -39,9 +40,9 @@ class _HomeManagerScreenState extends ConsumerState<HomeManagerScreen> {
           Expanded(
             child: KynzaEmptyState(
               icon: Icons.dashboard_outlined,
-              title: 'Tableau de bord Manager',
-              subtitle: 'Phase 2 — Booking Engine arrive ici',
-              ctaLabel: 'Aperçu des fonctionnalités →',
+              title: context.l10n.homeManagerDashboardTitle,
+              subtitle: context.l10n.homeManagerDashboardBody,
+              ctaLabel: context.l10n.homeManagerDashboardCta,
               onCta: () {},
             ),
           ),
@@ -50,26 +51,26 @@ class _HomeManagerScreenState extends ConsumerState<HomeManagerScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _tabIndex,
         onTap: (index) => setState(() => _tabIndex = index),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Calendrier',
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: context.l10n.navCalendar,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            label: context.l10n.navDashboard,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            label: 'Clients',
+            icon: const Icon(Icons.people_outline),
+            label: context.l10n.navClients,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.campaign_outlined),
-            label: 'Marketing',
+            icon: const Icon(Icons.campaign_outlined),
+            label: context.l10n.navMarketing,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
+            icon: const Icon(Icons.person_outline),
+            label: context.l10n.navProfile,
           ),
         ],
       ),

@@ -3,22 +3,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 
 const _weekdayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-const _monthLabels = [
-  'Janvier',
-  'Février',
-  'Mars',
-  'Avril',
-  'Mai',
-  'Juin',
-  'Juillet',
-  'Août',
-  'Septembre',
-  'Octobre',
-  'Novembre',
-  'Décembre',
-];
 
 /// Lightweight custom month calendar — no third-party calendar package
 /// (R13: keep the dependency/perf footprint minimal on entry-level devices).
@@ -50,6 +37,21 @@ class _BookingCalendarWidgetState extends State<BookingCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final monthLabels = [
+      l10n.commonMonthJanuary,
+      l10n.commonMonthFebruary,
+      l10n.commonMonthMarch,
+      l10n.commonMonthApril,
+      l10n.commonMonthMay,
+      l10n.commonMonthJune,
+      l10n.commonMonthJuly,
+      l10n.commonMonthAugust,
+      l10n.commonMonthSeptember,
+      l10n.commonMonthOctober,
+      l10n.commonMonthNovember,
+      l10n.commonMonthDecember,
+    ];
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
     final firstOfMonth = DateTime(_visibleMonth.year, _visibleMonth.month, 1);
@@ -75,7 +77,7 @@ class _BookingCalendarWidgetState extends State<BookingCalendarWidget> {
               ),
             ),
             Text(
-              '${_monthLabels[_visibleMonth.month - 1]} ${_visibleMonth.year}',
+              '${monthLabels[_visibleMonth.month - 1]} ${_visibleMonth.year}',
               style: AppTypography.h3,
             ),
             IconButton(

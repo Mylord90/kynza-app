@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/models/booking_model.dart';
 import '../../../../core/models/review/review_model.dart';
 import '../../../../core/models/staff_commission_model.dart';
@@ -113,7 +115,7 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Mes RDV', style: AppTypography.bodySmall),
+                          Text(context.l10n.myPerfMyBookings, style: AppTypography.bodySmall),
                           Text(
                             '${completed.length}',
                             style: AppTypography.amountMd,
@@ -128,7 +130,7 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Mon CA', style: AppTypography.bodySmall),
+                          Text(context.l10n.myPerfMyRevenue, style: AppTypography.bodySmall),
                           KynzaAmountWidget(
                             amountBif: revenue,
                             style: AppTypography.amountMd,
@@ -150,14 +152,14 @@ class MyPerformanceScreen extends ConsumerWidget {
               if (rank == 0) return const SizedBox.shrink();
               return KynzaCard(
                 child: Text(
-                  '$rank${_ordinalSuffix(rank)} sur $teamSize cette semaine',
+                  context.l10n.myPerfRankText(rank, _ordinalSuffix(context.l10n, rank), teamSize),
                   style: AppTypography.h3,
                 ),
               );
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Mes RDV ce mois', style: AppTypography.h3),
+          Text(context.l10n.myPerfMonthTitle, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.md),
           monthlyAsync.when(
             loading: () => const KynzaSkeleton(height: 180),
@@ -170,8 +172,8 @@ class MyPerformanceScreen extends ConsumerWidget {
               }
               final days = byDay.keys.toList()..sort();
               if (days.isEmpty) {
-                return const Text(
-                  'Aucun RDV terminé ce mois.',
+                return Text(
+                  context.l10n.myPerfNoBookings,
                   style: AppTypography.bodySmall,
                 );
               }
@@ -184,15 +186,15 @@ class MyPerformanceScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Mes avis récents', style: AppTypography.h3),
+          Text(context.l10n.myPerfReviewsTitle, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.md),
           reviewsAsync.when(
             loading: () => const KynzaSkeleton(height: 56, count: 3),
             error: (_, __) => const SizedBox.shrink(),
             data: (reviews) {
               if (reviews.isEmpty) {
-                return const Text(
-                  'Aucun avis pour le moment.',
+                return Text(
+                  context.l10n.myPerfNoReviews,
                   style: AppTypography.bodySmall,
                 );
               }
@@ -230,7 +232,7 @@ class MyPerformanceScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Mes commissions ce mois', style: AppTypography.h3),
+          Text(context.l10n.myPerfCommissionsMonth, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.md),
           commissionsAsync.when(
             loading: () => const KynzaSkeleton(height: 56),
@@ -249,7 +251,7 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Payé', style: AppTypography.bodySmall),
+                          Text(context.l10n.myPerfCommissionsPaid, style: AppTypography.bodySmall),
                           KynzaAmountWidget(
                             amountBif: paid,
                             style: AppTypography.amountMd,
@@ -264,8 +266,8 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'En attente',
+                          Text(
+                            context.l10n.myPerfCommissionsPending,
                             style: AppTypography.bodySmall,
                           ),
                           KynzaAmountWidget(
@@ -286,4 +288,5 @@ class MyPerformanceScreen extends ConsumerWidget {
   }
 }
 
-String _ordinalSuffix(int n) => n == 1 ? 'er' : 'ème';
+String _ordinalSuffix(AppLocalizations l10n, int n) =>
+    n == 1 ? l10n.commonOrdinalSuffixFirst : l10n.commonOrdinalSuffixOther;

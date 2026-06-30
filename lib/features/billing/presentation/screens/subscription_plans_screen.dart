@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/kynza_constants.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/billing/invoice_model.dart';
 import '../../../../core/models/billing/subscription_plan_model.dart';
 import '../../../../core/models/salon_full_model.dart';
@@ -30,7 +31,7 @@ class SubscriptionPlansScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Abonnement KYNZA')),
+      appBar: AppBar(title: Text(context.l10n.billingSubscriptionTitle)),
       body: Column(
         children: [
           const KynzaOfflineBanner(),
@@ -43,8 +44,8 @@ class SubscriptionPlansScreen extends ConsumerWidget {
                       Center(
                         child: KynzaBadge(
                           label: salon.plan == 'free'
-                              ? 'PLAN GRATUIT'
-                              : 'PLAN ${salon.plan.toUpperCase()}',
+                              ? context.l10n.billingCurrentPlanBadgeFree
+                              : context.l10n.billingCurrentPlanBadge(salon.plan.toUpperCase()),
                           variant: salon.plan == 'free'
                               ? KynzaBadgeVariant.neutral
                               : KynzaBadgeVariant.gold,
@@ -59,7 +60,7 @@ class SubscriptionPlansScreen extends ConsumerWidget {
                         loading: () =>
                             const KynzaSkeleton(height: 220, count: 3),
                         error: (_, __) => KynzaErrorState(
-                          message: "Impossible de charger les plans.",
+                          message: context.l10n.billingInvoicesLoadError,
                           onRetry: () =>
                               ref.invalidate(subscriptionPlansProvider),
                         ),
@@ -116,7 +117,7 @@ class _UsageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$used / $max RDV ce mois', style: AppTypography.h3),
+          Text(context.l10n.billingCurrentMonthUsage(used, max), style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
           ClipRRect(
             borderRadius: BorderRadius.circular(9999),
@@ -158,12 +159,12 @@ class _PlanCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (plan.isFeatured)
-            const Align(
+            Align(
               alignment: Alignment.topCenter,
               child: Padding(
-                padding: EdgeInsets.only(bottom: AppSpacing.sm),
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: KynzaBadge(
-                  label: 'RECOMMANDÉ',
+                  label: context.l10n.billingSubscriptionRecommendedBadge,
                   variant: KynzaBadgeVariant.gold,
                 ),
               ),
@@ -205,10 +206,10 @@ class _PlanCard extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           KynzaButton(
             label: isCurrent
-                ? 'Plan actuel'
+                ? context.l10n.billingPlanCurrentLabel
                 : isUpgrade
-                ? 'Passer à ${plan.name} →'
-                : 'Rétrograder',
+                ? context.l10n.billingPlanUpgradeLabel(plan.name)
+                : context.l10n.billingPlanDowngradeLabel,
             variant: isCurrent
                 ? KynzaButtonVariant.secondary
                 : isUpgrade
@@ -232,10 +233,11 @@ class _PlanCard extends ConsumerWidget {
   ) async {
     final salon = ref.read(ownerSalonProvider).valueOrNull;
     if (salon == null) return;
+    final l10n = context.l10n;
     final confirmed = await showKynzaConfirmDialog(
       context,
-      title: 'Rétrograder vers ${plan.name} ?',
-      message: 'Votre salon passera immédiatement au plan ${plan.name}.',
+      title: l10n.billingSubscriptionDowngradeConfirmTitle(plan.name),
+      message: l10n.billingSubscriptionDowngradeConfirmMessage(plan.name),
     );
     if (!confirmed) return;
     try {
@@ -246,7 +248,7 @@ class _PlanCard extends ConsumerWidget {
       if (context.mounted) {
         showKynzaToast(
           context,
-          message: 'Plan mis à jour.',
+          message: l10n.billingSubscriptionUpdateSuccess,
           level: ToastLevel.success,
         );
       }
@@ -254,7 +256,7 @@ class _PlanCard extends ConsumerWidget {
       if (context.mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Une erreur est survenue.',
+          message: e is AppException ? e.message : l10n.errorGeneric,
           level: ToastLevel.error,
         );
       }
@@ -289,6 +291,7 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
   String? _error;
 
   Future<void> _confirm() async {
+    final l10n = context.l10n;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -301,7 +304,7 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e is AppException ? e.message : 'Une erreur est survenue.';
+          _error = e is AppException ? e.message : l10n.errorGeneric;
         });
       }
     } finally {
@@ -325,12 +328,12 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
         children: invoice == null
             ? [
                 Text(
-                  'Vous demandez une mise à niveau vers ${widget.plan.name}.',
+                  context.l10n.billingUpgradeRequestTitle(widget.plan.name),
                   style: AppTypography.h2,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Notre équipe vous contactera pour le paiement.',
+                Text(
+                  context.l10n.billingUpgradeRequestSubtitle,
                   style: AppTypography.body,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -351,16 +354,16 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                 ],
                 const SizedBox(height: AppSpacing.lg),
                 KynzaButton(
-                  label: 'Confirmer la demande',
+                  label: context.l10n.billingUpgradeConfirmButton,
                   isLoading: _isLoading,
                   onPressed: _confirm,
                 ),
               ]
             : [
-                const Text('Demande envoyée ! 🎉', style: AppTypography.h2),
+                Text(context.l10n.billingUpgradeSentTitle, style: AppTypography.h2),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Référence à inclure : ${invoice.reference}',
+                  context.l10n.billingUpgradeReferenceLabel(invoice.reference),
                   style: AppTypography.amountMd,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -381,7 +384,7 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                   children: [
                     Expanded(
                       child: KynzaButton(
-                        label: 'Copier la référence',
+                        label: context.l10n.billingSubscriptionCopyReferenceButton,
                         variant: KynzaButtonVariant.secondary,
                         onPressed: () async {
                           await Clipboard.setData(
@@ -390,7 +393,7 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                           if (context.mounted) {
                             showKynzaToast(
                               context,
-                              message: 'Référence copiée !',
+                              message: context.l10n.billingSubscriptionCopyReferenceSuccess,
                               level: ToastLevel.success,
                             );
                           }
@@ -401,7 +404,7 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 KynzaButton(
-                  label: 'Partager les instructions',
+                  label: context.l10n.billingUpgradeShareButton,
                   variant: KynzaButtonVariant.secondary,
                   onPressed: () => ShareService.shareUpgradeInstructions(
                     planName: widget.plan.name,
@@ -413,7 +416,7 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 KynzaButton(
-                  label: 'Terminer',
+                  label: context.l10n.billingUpgradeDoneButton,
                   onPressed: () {
                     Navigator.of(context).pop();
                     context.go(RouteNames.ownerBillingSuccess);

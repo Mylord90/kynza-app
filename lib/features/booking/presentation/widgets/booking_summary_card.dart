@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/booking_flow_provider.dart';
 
@@ -67,7 +68,7 @@ class BookingSummaryCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total', style: AppTypography.h3),
+                Text(context.l10n.bookingTotal, style: AppTypography.h3),
                 KynzaAmountWidget(
                   amountBif: state.selectedService?.priceBif ?? 0,
                 ),

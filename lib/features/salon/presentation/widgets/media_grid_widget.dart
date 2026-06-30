@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -66,9 +67,8 @@ class MediaGridWidget extends StatelessWidget {
                       onTap: () async {
                         final confirmed = await showKynzaConfirmDialog(
                           context,
-                          title: 'Supprimer ce média ?',
-                          message:
-                              'Cette action retire le média de votre galerie.',
+                          title: context.l10n.salonMediaDeleteTitle,
+                          message: context.l10n.salonMediaDeleteMessage,
                         );
                         if (confirmed) onDelete(item.id!);
                       },

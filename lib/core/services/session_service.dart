@@ -45,6 +45,8 @@ class SessionService {
   String getLanguage() =>
       _box.get(_HiveKeys.language, defaultValue: 'fr') as String;
 
+  bool hasStoredLanguage() => _box.containsKey(_HiveKeys.language);
+
   Future<void> saveConfidentialMode(bool value) =>
       _box.put(_HiveKeys.confidentialMode, value);
 

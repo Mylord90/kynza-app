@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/loyalty_providers.dart';
@@ -24,7 +25,7 @@ class ClientLoyaltyScreen extends ConsumerWidget {
         ),
       ),
       error: (_, __) => KynzaErrorState(
-        message: 'Impossible de charger vos cartes de fidélité.',
+        message: context.l10n.loyaltyCardsLoadError,
         onRetry: () => ref.invalidate(clientLoyaltyCardsProvider),
       ),
       data: (cards) {
@@ -32,11 +33,9 @@ class ClientLoyaltyScreen extends ConsumerWidget {
         if (active.isEmpty) {
           return KynzaEmptyState(
             icon: Icons.star_outline,
-            title: 'Aucune carte de fidélité',
-            subtitle:
-                'Réservez votre premier RDV pour commencer à collecter des '
-                'tampons ! 💛',
-            ctaLabel: 'Découvrir les salons',
+            title: context.l10n.loyaltyCardsEmptyTitle,
+            subtitle: context.l10n.loyaltyCardsEmptySubtitle,
+            ctaLabel: context.l10n.loyaltyCardsEmptyCtaLabel,
             onCta: () => context.go(RouteNames.homeClient),
           );
         }

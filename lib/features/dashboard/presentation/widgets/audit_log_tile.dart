@@ -3,7 +3,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/audit_log_model.dart';
+import '../../../../l10n/app_localizations.dart';
 
 IconData _iconFor(String typeAction) {
   if (typeAction.startsWith('booking_')) return Icons.calendar_today_outlined;
@@ -21,38 +23,36 @@ Color _severityColor(String severity) => switch (severity) {
   _ => AppColors.textMuted,
 };
 
-String _descriptionFor(AuditLogModel log) {
-  const labels = {
-    'user_login': 'Connexion',
-    'user_logout': 'Déconnexion',
-    'profile_updated': 'Profil mis à jour',
-    'role_changed': 'Rôle modifié',
-    'salon_updated': 'Salon mis à jour',
-    'salon_status_changed': 'Statut du salon modifié',
-    'staff_invited': 'Invitation envoyée',
-    'staff_invitation_accepted': "Invitation acceptée",
-    'staff_removed': 'Membre retiré',
-    'staff_joined': "Nouveau membre dans l'équipe",
-    'booking_created': 'Réservation créée',
-    'booking_confirmed': 'Réservation confirmée',
-    'booking_cancelled': 'Réservation annulée',
-    'booking_completed': 'Réservation terminée',
-    'booking_no_show': 'Client absent (no-show)',
-    'payment_completed': 'Paiement réussi',
-    'payment_failed': 'Paiement échoué',
-    'refund_initiated': 'Remboursement initié',
-    'discount_applied': 'Réduction appliquée',
-    'loyalty_stamp_added': 'Tampon fidélité ajouté',
-    'loyalty_reward_redeemed': 'Récompense fidélité validée',
-    'referral_claimed': 'Parrainage utilisé',
-    'permission_group_created': 'Groupe de permissions créé',
-    'permission_group_deleted': 'Groupe de permissions supprimé',
-    'permission_group_permission_changed': 'Permission modifiée',
-    'permission_group_member_added': 'Membre ajouté à un groupe',
-    'permission_group_member_removed': "Membre retiré d'un groupe",
-  };
-  return labels[log.typeAction] ?? log.typeAction;
-}
+String _eventLabel(AppLocalizations l10n, String event) => switch (event) {
+  'user_login' => l10n.auditEventUserLogin,
+  'user_logout' => l10n.auditEventUserLogout,
+  'profile_updated' => l10n.auditEventProfileUpdated,
+  'role_changed' => l10n.auditEventRoleChanged,
+  'salon_updated' => l10n.auditEventSalonUpdated,
+  'salon_status_changed' => l10n.auditEventSalonStatusChanged,
+  'staff_invited' => l10n.auditEventStaffInvited,
+  'staff_invitation_accepted' => l10n.auditEventStaffInvitationAccepted,
+  'staff_removed' => l10n.auditEventStaffRemoved,
+  'staff_joined' => l10n.auditEventStaffJoined,
+  'booking_created' => l10n.auditEventBookingCreated,
+  'booking_confirmed' => l10n.auditEventBookingConfirmed,
+  'booking_cancelled' => l10n.auditEventBookingCancelled,
+  'booking_completed' => l10n.auditEventBookingCompleted,
+  'booking_no_show' => l10n.auditEventBookingNoShow,
+  'payment_completed' => l10n.auditEventPaymentCompleted,
+  'payment_failed' => l10n.auditEventPaymentFailed,
+  'refund_initiated' => l10n.auditEventRefundInitiated,
+  'discount_applied' => l10n.auditEventDiscountApplied,
+  'loyalty_stamp_added' => l10n.auditEventLoyaltyStampAdded,
+  'loyalty_reward_redeemed' => l10n.auditEventLoyaltyRewardRedeemed,
+  'referral_claimed' => l10n.auditEventReferralClaimed,
+  'permission_group_created' => l10n.auditEventPermissionGroupCreated,
+  'permission_group_deleted' => l10n.auditEventPermissionGroupDeleted,
+  'permission_group_permission_changed' => l10n.auditEventPermissionGroupPermissionChanged,
+  'permission_group_member_added' => l10n.auditEventPermissionGroupMemberAdded,
+  'permission_group_member_removed' => l10n.auditEventPermissionGroupMemberRemoved,
+  _ => event,
+};
 
 class AuditLogTile extends StatelessWidget {
   const AuditLogTile({super.key, required this.log});
@@ -91,7 +91,7 @@ class AuditLogTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        _descriptionFor(log),
+                        _eventLabel(context.l10n, log.typeAction),
                         style: AppTypography.body,
                       ),
                     ),

@@ -58,16 +58,23 @@ class KynzaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
-    final language = ref.watch(languageProvider);
+    final locale = ref.watch(currentLocaleProvider);
     return AuthBootGate(
       child: MaterialApp.router(
         title: KynzaConstants.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark,
         routerConfig: router,
-        locale: Locale(language),
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (deviceLocale, supported) {
+          if (deviceLocale == null) return const Locale('fr');
+          for (final s in supported) {
+            if (s.languageCode == deviceLocale.languageCode) return s;
+          }
+          return const Locale('fr');
+        },
       ),
     );
   }

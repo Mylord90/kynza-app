@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_working_hour_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/availability_providers.dart';
@@ -65,8 +66,8 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
       appBar: AppBar(
         title: Text(
           widget.staffName != null
-              ? 'Horaires de ${widget.staffName}'
-              : 'Mes disponibilités',
+              ? context.l10n.availabilityStaffHoursOf(widget.staffName!)
+              : context.l10n.availabilityMyAvailability,
         ),
       ),
       body: hoursAsync.when(
@@ -75,7 +76,7 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
           child: KynzaSkeleton(height: 400),
         ),
         error: (_, __) => KynzaErrorState(
-          message: 'Impossible de charger ces horaires.',
+          message: context.l10n.availabilityStaffHoursLoadError,
           onRetry: () => ref.invalidate(
             staffWorkingHoursProvider((widget.staffId, widget.salonId)),
           ),
@@ -87,14 +88,14 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              const Text(
-                'Ces horaires remplacent les horaires du salon pour ce praticien.',
+              Text(
+                context.l10n.availabilityStaffHoursScreenHint,
                 style: AppTypography.bodySmall,
               ),
               const SizedBox(height: AppSpacing.md),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Utiliser les horaires du salon'),
+                title: Text(context.l10n.availabilityStaffHoursUseSalonTitle),
                 value: _useSalonHours!,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) => setState(() => _useSalonHours = v),
@@ -107,7 +108,7 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
                 ),
               const SizedBox(height: AppSpacing.xl),
               KynzaButton(
-                label: 'Enregistrer',
+                label: context.l10n.commonSave,
                 isLoading: saving,
                 onPressed: () async {
                   final notifier = ref.read(
@@ -129,7 +130,7 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
                     if (context.mounted) {
                       showKynzaToast(
                         context,
-                        message: 'Horaires enregistrés.',
+                        message: context.l10n.availabilityStaffHoursSaveSuccess,
                         level: ToastLevel.success,
                       );
                     }
@@ -139,7 +140,7 @@ class _StaffHoursScreenState extends ConsumerState<StaffHoursScreen> {
                         context,
                         message: e is AppException
                             ? e.message
-                            : "Échec de l'enregistrement.",
+                            : context.l10n.availabilitySaveFailed,
                         level: ToastLevel.error,
                       );
                     }

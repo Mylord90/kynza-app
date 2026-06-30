@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/errors/app_exception.dart';
@@ -170,7 +171,7 @@ class _SalonCreationWizardScreenState
       setState(() {
         _submitError = e is AppException
             ? e.message
-            : 'Impossible de créer le salon. Réessayez.';
+            : context.l10n.salonCreationErrorGeneric;
       });
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -181,7 +182,7 @@ class _SalonCreationWizardScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Créer votre salon')),
+      appBar: AppBar(title: Text(context.l10n.salonCreationTitle)),
       body: Column(
         children: [
           const SizedBox(height: AppSpacing.md),
@@ -208,7 +209,7 @@ class _SalonCreationWizardScreenState
                 if (_step > 1)
                   Expanded(
                     child: KynzaButton(
-                      label: 'Retour',
+                      label: context.l10n.commonBack,
                       variant: KynzaButtonVariant.ghost,
                       onPressed: _isSubmitting ? null : _back,
                     ),
@@ -217,8 +218,8 @@ class _SalonCreationWizardScreenState
                 Expanded(
                   child: KynzaButton(
                     label: _step == _totalSteps
-                        ? 'Créer mon salon →'
-                        : 'Suivant →',
+                        ? context.l10n.salonCreationSubmitButton
+                        : context.l10n.salonCreationNextButton,
                     isLoading: _isSubmitting,
                     onPressed: _step == _totalSteps ? _submit : _next,
                   ),

@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../staff/application/providers/staff_providers.dart';
 import '../../application/providers/booking_flow_provider.dart';
 import '../widgets/practitioner_card.dart';
@@ -19,10 +20,10 @@ class PractitionerSelectionScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Choisir un praticien')),
+      appBar: AppBar(title: Text(context.l10n.bookingSelectPractitionerTitle)),
       body: salon == null
-          ? const KynzaErrorState(
-              message: 'Aucun salon sélectionné.',
+          ? KynzaErrorState(
+              message: context.l10n.bookingNoSalonSelected,
               onRetry: _noop,
             )
           : Consumer(
@@ -38,7 +39,7 @@ class PractitionerSelectionScreen extends ConsumerWidget {
                     ),
                   ),
                   error: (_, __) => KynzaErrorState(
-                    message: "Impossible de charger l'équipe.",
+                    message: context.l10n.bookingPractitionerLoadError,
                     onRetry: () => ref.invalidate(salonStaffProvider(salon.id)),
                   ),
                   data: (staff) {

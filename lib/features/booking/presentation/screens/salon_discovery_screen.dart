@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/service_categories.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
@@ -32,6 +33,7 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final salonsAsync = ref.watch(discoverSalonsProvider);
     final categoryIdsAsync = _category == null
         ? null
@@ -40,11 +42,11 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Découvrir'),
+        title: Text(l10n.bookingDiscoveryTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.tune),
-            tooltip: 'Recherche avancée',
+            tooltip: l10n.bookingDiscoveryAdvancedSearchTooltip,
             onPressed: () => context.push(RouteNames.search),
           ),
         ],
@@ -55,7 +57,7 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: KynzaTextField(
-              hint: 'Rechercher un salon…',
+              hint: l10n.bookingDiscoverySearchHint,
               controller: _searchCtrl,
               prefixWidget: const Icon(Icons.search, size: 18),
               onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
@@ -70,7 +72,7 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: ServiceCategoryChip(
-                    label: 'Toutes',
+                    label: l10n.bookingDiscoveryAllCategories,
                     isSelected: _category == null,
                     onTap: () => setState(() => _category = null),
                   ),
@@ -99,7 +101,7 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger les salons.',
+                message: l10n.bookingDiscoveryLoadError,
                 onRetry: () => ref.invalidate(discoverSalonsProvider),
               ),
               data: (salons) {
@@ -116,9 +118,9 @@ class _SalonDiscoveryScreenState extends ConsumerState<SalonDiscoveryScreen> {
                 if (filtered.isEmpty) {
                   return KynzaEmptyState(
                     icon: Icons.storefront_outlined,
-                    title: 'Aucun salon trouvé',
-                    subtitle: 'Essayez une autre recherche ou catégorie.',
-                    ctaLabel: 'Réinitialiser',
+                    title: l10n.bookingDiscoveryEmptyTitle,
+                    subtitle: l10n.bookingDiscoveryEmptySubtitle,
+                    ctaLabel: l10n.bookingDiscoveryResetButton,
                     onCta: () => setState(() {
                       _query = '';
                       _category = null;

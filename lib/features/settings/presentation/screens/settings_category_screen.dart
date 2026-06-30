@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/salon_settings_providers.dart';
 import '../widgets/setting_field.dart';
@@ -40,7 +41,7 @@ class SettingsCategoryScreen extends ConsumerWidget {
                 ),
               ),
               error: (_, __) => KynzaErrorState(
-                message: 'Impossible de charger les paramètres.',
+                message: context.l10n.settingsCategoryLoadError,
                 onRetry: () => ref.invalidate(salonSettingsProvider(salonId)),
               ),
               data: (settings) {
@@ -81,13 +82,14 @@ class _SettingFieldTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final label = field.resolveLabel(context.l10n);
     if (field.type == SettingFieldType.boolean) {
       return KynzaCard(
         child: SwitchListTile(
           contentPadding: EdgeInsets.zero,
           activeThumbColor: AppColors.primary,
           value: value as bool,
-          title: Text(field.label, style: AppTypography.body),
+          title: Text(label, style: AppTypography.body),
           onChanged: (next) => ref
               .read(salonSettingsNotifierProvider.notifier)
               .updateField(salonId, field.key, value, next),
@@ -99,7 +101,7 @@ class _SettingFieldTile extends ConsumerWidget {
       onTap: () => _showEditSheet(context, ref),
       child: Row(
         children: [
-          Expanded(child: Text(field.label, style: AppTypography.body)),
+          Expanded(child: Text(label, style: AppTypography.body)),
           Text(
             '$value',
             style: AppTypography.bodySmall.copyWith(
@@ -114,6 +116,7 @@ class _SettingFieldTile extends ConsumerWidget {
   }
 
   void _showEditSheet(BuildContext context, WidgetRef ref) {
+    final label = field.resolveLabel(context.l10n);
     final controller = TextEditingController(text: '$value');
     showKynzaBottomSheet<void>(
       context,
@@ -127,7 +130,7 @@ class _SettingFieldTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(field.label, style: AppTypography.h2),
+            Text(label, style: AppTypography.h2),
             const SizedBox(height: AppSpacing.md),
             KynzaTextField(
               controller: controller,
@@ -137,7 +140,7 @@ class _SettingFieldTile extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaButton(
-              label: 'Enregistrer',
+              label: sheetContext.l10n.commonSave,
               onPressed: () {
                 final next = field.type == SettingFieldType.integer
                     ? (int.tryParse(controller.text) ?? value)

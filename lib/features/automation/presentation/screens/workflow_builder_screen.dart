@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/automation_workflow_model.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/automation_providers.dart';
 
@@ -64,7 +66,7 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
     if (_nameController.text.trim().isEmpty || _triggerType == null) {
       showKynzaToast(
         context,
-        message: 'Le nom et le déclencheur sont requis.',
+        message: context.l10n.automationWorkflowValidationError,
         level: ToastLevel.error,
       );
       return;
@@ -89,7 +91,7 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
       if (!mounted) return;
       showKynzaToast(
         context,
-        message: 'Impossible de créer ce workflow.',
+        message: context.l10n.automationWorkflowCreateError,
         level: ToastLevel.error,
       );
     } finally {
@@ -99,34 +101,36 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final triggerTypesAsync = ref.watch(automationTriggerTypesProvider);
     final actionTypesAsync = ref.watch(automationActionTypesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Nouveau workflow')),
+      appBar: AppBar(title: Text(l10n.automationWorkflowTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          KynzaTextField(label: 'Nom', controller: _nameController),
+          KynzaTextField(label: l10n.automationWorkflowNameLabel, controller: _nameController),
           const SizedBox(height: AppSpacing.md),
           KynzaTextField(
-            label: 'Description (optionnel)',
+            label: l10n.automationWorkflowDescriptionLabel,
             controller: _descriptionController,
             maxLines: 2,
           ),
           const SizedBox(height: AppSpacing.md),
           triggerTypesAsync.when(
             loading: () => const KynzaSkeleton(height: 56),
-            error: (_, __) =>
-                const Text('Impossible de charger les déclencheurs.'),
+            error: (_, __) => Text(l10n.automationWorkflowTriggersLoadError),
             data: (triggers) => KynzaDropdown<String>(
-              label: 'Déclencheur',
+              label: l10n.automationWorkflowTriggerLabel,
               value: _triggerType,
               items: triggers.map((t) => t.id).toList(),
               itemLabel: (id) {
                 final trigger = triggers.firstWhere((t) => t.id == id);
-                return '${trigger.label}${trigger.wired ? '' : ' (pas encore câblé)'}';
+                return trigger.wired
+                    ? trigger.label
+                    : '${trigger.label} ${l10n.automationWorkflowNotWired}';
               },
               onChanged: (value) => setState(() => _triggerType = value),
             ),
@@ -135,7 +139,7 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Conditions', style: AppTypography.h2),
+              Text(l10n.automationWorkflowConditionsTitle, style: AppTypography.h2),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: _addCondition,
@@ -143,8 +147,8 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
             ],
           ),
           if (_conditions.isEmpty)
-            const Text(
-              "Aucune condition — le workflow s'exécutera à chaque déclenchement.",
+            Text(
+              l10n.automationWorkflowNoConditions,
               style: AppTypography.bodySmall,
             ),
           for (var i = 0; i < _conditions.length; i++)
@@ -158,7 +162,7 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Actions', style: AppTypography.h2),
+              Text(l10n.automationWorkflowActionsTitle, style: AppTypography.h2),
               actionTypesAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
@@ -172,7 +176,7 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
                         child: Text(
                           type.implemented
                               ? type.label
-                              : '${type.label} (bientôt)',
+                              : '${type.label} ${context.l10n.automationWorkflowComingSoon}',
                         ),
                       ),
                   ],
@@ -181,8 +185,8 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
             ],
           ),
           if (_actions.isEmpty)
-            const Text(
-              'Ajoutez au moins une action à exécuter.',
+            Text(
+              l10n.automationWorkflowNoActions,
               style: AppTypography.bodySmall,
             ),
           for (var i = 0; i < _actions.length; i++)
@@ -193,7 +197,7 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
             ),
           const SizedBox(height: AppSpacing.xl),
           KynzaButton(
-            label: 'Créer le workflow',
+            label: l10n.automationWorkflowCreateButton,
             isLoading: _saving,
             onPressed: _save,
           ),
@@ -218,6 +222,7 @@ class _ConditionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: KynzaCard(
@@ -227,7 +232,7 @@ class _ConditionRow extends StatelessWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: KynzaDropdown<String>(
-                  label: 'Opérateur logique',
+                  label: l10n.automationWorkflowLogicOperatorLabel,
                   value: condition.logicalOperator,
                   items: const ['AND', 'OR'],
                   itemLabel: (v) => v,
@@ -240,7 +245,7 @@ class _ConditionRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: KynzaTextField(
-                    label: 'Champ (ex. amount)',
+                    label: l10n.automationWorkflowFieldLabel,
                     controller: TextEditingController(text: condition.field),
                     onChanged: (v) => onChanged(condition.copyWith(field: v)),
                   ),
@@ -248,7 +253,7 @@ class _ConditionRow extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: KynzaDropdown<String>(
-                    label: 'Opérateur',
+                    label: l10n.automationWorkflowOperatorLabel,
                     value: condition.operator,
                     items: _operators,
                     itemLabel: (v) => v,
@@ -262,7 +267,7 @@ class _ConditionRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: KynzaTextField(
-                    label: 'Valeur',
+                    label: l10n.automationWorkflowValueLabel,
                     controller: TextEditingController(
                       text: '${condition.value}',
                     ),
@@ -303,6 +308,7 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: KynzaCard(
@@ -323,11 +329,11 @@ class _ActionRow extends StatelessWidget {
                 ),
               ],
             ),
-            ..._paramFields(),
+            ..._paramFields(l10n),
             Row(
               children: [
-                const Text(
-                  'Délai (secondes) : ',
+                Text(
+                  l10n.automationWorkflowDelayLabel,
                   style: AppTypography.bodySmall,
                 ),
                 Expanded(
@@ -349,21 +355,21 @@ class _ActionRow extends StatelessWidget {
     );
   }
 
-  List<Widget> _paramFields() {
+  List<Widget> _paramFields(AppLocalizations l10n) {
     switch (action.actionType) {
       case 'send_notification':
       case 'send_whatsapp':
         return [
           KynzaTextField(
-            label: 'Événement (event_type)',
-            hint: 'ex. booking_confirmed',
+            label: l10n.automationWorkflowEventLabel,
+            hint: l10n.automationWorkflowEventHint,
             controller: TextEditingController(
               text: '${action.params['event'] ?? ''}',
             ),
             onChanged: (v) => _setParam('event', v),
           ),
           KynzaDropdown<String>(
-            label: 'Destinataire',
+            label: l10n.automationWorkflowTargetLabel,
             value: action.params['target'] as String? ?? 'client',
             items: _targets,
             itemLabel: (v) => v,
@@ -373,7 +379,7 @@ class _ActionRow extends StatelessWidget {
       case 'add_loyalty_bonus':
         return [
           KynzaTextField(
-            label: 'Tampons bonus',
+            label: l10n.automationWorkflowStampsLabel,
             controller: TextEditingController(
               text: '${action.params['stamps'] ?? 1}',
             ),
@@ -381,7 +387,7 @@ class _ActionRow extends StatelessWidget {
             onChanged: (v) => _setParam('stamps', int.tryParse(v) ?? 1),
           ),
           KynzaTextField(
-            label: 'Raison (optionnel)',
+            label: l10n.automationWorkflowReasonLabel,
             controller: TextEditingController(
               text: '${action.params['reason'] ?? ''}',
             ),
@@ -391,14 +397,14 @@ class _ActionRow extends StatelessWidget {
       case 'log_activity':
         return [
           KynzaTextField(
-            label: 'Action',
+            label: l10n.automationWorkflowActionLabel,
             controller: TextEditingController(
               text: '${action.params['action'] ?? ''}',
             ),
             onChanged: (v) => _setParam('action', v),
           ),
           KynzaDropdown<String>(
-            label: 'Sévérité',
+            label: l10n.automationWorkflowSeverityLabel,
             value: action.params['severity'] as String? ?? 'info',
             items: _severities,
             itemLabel: (v) => v,
@@ -408,11 +414,11 @@ class _ActionRow extends StatelessWidget {
       case 'stamp_loyalty':
         return const [];
       default:
-        return const [
+        return [
           Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             child: Text(
-              "Cette action n'est pas encore exécutée par le moteur (voir PHASE_2_SUMMARY.md).",
+              l10n.automationWorkflowNotImplemented,
               style: AppTypography.bodySmall,
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/marketing/promotion_model.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -28,7 +29,7 @@ class MarketingDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Marketing'),
+        title: Text(context.l10n.navMarketing),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
@@ -87,7 +88,7 @@ class MarketingDashboardBody extends ConsumerWidget {
               ],
             ),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger le marketing.',
+              message: context.l10n.marketingClientsLoadError,
               onRetry: () => ref.invalidate(clientContactsProvider(salonId)),
             ),
             data: (contacts) {
@@ -104,9 +105,9 @@ class MarketingDashboardBody extends ConsumerWidget {
                 children: [
                   _MarketingCard(
                     icon: Icons.person_add_outlined,
-                    title: 'Mes Clients',
+                    title: context.l10n.marketingClientsTitle,
                     subtitle: '${contacts.length} contacts',
-                    badgeLabel: contacts.isEmpty ? 'Nouveau' : '$unsentInvites',
+                    badgeLabel: contacts.isEmpty ? context.l10n.marketingNewBadge : '$unsentInvites',
                     badgeVariant: contacts.isEmpty
                         ? KynzaBadgeVariant.warning
                         : KynzaBadgeVariant.info,
@@ -118,9 +119,9 @@ class MarketingDashboardBody extends ConsumerWidget {
                   ),
                   _MarketingCard(
                     icon: Icons.share_outlined,
-                    title: 'Partager mon salon',
-                    subtitle: 'Touchez plus de clients',
-                    badgeLabel: 'Gratuit',
+                    title: context.l10n.marketingShareTitle,
+                    subtitle: context.l10n.marketingShareServicesTitle,
+                    badgeLabel: context.l10n.marketingFreeBadge,
                     badgeVariant: KynzaBadgeVariant.gold,
                     onTap: () => context.go(RouteNames.ownerShare),
                   ),
@@ -134,10 +135,10 @@ class MarketingDashboardBody extends ConsumerWidget {
                       );
                       return _MarketingCard(
                         icon: Icons.local_offer_outlined,
-                        title: 'Mes Promotions',
+                        title: context.l10n.marketingPromotionsTitle,
                         subtitle: '$active promotion(s) active(s)',
                         badgeLabel: expiringSoon
-                            ? 'Expire bientôt'
+                            ? context.l10n.marketingExpiringSoonBadge
                             : '${promos.length}',
                         badgeVariant: expiringSoon
                             ? KynzaBadgeVariant.error
@@ -152,7 +153,7 @@ class MarketingDashboardBody extends ConsumerWidget {
                     },
                     orElse: () => _MarketingCard(
                       icon: Icons.local_offer_outlined,
-                      title: 'Mes Promotions',
+                      title: context.l10n.marketingPromotionsTitle,
                       subtitle: '—',
                       badgeLabel: '',
                       badgeVariant: KynzaBadgeVariant.neutral,
@@ -167,10 +168,10 @@ class MarketingDashboardBody extends ConsumerWidget {
                   programAsync.maybeWhen(
                     data: (program) => _MarketingCard(
                       icon: Icons.star_outline,
-                      title: 'Fidélité',
+                      title: context.l10n.settingsLoyaltyLabel,
                       subtitle:
                           '${program?.stampsRequired ?? 10} tampons = récompense',
-                      badgeLabel: program == null ? 'À configurer' : 'Actif',
+                      badgeLabel: program == null ? context.l10n.marketingToConfigureBadge : context.l10n.marketingActiveBadge,
                       badgeVariant: program == null
                           ? KynzaBadgeVariant.warning
                           : KynzaBadgeVariant.success,
@@ -182,7 +183,7 @@ class MarketingDashboardBody extends ConsumerWidget {
                     ),
                     orElse: () => _MarketingCard(
                       icon: Icons.star_outline,
-                      title: 'Fidélité',
+                      title: context.l10n.settingsLoyaltyLabel,
                       subtitle: '—',
                       badgeLabel: '',
                       badgeVariant: KynzaBadgeVariant.neutral,
@@ -198,7 +199,7 @@ class MarketingDashboardBody extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Promotions actives', style: AppTypography.h2),
+          Text(context.l10n.marketingPromotionsActiveFilter, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.md),
           promotionsAsync.when(
             loading: () => const KynzaSkeleton(height: 80),
@@ -208,9 +209,9 @@ class MarketingDashboardBody extends ConsumerWidget {
               if (active.isEmpty) {
                 return KynzaEmptyState(
                   icon: Icons.local_offer_outlined,
-                  title: 'Aucune promotion',
-                  subtitle: 'Créez votre première offre.',
-                  ctaLabel: 'Créer une promotion +',
+                  title: context.l10n.marketingPromotionsEmptyActive,
+                  subtitle: context.l10n.marketingPromotionsEmptyActiveHint,
+                  ctaLabel: context.l10n.marketingPromotionsCreateButton,
                   onCta: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => PromotionCenterScreen(salonId: salonId),
@@ -261,15 +262,15 @@ class MarketingDashboardBody extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text('Contacts récents', style: AppTypography.h2),
+          Text(context.l10n.marketingRecentContactsTitle, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.md),
           contactsAsync.when(
             loading: () => const KynzaSkeleton(height: 64, count: 3),
             error: (_, __) => const SizedBox.shrink(),
             data: (contacts) {
               if (contacts.isEmpty) {
-                return const Text(
-                  'Aucun contact pour le moment.',
+                return Text(
+                  context.l10n.marketingNoContactsYet,
                   style: AppTypography.body,
                 );
               }
@@ -311,7 +312,7 @@ class MarketingDashboardBody extends ConsumerWidget {
                           builder: (_) => InviteClientsScreen(salonId: salonId),
                         ),
                       ),
-                      child: const Text('Voir tous mes contacts →'),
+                      child: Text(context.l10n.marketingSeeAllContactsButton),
                     ),
                   ),
                 ],
@@ -422,9 +423,9 @@ class _MarketingCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Text(
-            'Gérer →',
-            style: TextStyle(color: AppColors.primary, fontSize: 12),
+          Text(
+            context.l10n.marketingManageButton,
+            style: const TextStyle(color: AppColors.primary, fontSize: 12),
           ),
         ],
       ),
@@ -450,7 +451,7 @@ class _FillMyDayCard extends ConsumerWidget {
         if (context.mounted) {
           showKynzaToast(
             context,
-            message: 'Limite de 2 promotions par semaine atteinte.',
+            message: context.l10n.marketingFillMyDayLimitReached,
             level: ToastLevel.warning,
           );
         }
@@ -463,7 +464,7 @@ class _FillMyDayCard extends ConsumerWidget {
       if (context.mounted) {
         showKynzaToast(
           context,
-          message: "Échec de l'envoi.",
+          message: context.l10n.marketingSendError,
           level: ToastLevel.error,
         );
       }
@@ -476,16 +477,15 @@ class _FillMyDayCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Remplir ma journée', style: AppTypography.h3),
+          Text(context.l10n.marketingFillMyDayTitle, style: AppTypography.h3),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
-            "Des créneaux libres aujourd'hui ou demain ? Partagez une "
-            'promotion à vos contacts personnels (max 2 par semaine).',
+          Text(
+            context.l10n.marketingFillMyDaySubtitle,
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
           KynzaButton(
-            label: 'Partager une promo →',
+            label: context.l10n.marketingFillMyDayButton,
             onPressed: () => _fillMyDay(context),
           ),
         ],

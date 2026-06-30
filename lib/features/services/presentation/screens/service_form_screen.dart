@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/service_categories.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/service_model.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -93,7 +94,7 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Une erreur est survenue.',
+          message: e is AppException ? e.message : context.l10n.errorGeneric,
           level: ToastLevel.error,
         );
       }
@@ -109,7 +110,11 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Modifier le service' : 'Nouveau service'),
+        title: Text(
+          _isEditing
+              ? context.l10n.servicesFormEditTitle
+              : context.l10n.servicesFormNewTitle,
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -117,13 +122,14 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
           padding: const EdgeInsets.all(AppSpacing.xl),
           children: [
             KynzaTextField(
-              label: 'Nom du service *',
+              label: context.l10n.servicesFormNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, 'Nom du service'),
+              validator: (v) =>
+                  Validators.required(v, context.l10n.servicesFormNameLabel),
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaDropdown<String>(
-              label: 'Catégorie *',
+              label: context.l10n.servicesFormCategoryLabel,
               value: _category,
               items: ServiceCategories.all,
               itemLabel: (c) => c,
@@ -131,42 +137,46 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Description',
+              label: context.l10n.servicesFormDescriptionLabel,
               controller: _descriptionCtrl,
               maxLines: 3,
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Durée (minutes) *',
+              label: context.l10n.servicesFormDurationLabel,
               controller: _durationCtrl,
               keyboardType: TextInputType.number,
               validator: (v) {
                 final n = int.tryParse(v ?? '');
-                return (n == null || n <= 0) ? 'Durée invalide.' : null;
+                return (n == null || n <= 0)
+                    ? context.l10n.servicesFormDurationError
+                    : null;
               },
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Temps de préparation (minutes)',
+              label: context.l10n.servicesFormBufferLabel,
               controller: _bufferCtrl,
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Prix (FBu) *',
+              label: context.l10n.servicesFormPriceLabel,
               controller: _priceCtrl,
               keyboardType: TextInputType.number,
               onChanged: (_) => setState(() {}),
               validator: (v) {
                 final n = int.tryParse(v ?? '');
-                return (n == null || n < 0) ? 'Prix invalide.' : null;
+                return (n == null || n < 0)
+                    ? context.l10n.servicesFormPriceError
+                    : null;
               },
             ),
             const SizedBox(height: AppSpacing.sm),
             KynzaAmountWidget(amountBif: previewPrice),
             const SizedBox(height: AppSpacing.xxl),
             KynzaButton(
-              label: 'Enregistrer',
+              label: context.l10n.commonSave,
               isLoading: _isSaving,
               onPressed: _save,
             ),

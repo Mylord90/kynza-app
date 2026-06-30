@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/review/salon_rating_model.dart';
 
 class RatingSummaryWidget extends StatelessWidget {
@@ -41,7 +42,7 @@ class RatingSummaryWidget extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '${rating.totalReviews} avis vérifiés',
+                context.l10n.reviewsVerifiedCount(rating.totalReviews),
                 style: AppTypography.bodySmall,
               ),
             ],

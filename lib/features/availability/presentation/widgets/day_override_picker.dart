@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/availability_override_model.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 
@@ -52,7 +53,7 @@ class _DayOverridePickerState extends State<DayOverridePicker> {
           const SizedBox(height: AppSpacing.lg),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Ouvert ce jour-là'),
+            title: Text(context.l10n.availabilityDayOverrideTitle),
             value: _isAvailable,
             activeTrackColor: AppColors.primary,
             onChanged: (v) => setState(() => _isAvailable = v),
@@ -60,14 +61,14 @@ class _DayOverridePickerState extends State<DayOverridePicker> {
           if (!_isAvailable) ...[
             const SizedBox(height: AppSpacing.md),
             KynzaTextField(
-              label: 'Raison (optionnel)',
-              hint: 'Congé, jour férié, formation…',
+              label: context.l10n.availabilityDayOverrideReasonLabel,
+              hint: context.l10n.availabilityDayOverrideHint,
               controller: _reasonCtrl,
             ),
           ],
           const SizedBox(height: AppSpacing.xl),
           KynzaButton(
-            label: 'Enregistrer',
+            label: context.l10n.commonSave,
             onPressed: () {
               widget.onSave(
                 AvailabilityOverrideModel(

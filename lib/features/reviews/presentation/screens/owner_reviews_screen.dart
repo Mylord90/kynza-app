@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/review/review_model.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -53,17 +54,17 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Répondre à cet avis', style: AppTypography.h2),
+            Text(context.l10n.reviewsReplyTitle, style: AppTypography.h2),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
-              label: 'Votre réponse',
+              label: context.l10n.reviewsReplyLabel,
               controller: replyCtrl,
               maxLines: 4,
               maxLength: 500,
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaButton(
-              label: 'Publier la réponse',
+              label: context.l10n.reviewsReplySubmitButton,
               onPressed: () async {
                 if (replyCtrl.text.trim().isEmpty) return;
                 try {
@@ -81,7 +82,7 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
                       context,
                       message: e is AppException
                           ? e.message
-                          : "Échec de l'envoi.",
+                          : context.l10n.reviewsReplyError,
                       level: ToastLevel.error,
                     );
                   }
@@ -97,9 +98,9 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
   Future<void> _flag(ReviewModel review) async {
     final confirmed = await showKynzaConfirmDialog(
       context,
-      title: 'Signaler cet avis ?',
-      message: 'Il sera masqué en attendant une revue par notre équipe.',
-      confirmLabel: 'Signaler',
+      title: context.l10n.reviewsFlagConfirmTitle,
+      message: context.l10n.reviewsFlagConfirmMessage,
+      confirmLabel: context.l10n.reviewsFlagConfirmButton,
     );
     if (!confirmed) return;
     try {
@@ -110,7 +111,7 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : 'Échec du signalement.',
+          message: e is AppException ? e.message : context.l10n.reviewsFlagError,
           level: ToastLevel.error,
         );
       }
@@ -126,7 +127,7 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Mes Avis'),
+        title: Text(context.l10n.reviewsOwnerTitle),
         actions: [
           ratingAsync.maybeWhen(
             data: (rating) => rating.totalReviews == 0
@@ -156,15 +157,18 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           SegmentedButton<_SortMode>(
-            segments: const [
-              ButtonSegment(value: _SortMode.recent, label: Text('Récents')),
+            segments: [
+              ButtonSegment(
+                value: _SortMode.recent,
+                label: Text(context.l10n.reviewsSortRecent),
+              ),
               ButtonSegment(
                 value: _SortMode.lowestRating,
-                label: Text('Note basse'),
+                label: Text(context.l10n.reviewsSortLowest),
               ),
               ButtonSegment(
                 value: _SortMode.unansweredFirst,
-                label: Text('Sans réponse'),
+                label: Text(context.l10n.reviewsSortUnanswered),
               ),
             ],
             selected: {_sort},
@@ -182,17 +186,17 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
               ],
             ),
             error: (_, __) => KynzaErrorState(
-              message: 'Impossible de charger vos avis.',
+              message: context.l10n.reviewsLoadError,
               onRetry: () =>
                   ref.invalidate(salonReviewsProvider(widget.salonId)),
             ),
             data: (reviews) {
               if (reviews.isEmpty) {
-                return const KynzaEmptyState(
+                return KynzaEmptyState(
                   icon: Icons.rate_review_outlined,
-                  title: 'Aucun avis encore',
-                  subtitle: 'Vos avis clients apparaîtront ici.',
-                  ctaLabel: 'Retour',
+                  title: context.l10n.reviewsEmptyTitle,
+                  subtitle: context.l10n.reviewsEmptySubtitle,
+                  ctaLabel: context.l10n.reviewsEmptyCta,
                   onCta: _noop,
                 );
               }
