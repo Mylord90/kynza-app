@@ -98,6 +98,17 @@ class SettingsHomeScreen extends StatelessWidget {
             onTap: () =>
                 _openCategory(context, 'Avancé', advancedSettingFields),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsTile(
+            icon: Icons.description_outlined,
+            label: 'Modèles de documents',
+            onTap: () => context.push(RouteNames.ownerTemplates),
+          ),
+          _SettingsTile(
+            icon: Icons.cloud_done_outlined,
+            label: 'Sauvegardes de données',
+            onTap: () => context.push(RouteNames.ownerBackup),
+          ),
         ],
       ),
     );

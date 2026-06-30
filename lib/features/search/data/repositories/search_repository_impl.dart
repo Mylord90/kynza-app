@@ -28,58 +28,112 @@ class SearchRepositoryImpl implements SearchRepository {
     }
   }
 
+  // Uses search_salon_data() RPC (Phase 3 FTS — GIN tsvector indexes).
+  // Falls back to ILIKE if the RPC fails (e.g. during a migration window).
+  Future<List<SearchResultItem>> _searchViaRpc(
+    String query,
+    SearchFilters filters,
+    String type,
+  ) async {
+    final rows = await SupabaseService.client.rpc(
+      'search_salon_data',
+      params: {
+        'p_query': query,
+        'p_type': type,
+        if (filters.province != null) 'p_province': filters.province,
+        'p_limit': 30,
+      },
+    ) as List<dynamic>;
+
+    return rows.map((raw) {
+      final row = raw as Map<String, dynamic>;
+      return SearchResultItem(
+        id: row['id'] as String,
+        salonId: row['salon_id'] as String,
+        type: row['result_type'] == 'salon'
+            ? SearchResultType.salon
+            : SearchResultType.service,
+        title: row['title'] as String,
+        subtitle: row['subtitle'] as String?,
+        imageUrl: row['image_url'] as String?,
+        priceBif: row['price_bif'] as int?,
+        province: row['province'] as String?,
+      );
+    }).toList();
+  }
+
   Future<List<SearchResultItem>> _searchSalons(
     String query,
     SearchFilters filters,
   ) async {
-    var builder = SupabaseService.from(
-      'salons',
-    ).select().eq('is_online', true).isFilter('deleted_at', null);
-    if (query.isNotEmpty) {
-      builder = builder.or('name.ilike.%$query%,description.ilike.%$query%');
-    }
-    if (filters.province != null) {
-      builder = builder.eq('province', filters.province!);
-    }
-    final rows = await builder.limit(30);
-    if (rows.isEmpty) return [];
+    try {
+      final results = await _searchViaRpc(query, filters, 'salon');
+      return results.where((r) {
+        return filters.minRating == null ||
+            (r.rating ?? 0) >= filters.minRating!;
+      }).toList();
+    } catch (_) {
+      // FTS RPC unavailable — fallback to ILIKE (pg_trgm index still speeds
+      // this up even without the tsvector path).
+      var builder = SupabaseService.from('salons')
+          .select()
+          .eq('is_online', true)
+          .isFilter('deleted_at', null);
+      if (query.isNotEmpty) {
+        builder = builder.or('name.ilike.%$query%,description.ilike.%$query%');
+      }
+      if (filters.province != null) {
+        builder = builder.eq('province', filters.province!);
+      }
+      final rows = await builder.limit(30);
+      if (rows.isEmpty) return [];
 
-    final ids = rows.map((r) => r['id'] as String).toList();
-    final ratingRows = await SupabaseService.from(
-      'v_salon_ratings',
-    ).select('salon_id, average_rating').inFilter('salon_id', ids);
-    final ratingBySalon = {
-      for (final r in ratingRows)
-        r['salon_id'] as String: (r['average_rating'] as num).toDouble(),
-    };
-
-    return rows
-        .map((row) {
-          final id = row['id'] as String;
-          final rating = ratingBySalon[id];
-          return SearchResultItem(
-            id: id,
-            salonId: id,
-            type: SearchResultType.salon,
-            title: row['name'] as String,
-            subtitle: row['province'] as String?,
-            imageUrl: row['logo_url'] as String?,
-            rating: rating,
-            province: row['province'] as String?,
-          );
-        })
-        .where(
-          (r) =>
-              filters.minRating == null ||
-              (r.rating ?? 0) >= filters.minRating!,
-        )
-        .toList();
+      final ids = rows.map((r) => r['id'] as String).toList();
+      final ratingRows = await SupabaseService.from('v_salon_ratings')
+          .select('salon_id, average_rating')
+          .inFilter('salon_id', ids);
+      final ratingBySalon = {
+        for (final r in ratingRows)
+          r['salon_id'] as String: (r['average_rating'] as num).toDouble(),
+      };
+      return rows
+          .map((row) {
+            final id = row['id'] as String;
+            return SearchResultItem(
+              id: id,
+              salonId: id,
+              type: SearchResultType.salon,
+              title: row['name'] as String,
+              subtitle: row['province'] as String?,
+              imageUrl: row['logo_url'] as String?,
+              rating: ratingBySalon[id],
+              province: row['province'] as String?,
+            );
+          })
+          .where((r) =>
+              filters.minRating == null || (r.rating ?? 0) >= filters.minRating!)
+          .toList();
+    }
   }
 
   Future<List<SearchResultItem>> _searchServices(
     String query,
     SearchFilters filters,
   ) async {
+    // Service-only filters (category, price) can't be passed to the RPC —
+    // fall back to the direct query when any are set.
+    final hasServiceOnlyFilters = filters.categories.isNotEmpty ||
+        filters.minPriceBif != null ||
+        filters.maxPriceBif != null;
+
+    if (!hasServiceOnlyFilters) {
+      try {
+        return await _searchViaRpc(query, filters, 'service');
+      } catch (_) {
+        // fall through to ILIKE below
+      }
+    }
+
     var builder = SupabaseService.from('services')
         .select('*, salon:salons!inner(name, province, logo_url, is_online)')
         .eq('is_active', true)
@@ -101,7 +155,6 @@ class SearchRepositoryImpl implements SearchRepository {
       builder = builder.eq('salon.province', filters.province!);
     }
     final rows = await builder.limit(30);
-
     return rows.map((row) {
       final salon = row['salon'] as Map<String, dynamic>?;
       return SearchResultItem(

@@ -32,6 +32,8 @@ import '../../features/permissions/presentation/screens/permission_group_detail_
 import '../../features/permissions/presentation/screens/permission_groups_screen.dart';
 import '../../features/settings/presentation/screens/settings_home_screen.dart';
 import '../../features/automation/presentation/screens/automation_list_screen.dart';
+import '../../features/data_platform/backup/presentation/screens/backup_screen.dart';
+import '../../features/data_platform/templates/presentation/screens/template_list_screen.dart';
 import '../../features/loyalty/presentation/screens/client_loyalty_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_qr_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_scan_screen.dart';
@@ -460,6 +462,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => const _RoleGuard(
           role: UserRole.owner,
           child: _OwnerAutomationLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerBackup,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerBackupLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerTemplates,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerTemplatesLoader(),
         ),
       ),
       _fadeRoute(
@@ -1024,6 +1040,38 @@ class _OwnerAutomationLoader extends ConsumerWidget {
       );
     }
     return AutomationListScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerBackupLoader extends ConsumerWidget {
+  const _OwnerBackupLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return BackupScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerTemplatesLoader extends ConsumerWidget {
+  const _OwnerTemplatesLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return TemplateListScreen(salonId: salon.id);
   }
 }
 

@@ -109,4 +109,8 @@ abstract class RouteNames {
 
   // Enterprise Foundation V2 — Phase 2: Automation Platform
   static const ownerAutomation = '/owner/automation';
+
+  // Enterprise Foundation V2 — Phase 3: Data Platform
+  static const ownerBackup = '/owner/backup';
+  static const ownerTemplates = '/owner/templates';
 }

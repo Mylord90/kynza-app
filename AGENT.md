@@ -137,8 +137,11 @@ lib/
     │                    # additive to the base role system below)
     ├── settings/        # SettingsHomeScreen + generic SettingsCategoryScreen
     │                    # (Phase 1.4 — salon_settings)
-    └── automation/      # Workflow builder/list/execution-log (Phase 2 —
-                          # Trigger → Conditions → Actions)
+    ├── automation/      # Workflow builder/list/execution-log (Phase 2 —
+    │                    # Trigger → Conditions → Actions)
+    └── data_platform/   # backup/ (BackupScreen) + templates/
+                          # (TemplateListScreen, TemplateEditorScreen)
+                          # Phase 3 — Enterprise Data Platform
 ```
 
 Toute nouvelle feature respecte ce découpage : pas de logique transverse hors `core/`, pas de widget partagé dupliqué hors `shared/widgets/`.
@@ -322,6 +325,26 @@ auto-créés par salon. Tous les types de trigger/action ne sont pas câblés
 — voir la colonne `wired`/`implemented` des catalogues et
 `docs/PHASE_2_SUMMARY.md` pour le détail de ce qui fonctionne réellement.
 
+**Enterprise Data Platform (Phase 3)** — 4 sous-systèmes :
+1. **FTS** — `pg_trgm` GIN (accélère les ILIKE existants sans changer le
+   code Flutter) + colonnes `search_vector TSVECTOR STORED` + GIN sur
+   `salons`/`services` + RPC `search_salon_data()` (résultats unifiés,
+   classés par pertinence, config `'simple'` pour noms propres/marques).
+   `SearchRepositoryImpl` essaie le RPC en premier, bascule sur ILIKE si
+   le RPC échoue ou si des filtres service-only sont actifs.
+2. **mv_daily_revenue** — snapshot pré-agrégé `{salon_id, day, revenue_bif,
+   bookings_*}`, rafraîchi toutes les nuits (pg_cron CONCURRENTLY).
+   Pas de RLS (MV Postgres) → pas de GRANT authenticated. Vue fine
+   `v_mv_daily_revenue` exposée aux utilisateurs avec filtre `salon_id`.
+   Usage prévu : action `update_stats` du moteur d'automatisation.
+3. **Backup** — table `backup_jobs` + bucket `kynza-backups` (privé) +
+   Edge Function `create-backup` : 90j de données transactionnelles
+   + référentiels complets → JSON dans le storage, 1 backup / 6h max.
+4. **Templates de documents** — `document_templates` (invoice/receipt/
+   monthly_report, syntaxe `{{variable}}`), `render_template()` RPC,
+   3 modèles par défaut auto-créés par salon (trigger + backfill).
+   Voir `docs/PHASE_3_SUMMARY.md`.
+
 ---
 
 ## SECTION 11 — TESTING & CI
@@ -449,7 +472,8 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Audit (Phase 1.2) : `mv_audit_stats` n'a aucun consommateur (pas d'écran de stats dessus). Pas de collecte device_info/app_version/screen_name (colonnes présentes, non alimentées — nécessiterait `package_info_plus`/`device_info_plus`, pas encore une dépendance du projet). Pas d'export PDF du journal (CSV seulement). Le logging des changements de `salon_settings` est différé à la Phase 1.4 (la table n'existe pas encore).
 - Versioning (Phase 1.3) : `entity_versions` n'a aucun consommateur Flutter (pas d'écran d'historique, pas de `compare()`/`restore()`) — mécanisme backend vérifié fonctionnel uniquement. `restore()` nécessiterait du SQL dynamique par `entity_type` ou de la logique Dart par entité ; pas construit avant qu'un écran en ait réellement besoin.
 - Settings (Phase 1.4) : pas de `PermissionGuard` sur les écrans de catégorie au-delà du `_RoleGuard` owner-only de la route — suffisant tant que seul l'Owner atteint `/owner/settings`. Pas de validation des champs entier/texte au-delà de `int.tryParse` (aucune borne min/max appliquée côté UI).
-- Automation (Phase 2) : 4 des 8 types de trigger ne sont câblés nulle part (`booking.completed`/`booking.cancelled` passent par des `.update()` Flutter directs, pas d'Edge Function à brancher ; `review.submitted` idem ; `loyalty.card_full` n'est délibérément pas branché dans `validate-qr`, qui gère déjà ce cas pour éviter une double notification). 3 des 8 types d'action ne sont pas implémentés (`send_email` — interdit par R14 et aucune infra —, `create_invoice` — schéma `invoices.plan_key` incompatible —, `update_stats` — aucune cible avant la Phase 3). L'éditeur de conditions/actions Flutter est fonctionnel mais basique (champs texte libres, pas d'autocomplétion sur `available_context`, pas de réordonnancement par glisser-déposer).
+- Automation (Phase 2) : 4 des 8 types de trigger ne sont câblés nulle part (`booking.completed`/`booking.cancelled` passent par des `.update()` Flutter directs, pas d'Edge Function à brancher ; `review.submitted` idem ; `loyalty.card_full` n'est délibérément pas branché dans `validate-qr`, qui gère déjà ce cas pour éviter une double notification). 3 des 8 types d'action ne sont pas implémentés (`send_email` — interdit par R14 et aucune infra —, `create_invoice` — schéma `invoices.plan_key` incompatible —, `update_stats` — cible `mv_daily_revenue` disponible depuis Phase 3, reste à câbler). L'éditeur de conditions/actions Flutter est fonctionnel mais basique (champs texte libres, pas d'autocomplétion sur `available_context`, pas de réordonnancement par glisser-déposer).
+- Data Platform (Phase 3) : `mv_daily_revenue` n'a aucun consommateur Flutter direct (les dashboards utilisent toujours `v_salon_kpis`) — `v_mv_daily_revenue` est wired mais pas encore appelée par un écran. `render_template()` RPC branché dans le repository mais pas de "preview du rendu" dans l'UI. Pas de test end-to-end live de `create-backup` (Edge Function déployée, structure vérifiée, test en conditions réelles à faire via l'app). FTS ne retrouve pas les noms de salon sans espace (ex. `'SalonBeauteQA'` n'est pas trouvé par `p_query='salon'` — comportement FTS correct, le fallback ILIKE gère ce cas).
 
 ---
 
