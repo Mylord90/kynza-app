@@ -345,6 +345,37 @@ auto-créés par salon. Tous les types de trigger/action ne sont pas câblés
    3 modèles par défaut auto-créés par salon (trigger + backfill).
    Voir `docs/PHASE_3_SUMMARY.md`.
 
+**Evolution Platform (Phase 4)** — 3 sous-systèmes indépendants, zéro
+modification de l'existant :
+1. **Feature Flags V2** — table `feature_flags` (catalogue global, service_role
+   only en écriture) + `salon_feature_overrides` (overrides par salon, Owner ALL /
+   Manager SELECT). `evaluate_feature_flag(key)` RPC : résolution ordonnée
+   (override → flag désactivé → rollout 100% → bucket déterministe
+   `md5(salon_id||key) mod 100`). `FeatureFlagScreen` liste les flags avec
+   Switch par tile (crée/met à jour l'override), badge GLOBAL: ACTIVÉ/DÉSACTIVÉ/xx%.
+2. **Maintenance Mode** — table `maintenance_windows` + `is_maintenance_active()` RPC
+   (retourne toujours 1 ligne). `maintenanceStatusProvider` (non-autoDispose).
+   `MaintenanceScreen` : `PopScope(canPop:false)`, `Timer.periodic(30s)` invalide
+   le provider → le router re-évalue le redirect → sortie automatique en fin de
+   maintenance.
+3. **Version Manager** — table `app_versions` + `check_app_version(platform,
+   version_code)` RPC. `appVersionCheckProvider` (non-autoDispose).
+   `ForceUpdateScreen` : `PopScope(canPop:false)`, lance `url_launcher` vers
+   Play Store / App Store. `kAppVersionCode` + `kAppPlatform` dans
+   `lib/core/constants/app_version.dart`.
+   Router : `_AuthRefreshNotifier` écoute maintenant 3 providers
+   (`auth`, `maintenance`, `version`) ; chaîne de redirect : force-update > maintenance
+   > null. Voir `docs/PHASE_4_SUMMARY.md`.
+
+**Documentation & Architecture (Phase 5)** — phase purement documentaire :
+- `docs/ARCHITECTURE.md` : vue système complète (stack, couches Flutter,
+  multi-tenancy, RLS, Edge Functions, data flow réservation, stratégie offline).
+- `docs/API_REFERENCE.md` : catalogue des 8 RPCs PostgreSQL + 8 Edge Functions
+  avec params/returns/erreurs et snippets Dart/TypeScript.
+- `docs/SECURITY.md` : modèle de sécurité complet (`has_role()`, RLS patterns,
+  Edge Function auth, Leapa webhook HMAC, gestion secrets, règles non-négociables).
+- `docs/PHASE_4_SUMMARY.md` + `docs/PHASE_5_SUMMARY.md` : résumés de phases.
+
 ---
 
 ## SECTION 11 — TESTING & CI
@@ -474,6 +505,7 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Settings (Phase 1.4) : pas de `PermissionGuard` sur les écrans de catégorie au-delà du `_RoleGuard` owner-only de la route — suffisant tant que seul l'Owner atteint `/owner/settings`. Pas de validation des champs entier/texte au-delà de `int.tryParse` (aucune borne min/max appliquée côté UI).
 - Automation (Phase 2) : 4 des 8 types de trigger ne sont câblés nulle part (`booking.completed`/`booking.cancelled` passent par des `.update()` Flutter directs, pas d'Edge Function à brancher ; `review.submitted` idem ; `loyalty.card_full` n'est délibérément pas branché dans `validate-qr`, qui gère déjà ce cas pour éviter une double notification). 3 des 8 types d'action ne sont pas implémentés (`send_email` — interdit par R14 et aucune infra —, `create_invoice` — schéma `invoices.plan_key` incompatible —, `update_stats` — cible `mv_daily_revenue` disponible depuis Phase 3, reste à câbler). L'éditeur de conditions/actions Flutter est fonctionnel mais basique (champs texte libres, pas d'autocomplétion sur `available_context`, pas de réordonnancement par glisser-déposer).
 - Data Platform (Phase 3) : `mv_daily_revenue` n'a aucun consommateur Flutter direct (les dashboards utilisent toujours `v_salon_kpis`) — `v_mv_daily_revenue` est wired mais pas encore appelée par un écran. `render_template()` RPC branché dans le repository mais pas de "preview du rendu" dans l'UI. Pas de test end-to-end live de `create-backup` (Edge Function déployée, structure vérifiée, test en conditions réelles à faire via l'app). FTS ne retrouve pas les noms de salon sans espace (ex. `'SalonBeauteQA'` n'est pas trouvé par `p_query='salon'` — comportement FTS correct, le fallback ILIKE gère ce cas).
+- Evolution Platform (Phase 4) : `kAppVersionCode = 1` est une constante hardcodée dans `app_version.dart` — doit être mise à jour manuellement en sync avec `pubspec.yaml` à chaque release (une intégration `package_info_plus` l'automatiserait). `kPlayStoreUrl` et `kAppStoreUrl` sont des placeholders jusqu'à la première soumission aux stores. `evaluate_feature_flag()` retourne `false` appelée avec `service_role` (pas de `salon_id` en contexte) — comportement attendu et sûr. `ForceUpdateScreen` et `MaintenanceScreen` ont `PopScope(canPop:false)` sans possibilité de bypass manuel pour l'Owner — prévu, mais à documenter dans les release notes internes.
 
 ---
 
