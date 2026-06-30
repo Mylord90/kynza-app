@@ -113,4 +113,9 @@ abstract class RouteNames {
   // Enterprise Foundation V2 — Phase 3: Data Platform
   static const ownerBackup = '/owner/backup';
   static const ownerTemplates = '/owner/templates';
+
+  // Enterprise Foundation V2 — Phase 4: Evolution Platform
+  static const ownerFeatureFlags = '/owner/feature-flags';
+  static const maintenance = '/maintenance';
+  static const forceUpdate = '/force-update';
 }

@@ -109,6 +109,11 @@ class SettingsHomeScreen extends StatelessWidget {
             label: 'Sauvegardes de données',
             onTap: () => context.push(RouteNames.ownerBackup),
           ),
+          _SettingsTile(
+            icon: Icons.flag_outlined,
+            label: 'Drapeaux de fonctionnalités',
+            onTap: () => context.push(RouteNames.ownerFeatureFlags),
+          ),
         ],
       ),
     );

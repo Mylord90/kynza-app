@@ -34,6 +34,13 @@ import '../../features/settings/presentation/screens/settings_home_screen.dart';
 import '../../features/automation/presentation/screens/automation_list_screen.dart';
 import '../../features/data_platform/backup/presentation/screens/backup_screen.dart';
 import '../../features/data_platform/templates/presentation/screens/template_list_screen.dart';
+import '../../core/models/app_version_check_model.dart';
+import '../../core/models/maintenance_window_model.dart';
+import '../../features/evolution/feature_flags/presentation/screens/feature_flag_screen.dart';
+import '../../features/evolution/maintenance/application/providers/maintenance_providers.dart';
+import '../../features/evolution/maintenance/presentation/screens/maintenance_screen.dart';
+import '../../features/evolution/version_manager/application/providers/version_providers.dart';
+import '../../features/evolution/version_manager/presentation/screens/force_update_screen.dart';
 import '../../features/loyalty/presentation/screens/client_loyalty_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_qr_screen.dart';
 import '../../features/loyalty/presentation/screens/loyalty_scan_screen.dart';
@@ -121,6 +128,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       },
       authenticated: (user) {
         if (isGuestRoute) return redirectAfterAuth(user);
+
+        // Force-update gate — blocks all navigation when the installed
+        // version is below the minimum required (checked once on login,
+        // re-checked when the user taps "Vérifier à nouveau").
+        if (path != RouteNames.forceUpdate) {
+          final versionAsync = ref.read(appVersionCheckProvider);
+          if (versionAsync is AsyncData<AppVersionCheckModel?> &&
+              versionAsync.value?.updateRequired == true) {
+            return RouteNames.forceUpdate;
+          }
+        }
+
+        // Maintenance gate — blocks all navigation during an active window.
+        // MaintenanceScreen polls every 30 s and invalidates the provider
+        // when maintenance ends, which triggers a fresh redirect evaluation.
+        if (path != RouteNames.maintenance) {
+          final maintenanceAsync = ref.read(maintenanceStatusProvider);
+          if (maintenanceAsync is AsyncData<MaintenanceWindowModel?> &&
+              maintenanceAsync.value?.isActive == true) {
+            return RouteNames.maintenance;
+          }
+        }
+
         return null;
       },
       emailNotVerified: (email, userId) {
@@ -479,6 +509,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       _fadeRoute(
+        RouteNames.ownerFeatureFlags,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: _OwnerFeatureFlagsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.maintenance,
+        (context, state) => const MaintenanceScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.forceUpdate,
+        (context, state) => const ForceUpdateScreen(),
+      ),
+      _fadeRoute(
         RouteNames.ownerTeam,
         (context, state) =>
             const _RoleGuard(role: UserRole.owner, child: StaffListScreen()),
@@ -578,21 +623,35 @@ GoRoute _fadeRoute(
   );
 }
 
-/// Bridges Riverpod's authNotifierProvider to GoRouter's refreshListenable
-/// so navigation re-evaluates whenever the auth state changes.
+/// Bridges Riverpod providers to GoRouter's refreshListenable so navigation
+/// re-evaluates whenever auth state, maintenance status, or version check changes.
 class _AuthRefreshNotifier extends ChangeNotifier {
   _AuthRefreshNotifier(Ref ref) {
-    _subscription = ref.listen(
+    _authSub = ref.listen(
       authNotifierProvider,
-      (previous, next) => notifyListeners(),
+      (_, __) => notifyListeners(),
+    );
+    _maintenanceSub = ref.listen(
+      maintenanceStatusProvider,
+      (_, __) => notifyListeners(),
+    );
+    _versionSub = ref.listen(
+      appVersionCheckProvider,
+      (_, __) => notifyListeners(),
     );
   }
 
-  late final ProviderSubscription<AsyncValue<Object?>> _subscription;
+  late final ProviderSubscription<AsyncValue<Object?>> _authSub;
+  late final ProviderSubscription<AsyncValue<MaintenanceWindowModel?>>
+      _maintenanceSub;
+  late final ProviderSubscription<AsyncValue<AppVersionCheckModel?>>
+      _versionSub;
 
   @override
   void dispose() {
-    _subscription.close();
+    _authSub.close();
+    _maintenanceSub.close();
+    _versionSub.close();
     super.dispose();
   }
 }
@@ -1056,6 +1115,22 @@ class _OwnerBackupLoader extends ConsumerWidget {
       );
     }
     return BackupScreen(salonId: salon.id);
+  }
+}
+
+class _OwnerFeatureFlagsLoader extends ConsumerWidget {
+  const _OwnerFeatureFlagsLoader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final salon = ref.watch(ownerSalonProvider).valueOrNull;
+    if (salon == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: KynzaSpinner()),
+      );
+    }
+    return FeatureFlagScreen(salonId: salon.id);
   }
 }
 
