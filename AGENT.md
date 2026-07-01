@@ -545,4 +545,15 @@ via `CustomPainter`/`AnimationController`, sans dépendance externe.
 
 ---
 
+## SECTION 20 — TYPOGRAPHIE
+
+- `AppTypography` (`lib/core/constants/app_typography.dart`) est la **seule** classe autorisée à définir des `TextStyle`. Interdiction d'utiliser `TextStyle(fontFamily: '...')` en dehors de ce fichier — toujours `AppTypography.fontUI` / `AppTypography.fontMono` si un `.copyWith` doit forcer la police.
+- Police UI : **Plus Jakarta Sans** (`fontUI`). Police Mono : **JetBrains Mono** (`fontMono`) — réservée aux montants BIF/FBu, codes, timestamps. Les deux sont bundlées localement (`assets/fonts/`, polices variables), jamais chargées depuis le réseau.
+- Montants : toujours `AppTypography.amount*` (ou `amountMd`/`amountSm`/`amountLarge`/`amountLabel`), avec `FontFeature.tabularFigures()` et séparateur de milliers ` ` (déjà géré par `CurrencyFormatter`).
+- `KynzaTextTheme.dark` (`lib/core/theme/text_theme.dart`) mappe l'échelle sur `ThemeData.textTheme` (Material 3) — accessible via `Theme.of(context).textTheme.*`.
+- Échelle historique (`h1`, `h2`, `h3`, `body`, `button`, `label`, `amount`, `amountMd`, `amountSm`, `mono`, `displayLarge`) **non renommée/modifiée** pour préserver les ~130 usages existants ; l'échelle étendue (`headlineLarge/Medium/Small`, `titleLarge/Medium/Small`, `bodyLarge/Medium`, `labelLarge/Medium/Small`, `amountLarge`, `amountLabel`, `monoBold`, `displayMedium`) s'ajoute pour les nouveaux écrans.
+- Référence complète : `docs/TYPOGRAPHY_GUIDE.md`. Rapport de la phase : `docs/PHASE_TYPOGRAPHY_SUMMARY.md`.
+
+---
+
 *KYNZA — AGENT.md · Document fondateur · Production-Ready target · Flutter + Supabase + Leapa · Burundi 2026*

@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/app_typography.dart';
 import 'kynza_theme_extension.dart';
+import 'text_theme.dart';
 
 abstract class AppTheme {
   static ThemeData get dark {
     final base = ThemeData(brightness: Brightness.dark, useMaterial3: true);
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme)
-        .apply(
-          bodyColor: AppColors.textPrimary,
-          displayColor: AppColors.textPrimary,
-        );
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primary,
-      textTheme: textTheme,
+      textTheme: KynzaTextTheme.dark,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.primaryVariant,

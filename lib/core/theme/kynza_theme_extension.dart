@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../constants/app_typography.dart';
 
 /// Holds the JetBrains Mono text style used for monetary amounts and
-/// monospace content. Declared as a [ThemeExtension] so the font is
-/// resolved once via [GoogleFonts] and shared through [ThemeData].
+/// monospace content, sourced from the locally bundled font (see
+/// [AppTypography.fontMono]) and shared through [ThemeData].
 @immutable
 class KynzaThemeExtension extends ThemeExtension<KynzaThemeExtension> {
   const KynzaThemeExtension({required this.monoTextStyle});
 
   final TextStyle monoTextStyle;
 
-  static KynzaThemeExtension get standard =>
-      KynzaThemeExtension(monoTextStyle: GoogleFonts.jetBrainsMono());
+  static const KynzaThemeExtension standard = KynzaThemeExtension(
+    monoTextStyle: TextStyle(fontFamily: AppTypography.fontMono),
+  );
 
   @override
   KynzaThemeExtension copyWith({TextStyle? monoTextStyle}) =>

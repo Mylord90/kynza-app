@@ -79,7 +79,7 @@ class KynzaBarChartFl extends StatelessWidget {
                       BarTooltipItem(
                         '${rod.toY.round()}',
                         AppTypography.bodySmall.copyWith(
-                          fontFamily: 'JetBrainsMono',
+                          fontFamily: AppTypography.fontMono,
                           color: AppColors.primary,
                         ),
                       ),

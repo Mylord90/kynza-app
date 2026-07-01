@@ -155,7 +155,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                   hints,
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textSecondary,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTypography.fontMono,
                   ),
                 ),
               ],

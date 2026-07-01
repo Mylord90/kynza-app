@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/utils/haptics.dart';
 import 'kynza_nav_item.dart';
 import 'kynza_nav_theme.dart';
@@ -202,7 +203,7 @@ class _KynzaBottomNavState extends State<KynzaBottomNav>
                       duration: theme.animationDuration,
                       curve: theme.animationCurve,
                       style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
+                        fontFamily: AppTypography.fontUI,
                         fontSize: isActive ? 11.5 : 10.5,
                         fontWeight: isActive
                             ? FontWeight.w600

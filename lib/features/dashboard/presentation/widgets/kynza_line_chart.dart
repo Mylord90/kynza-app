@@ -101,7 +101,7 @@ class KynzaLineChart extends StatelessWidget {
                         (s) => LineTooltipItem(
                           CurrencyFormatter.formatBif(s.y.round()),
                           AppTypography.bodySmall.copyWith(
-                            fontFamily: 'JetBrainsMono',
+                            fontFamily: AppTypography.fontMono,
                             color: AppColors.primary,
                           ),
                         ),
