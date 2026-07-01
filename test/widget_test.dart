@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kynza/core/utils/currency_formatter.dart';
 import 'package:kynza/core/utils/validators.dart';
+import 'package:kynza/l10n/app_localizations.dart';
 import 'package:kynza/shared/widgets/kynza_button.dart';
+import 'package:kynza/shared/widgets/loader/widgets/loader_button.dart';
 
 void main() {
   group('CurrencyFormatter', () {
@@ -46,6 +48,9 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('fr'),
           home: Scaffold(
             body: KynzaButton(
               label: 'Continuer',
@@ -57,7 +62,7 @@ void main() {
       );
 
       expect(find.text('Continuer'), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(KynzaLoaderButton), findsOneWidget);
     },
   );
 }

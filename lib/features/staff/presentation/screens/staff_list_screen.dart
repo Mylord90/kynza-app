@@ -150,7 +150,10 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _CountChip(label: context.l10n.staffCountActive, count: active.length),
+                    child: _CountChip(
+                      label: context.l10n.staffCountActive,
+                      count: active.length,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -219,6 +222,8 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
                       ),
                     )
                   : RefreshIndicator(
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.surface,
                       onRefresh: () async =>
                           ref.invalidate(salonStaffProvider(widget.salonId)),
                       child: ListView.builder(

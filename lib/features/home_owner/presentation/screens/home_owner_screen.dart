@@ -337,7 +337,8 @@ class _ClientsTab extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            client['fullName'] as String? ?? context.l10n.homeOwnerClientFallbackName,
+                            client['fullName'] as String? ??
+                                context.l10n.homeOwnerClientFallbackName,
                             style: AppTypography.h3,
                           ),
                           if (client['phone'] != null)
@@ -346,7 +347,9 @@ class _ClientsTab extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      context.l10n.homeOwnerClientRdvCount(client['count'] as int),
+                      context.l10n.homeOwnerClientRdvCount(
+                        client['count'] as int,
+                      ),
                       style: AppTypography.bodySmall,
                     ),
                   ],
@@ -402,7 +405,12 @@ class _ProfileTab extends ConsumerWidget {
             children: [
               const Icon(Icons.star_outline, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(context.l10n.homeOwnerProfileMyReviews, style: AppTypography.h3)),
+              Expanded(
+                child: Text(
+                  context.l10n.homeOwnerProfileMyReviews,
+                  style: AppTypography.h3,
+                ),
+              ),
               const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
@@ -415,7 +423,10 @@ class _ProfileTab extends ConsumerWidget {
               const Icon(Icons.history_outlined, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text(context.l10n.homeOwnerProfileActivityLog, style: AppTypography.h3),
+                child: Text(
+                  context.l10n.homeOwnerProfileActivityLog,
+                  style: AppTypography.h3,
+                ),
               ),
               const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
@@ -428,7 +439,12 @@ class _ProfileTab extends ConsumerWidget {
             children: [
               const Icon(Icons.settings_outlined, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(context.l10n.homeOwnerProfileSettings, style: AppTypography.h3)),
+              Expanded(
+                child: Text(
+                  context.l10n.homeOwnerProfileSettings,
+                  style: AppTypography.h3,
+                ),
+              ),
               const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
@@ -438,7 +454,10 @@ class _ProfileTab extends ConsumerWidget {
           onTap: () => context.push(RouteNames.ownerBilling),
           child: Row(
             children: [
-              const Icon(Icons.workspace_premium_outlined, color: AppColors.primary),
+              const Icon(
+                Icons.workspace_premium_outlined,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
@@ -457,7 +476,12 @@ class _ProfileTab extends ConsumerWidget {
             children: [
               const Icon(Icons.language, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(context.l10n.homeOwnerProfileLanguage, style: AppTypography.h3)),
+              Expanded(
+                child: Text(
+                  context.l10n.homeOwnerProfileLanguage,
+                  style: AppTypography.h3,
+                ),
+              ),
               const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),

@@ -363,7 +363,12 @@ class _MyClientsTab extends ConsumerWidget {
                   children: [
                     KynzaAvatar(fullName: c['fullName'] as String? ?? ''),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: Text(c['fullName'] as String? ?? context.l10n.homeOwnerClientFallbackName)),
+                    Expanded(
+                      child: Text(
+                        c['fullName'] as String? ??
+                            context.l10n.homeOwnerClientFallbackName,
+                      ),
+                    ),
                   ],
                 ),
               ),

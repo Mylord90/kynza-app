@@ -23,5 +23,8 @@ abstract class TemplateRepository {
 
   Future<void> deleteTemplate(String id);
 
-  Future<String?> renderTemplate(String templateId, Map<String, String> variables);
+  Future<String?> renderTemplate(
+    String templateId,
+    Map<String, String> variables,
+  );
 }

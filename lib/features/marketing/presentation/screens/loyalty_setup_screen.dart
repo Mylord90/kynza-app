@@ -156,7 +156,9 @@ class _LoyaltyFormState extends ConsumerState<_LoyaltyForm> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : context.l10n.marketingLoyaltySaveError,
+          message: e is AppException
+              ? e.message
+              : context.l10n.marketingLoyaltySaveError,
           level: ToastLevel.error,
         );
       }
@@ -182,7 +184,10 @@ class _LoyaltyFormState extends ConsumerState<_LoyaltyForm> {
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
-        Text(context.l10n.marketingLoyaltyStampsRequiredLabel, style: AppTypography.h3),
+        Text(
+          context.l10n.marketingLoyaltyStampsRequiredLabel,
+          style: AppTypography.h3,
+        ),
         Slider(
           value: _stampsRequired.toDouble(),
           min: 1,
@@ -222,20 +227,33 @@ class _LoyaltyFormState extends ConsumerState<_LoyaltyForm> {
         const SizedBox(height: AppSpacing.lg),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(context.l10n.marketingLoyaltyProgramActiveLabel, style: AppTypography.h3),
+          title: Text(
+            context.l10n.marketingLoyaltyProgramActiveLabel,
+            style: AppTypography.h3,
+          ),
           value: _isActive,
           activeThumbColor: AppColors.primary,
           onChanged: (v) => setState(() => _isActive = v),
         ),
         const SizedBox(height: AppSpacing.lg),
-        KynzaButton(label: context.l10n.commonSave, isLoading: _saving, onPressed: _save),
+        KynzaButton(
+          label: context.l10n.commonSave,
+          isLoading: _saving,
+          onPressed: _save,
+        ),
         const SizedBox(height: AppSpacing.xxl),
-        Text(context.l10n.marketingLoyaltyCardPreviewTitle, style: AppTypography.h2),
+        Text(
+          context.l10n.marketingLoyaltyCardPreviewTitle,
+          style: AppTypography.h2,
+        ),
         const SizedBox(height: AppSpacing.md),
         _CardPreview(stampsRequired: _stampsRequired),
         if (widget.program != null) ...[
           const SizedBox(height: AppSpacing.xxl),
-          Text(context.l10n.marketingLoyaltyStatsTitle, style: AppTypography.h2),
+          Text(
+            context.l10n.marketingLoyaltyStatsTitle,
+            style: AppTypography.h2,
+          ),
           const SizedBox(height: AppSpacing.md),
           statsAsync.when(
             loading: () => const KynzaSkeleton(height: 120),
@@ -304,7 +322,9 @@ class _CardPreview extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            context.l10n.marketingLoyaltyVisitsRemaining(stampsRequired - shown),
+            context.l10n.marketingLoyaltyVisitsRemaining(
+              stampsRequired - shown,
+            ),
             style: AppTypography.bodySmall,
           ),
         ],
@@ -334,7 +354,10 @@ class _StatsSection extends ConsumerWidget {
     final confirmed = await showKynzaConfirmDialog(
       context,
       title: l10n.marketingLoyaltyRewardValidateConfirmTitle,
-      message: l10n.marketingLoyaltyRewardValidateConfirmMessage(clientName, stampsRequired),
+      message: l10n.marketingLoyaltyRewardValidateConfirmMessage(
+        clientName,
+        stampsRequired,
+      ),
       confirmLabel: l10n.marketingLoyaltyValidateButton,
       isDestructive: false,
     );
@@ -355,7 +378,9 @@ class _StatsSection extends ConsumerWidget {
       if (context.mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : l10n.marketingLoyaltyValidateError,
+          message: e is AppException
+              ? e.message
+              : l10n.marketingLoyaltyValidateError,
           level: ToastLevel.error,
         );
       }
@@ -370,7 +395,10 @@ class _StatsSection extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: _StatTile(label: context.l10n.marketingLoyaltyStatCardsLabel, value: '${stats.totalCards}'),
+              child: _StatTile(
+                label: context.l10n.marketingLoyaltyStatCardsLabel,
+                value: '${stats.totalCards}',
+              ),
             ),
             Expanded(
               child: _StatTile(
@@ -388,7 +416,10 @@ class _StatsSection extends ConsumerWidget {
         ),
         if (stats.topClients.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
-          Text(context.l10n.marketingLoyaltyTopClientsTitle, style: AppTypography.h3),
+          Text(
+            context.l10n.marketingLoyaltyTopClientsTitle,
+            style: AppTypography.h3,
+          ),
           const SizedBox(height: AppSpacing.sm),
           for (final client in stats.topClients)
             Padding(
@@ -409,7 +440,9 @@ class _StatsSection extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      context.l10n.marketingLoyaltyStampsCount(client['stamps'] as int),
+                      context.l10n.marketingLoyaltyStampsCount(
+                        client['stamps'] as int,
+                      ),
                       style: AppTypography.bodySmall,
                     ),
                     if ((client['stamps'] as int) >= stampsRequired &&

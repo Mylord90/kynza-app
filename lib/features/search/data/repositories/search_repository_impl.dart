@@ -35,15 +35,17 @@ class SearchRepositoryImpl implements SearchRepository {
     SearchFilters filters,
     String type,
   ) async {
-    final rows = await SupabaseService.client.rpc(
-      'search_salon_data',
-      params: {
-        'p_query': query,
-        'p_type': type,
-        if (filters.province != null) 'p_province': filters.province,
-        'p_limit': 30,
-      },
-    ) as List<dynamic>;
+    final rows =
+        await SupabaseService.client.rpc(
+              'search_salon_data',
+              params: {
+                'p_query': query,
+                'p_type': type,
+                if (filters.province != null) 'p_province': filters.province,
+                'p_limit': 30,
+              },
+            )
+            as List<dynamic>;
 
     return rows.map((raw) {
       final row = raw as Map<String, dynamic>;
@@ -75,10 +77,9 @@ class SearchRepositoryImpl implements SearchRepository {
     } catch (_) {
       // FTS RPC unavailable — fallback to ILIKE (pg_trgm index still speeds
       // this up even without the tsvector path).
-      var builder = SupabaseService.from('salons')
-          .select()
-          .eq('is_online', true)
-          .isFilter('deleted_at', null);
+      var builder = SupabaseService.from(
+        'salons',
+      ).select().eq('is_online', true).isFilter('deleted_at', null);
       if (query.isNotEmpty) {
         builder = builder.or('name.ilike.%$query%,description.ilike.%$query%');
       }
@@ -89,9 +90,9 @@ class SearchRepositoryImpl implements SearchRepository {
       if (rows.isEmpty) return [];
 
       final ids = rows.map((r) => r['id'] as String).toList();
-      final ratingRows = await SupabaseService.from('v_salon_ratings')
-          .select('salon_id, average_rating')
-          .inFilter('salon_id', ids);
+      final ratingRows = await SupabaseService.from(
+        'v_salon_ratings',
+      ).select('salon_id, average_rating').inFilter('salon_id', ids);
       final ratingBySalon = {
         for (final r in ratingRows)
           r['salon_id'] as String: (r['average_rating'] as num).toDouble(),
@@ -110,8 +111,11 @@ class SearchRepositoryImpl implements SearchRepository {
               province: row['province'] as String?,
             );
           })
-          .where((r) =>
-              filters.minRating == null || (r.rating ?? 0) >= filters.minRating!)
+          .where(
+            (r) =>
+                filters.minRating == null ||
+                (r.rating ?? 0) >= filters.minRating!,
+          )
           .toList();
     }
   }
@@ -122,7 +126,8 @@ class SearchRepositoryImpl implements SearchRepository {
   ) async {
     // Service-only filters (category, price) can't be passed to the RPC —
     // fall back to the direct query when any are set.
-    final hasServiceOnlyFilters = filters.categories.isNotEmpty ||
+    final hasServiceOnlyFilters =
+        filters.categories.isNotEmpty ||
         filters.minPriceBif != null ||
         filters.maxPriceBif != null;
 

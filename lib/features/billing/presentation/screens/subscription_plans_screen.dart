@@ -37,7 +37,7 @@ class SubscriptionPlansScreen extends ConsumerWidget {
           const KynzaOfflineBanner(),
           Expanded(
             child: salon == null
-                ? const Center(child: KynzaSpinner())
+                ? const KynzaLoaderInline(size: KynzaLoaderSize.large)
                 : ListView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
@@ -45,7 +45,9 @@ class SubscriptionPlansScreen extends ConsumerWidget {
                         child: KynzaBadge(
                           label: salon.plan == 'free'
                               ? context.l10n.billingCurrentPlanBadgeFree
-                              : context.l10n.billingCurrentPlanBadge(salon.plan.toUpperCase()),
+                              : context.l10n.billingCurrentPlanBadge(
+                                  salon.plan.toUpperCase(),
+                                ),
                           variant: salon.plan == 'free'
                               ? KynzaBadgeVariant.neutral
                               : KynzaBadgeVariant.gold,
@@ -117,7 +119,10 @@ class _UsageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(context.l10n.billingCurrentMonthUsage(used, max), style: AppTypography.h3),
+          Text(
+            context.l10n.billingCurrentMonthUsage(used, max),
+            style: AppTypography.h3,
+          ),
           const SizedBox(height: AppSpacing.sm),
           ClipRRect(
             borderRadius: BorderRadius.circular(9999),
@@ -360,7 +365,10 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                 ),
               ]
             : [
-                Text(context.l10n.billingUpgradeSentTitle, style: AppTypography.h2),
+                Text(
+                  context.l10n.billingUpgradeSentTitle,
+                  style: AppTypography.h2,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   context.l10n.billingUpgradeReferenceLabel(invoice.reference),
@@ -384,7 +392,8 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                   children: [
                     Expanded(
                       child: KynzaButton(
-                        label: context.l10n.billingSubscriptionCopyReferenceButton,
+                        label:
+                            context.l10n.billingSubscriptionCopyReferenceButton,
                         variant: KynzaButtonVariant.secondary,
                         onPressed: () async {
                           await Clipboard.setData(
@@ -393,7 +402,9 @@ class _UpgradeRequestSheetState extends ConsumerState<_UpgradeRequestSheet> {
                           if (context.mounted) {
                             showKynzaToast(
                               context,
-                              message: context.l10n.billingSubscriptionCopyReferenceSuccess,
+                              message: context
+                                  .l10n
+                                  .billingSubscriptionCopyReferenceSuccess,
                               level: ToastLevel.success,
                             );
                           }

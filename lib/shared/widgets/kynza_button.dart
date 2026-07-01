@@ -4,7 +4,7 @@ import '../../core/constants/app_durations.dart';
 import '../../core/constants/app_radius.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/utils/haptics.dart';
-import 'kynza_spinner.dart';
+import 'loader/widgets/loader_button.dart';
 
 enum KynzaButtonVariant { primary, secondary, ghost, destructive }
 
@@ -79,7 +79,9 @@ class _KynzaButtonState extends State<KynzaButton> {
     }
 
     final content = widget.isLoading
-        ? KynzaSpinner(size: 20, color: textColor)
+        ? KynzaLoaderButton(
+            onGoldBackground: widget.variant == KynzaButtonVariant.primary,
+          )
         : Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,

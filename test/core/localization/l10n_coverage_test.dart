@@ -64,19 +64,13 @@ void main() {
 
     test('parameterized auth keys interpolate correctly in French', () {
       const email = 'test@example.com';
-      expect(
-        fr.authForgotPasswordSuccessSubtitle(email),
-        contains(email),
-      );
+      expect(fr.authForgotPasswordSuccessSubtitle(email), contains(email));
       expect(fr.authVerifyEmailSubtitle(email), contains(email));
     });
 
     test('parameterized auth keys interpolate correctly in English', () {
       const email = 'test@example.com';
-      expect(
-        en.authForgotPasswordSuccessSubtitle(email),
-        contains(email),
-      );
+      expect(en.authForgotPasswordSuccessSubtitle(email), contains(email));
       expect(en.authVerifyEmailSubtitle(email), contains(email));
     });
 
@@ -101,11 +95,14 @@ void main() {
       }
     });
 
-    test('French strings are distinct from English strings for key samples', () {
-      expect(fr.authLoginTitle, isNot(equals(en.authLoginTitle)));
-      expect(fr.commonCancel, isNot(equals(en.commonCancel)));
-      expect(fr.offlineBannerMessage, isNot(equals(en.offlineBannerMessage)));
-    });
+    test(
+      'French strings are distinct from English strings for key samples',
+      () {
+        expect(fr.authLoginTitle, isNot(equals(en.authLoginTitle)));
+        expect(fr.commonCancel, isNot(equals(en.commonCancel)));
+        expect(fr.offlineBannerMessage, isNot(equals(en.offlineBannerMessage)));
+      },
+    );
 
     test('AppLocalizations.supportedLocales includes fr and en', () {
       final codes = AppLocalizations.supportedLocales

@@ -136,19 +136,27 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                           .where((r) => r.type == SearchResultType.service)
                           .toList();
                       return RefreshIndicator(
+                        color: AppColors.primary,
+                        backgroundColor: AppColors.surface,
                         onRefresh: () async =>
                             ref.invalidate(searchResultsProvider),
                         child: ListView(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           children: [
                             if (salons.isNotEmpty) ...[
-                              Text(context.l10n.searchSalonsSectionLabel, style: AppTypography.h3),
+                              Text(
+                                context.l10n.searchSalonsSectionLabel,
+                                style: AppTypography.h3,
+                              ),
                               const SizedBox(height: AppSpacing.sm),
                               for (final r in salons) _ResultTile(item: r),
                               const SizedBox(height: AppSpacing.lg),
                             ],
                             if (services.isNotEmpty) ...[
-                              Text(context.l10n.searchServicesSectionLabel, style: AppTypography.h3),
+                              Text(
+                                context.l10n.searchServicesSectionLabel,
+                                style: AppTypography.h3,
+                              ),
                               const SizedBox(height: AppSpacing.sm),
                               for (final r in services) _ResultTile(item: r),
                             ],

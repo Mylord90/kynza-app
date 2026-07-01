@@ -30,4 +30,11 @@ abstract class AppColors {
     colors: goldGradientColors,
     transform: GradientRotation(2.356),
   );
+
+  /// Palette dédiée au dégradé radial du KynzaLoader — `primary` reste
+  /// l'accent de marque, ces tons l'entourent pour le dégradé "Orbite Dorée".
+  static const goldLight = Color(0xFFFFD54A);
+  static const goldCore = Color(0xFFF5C542);
+  static const amberDeep = Color(0xFFD98A00);
+  static const loaderGradientColors = [goldLight, goldCore, primary, amberDeep];
 }

@@ -152,7 +152,10 @@ class ClientProfileScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xxl),
 
         // SECTION 3 — Mes RDV récents
-        Text(l10n.homeClientProfileRecentBookingsTitle, style: AppTypography.h2),
+        Text(
+          l10n.homeClientProfileRecentBookingsTitle,
+          style: AppTypography.h2,
+        ),
         const SizedBox(height: AppSpacing.md),
         bookingsAsync.when(
           loading: () => const KynzaSkeleton(height: 72, count: 2),
@@ -250,7 +253,10 @@ class ClientProfileScreen extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.notifications_outlined, color: AppColors.primary),
+              const Icon(
+                Icons.notifications_outlined,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(l10n.navNotifications, style: AppTypography.h3),
@@ -269,7 +275,10 @@ class ClientProfileScreen extends ConsumerWidget {
               const Icon(Icons.language, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text(l10n.settingsLanguageTitle, style: AppTypography.h3),
+                child: Text(
+                  l10n.settingsLanguageTitle,
+                  style: AppTypography.h3,
+                ),
               ),
               const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],

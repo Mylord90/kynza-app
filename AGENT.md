@@ -488,12 +488,26 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 
 ---
 
-## SECTION 17 — DETTE TECHNIQUE
+## SECTION 17 — INTERNATIONALISATION
+
+Système i18n FR/EN actif depuis 2026-07-01. Architecture : `core/localization/`.
+
+Règles absolues :
+- JAMAIS de `Text("texte")` en dur — toujours `context.l10n.xxx`
+- JAMAIS de `AppLocalizations.of(context)!` — le nullable-getter est false ; utiliser `context.l10n`
+- Ajouter une clé : dans `lib/l10n/app_fr.arb` ET `lib/l10n/app_en.arb`, puis `flutter gen-l10n`
+- Les deux ARBs doivent toujours avoir exactement les mêmes clés (vérifié par `test/core/localization/l10n_arb_parity_test.dart`)
+
+Références : `docs/I18N_GUIDE.md`, `docs/LANGUAGE_WORKFLOW.md`, `docs/PHASE_I18N_SUMMARY.md`
+
+---
+
+## SECTION 18 — DETTE TECHNIQUE
 
 À tenir à jour à chaque phase. Ne pas corriger hors-scope sans instruction explicite.
 
 - Pas de `ShellRoute` GoRouter — bottom nav en state local par `Home*Screen`. À corriger avant Play Store (voir mémoire `shellrouter_refactor_backlog`).
-- ~100 screens non migrés vers `AppLocalizations` (infra i18n FR/EN posée en Phase Advanced, adoption partielle).
+- 0 screens non migrés — i18n 100% complet depuis 2026-07-01 (tous les écrans utilisent `context.l10n`, parité ARB FR/EN vérifiée par test automatique).
 - Coordonnées bancaires (`KynzaConstants.bankTransferInstructions`) = placeholders, à remplacer avant toute vraie demande d'upgrade client.
 - Keystore Android debug (pas de signing release configuré).
 - Leapa API non live (compte en attente) — paiements mobile money non fonctionnels en prod.
@@ -506,6 +520,28 @@ confirmed → no_show     (H+15min, déclenché par le Staff)
 - Automation (Phase 2) : 4 des 8 types de trigger ne sont câblés nulle part (`booking.completed`/`booking.cancelled` passent par des `.update()` Flutter directs, pas d'Edge Function à brancher ; `review.submitted` idem ; `loyalty.card_full` n'est délibérément pas branché dans `validate-qr`, qui gère déjà ce cas pour éviter une double notification). 3 des 8 types d'action ne sont pas implémentés (`send_email` — interdit par R14 et aucune infra —, `create_invoice` — schéma `invoices.plan_key` incompatible —, `update_stats` — cible `mv_daily_revenue` disponible depuis Phase 3, reste à câbler). L'éditeur de conditions/actions Flutter est fonctionnel mais basique (champs texte libres, pas d'autocomplétion sur `available_context`, pas de réordonnancement par glisser-déposer).
 - Data Platform (Phase 3) : `mv_daily_revenue` n'a aucun consommateur Flutter direct (les dashboards utilisent toujours `v_salon_kpis`) — `v_mv_daily_revenue` est wired mais pas encore appelée par un écran. `render_template()` RPC branché dans le repository mais pas de "preview du rendu" dans l'UI. Pas de test end-to-end live de `create-backup` (Edge Function déployée, structure vérifiée, test en conditions réelles à faire via l'app). FTS ne retrouve pas les noms de salon sans espace (ex. `'SalonBeauteQA'` n'est pas trouvé par `p_query='salon'` — comportement FTS correct, le fallback ILIKE gère ce cas).
 - Evolution Platform (Phase 4) : `kAppVersionCode = 1` est une constante hardcodée dans `app_version.dart` — doit être mise à jour manuellement en sync avec `pubspec.yaml` à chaque release (une intégration `package_info_plus` l'automatiserait). `kPlayStoreUrl` et `kAppStoreUrl` sont des placeholders jusqu'à la première soumission aux stores. `evaluate_feature_flag()` retourne `false` appelée avec `service_role` (pas de `salon_id` en contexte) — comportement attendu et sûr. `ForceUpdateScreen` et `MaintenanceScreen` ont `PopScope(canPop:false)` sans possibilité de bypass manuel pour l'Owner — prévu, mais à documenter dans les release notes internes.
+- Loader Officiel (KynzaLoader) : `KynzaLoaderVariant.linear` (progression déterministe) documenté dans `docs/LOADER_GUIDE.md` mais non codé — aucun cas d'usage réel dans le projet (pas d'upload avec % connu). Les goldens de `test/golden/kynza_loader_golden_test.dart` ont été générés puis inspectés visuellement une fois lors de cette phase ; toute régénération future (`--update-goldens`) doit repasser par une inspection visuelle avant merge.
+
+---
+
+## SECTION 19 — LOADER OFFICIEL
+
+`KynzaLoader` (`lib/shared/widgets/loader/`) est l'**unique** composant de
+chargement autorisé dans l'application — "Orbite Dorée", dessiné à la main
+via `CustomPainter`/`AnimationController`, sans dépendance externe.
+
+- **Interdiction absolue** de réintroduire un `CircularProgressIndicator`
+  brut ailleurs que dans l'exception documentée (`RefreshIndicator` stylé
+  gold, pull-to-refresh natif — geste non réimplémentable sans régression).
+- Variantes d'usage : `KynzaLoaderInline` (sections/listes/gardes de route),
+  `KynzaLoaderFullscreen` (écran de chargement dédié), `KynzaLoaderOverlay`
+  + `loaderOverlayProvider` (opération critique bloquante, câblé dans
+  `main.dart` au-dessus de `MaterialApp.router`), `KynzaLoaderButton` (état
+  `isLoading` d'un bouton, avec variante `onGoldBackground`).
+- Distinct de `KynzaSkeleton`/`KynzaCardSkeletons` (shimmer) — systèmes
+  complémentaires, jamais fusionnés.
+- Référence complète : `docs/LOADER_GUIDE.md`. Audit préalable au
+  remplacement : `docs/audit/LOADER_AUDIT.md`.
 
 ---
 

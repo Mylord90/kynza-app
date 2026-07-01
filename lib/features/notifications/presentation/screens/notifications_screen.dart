@@ -270,6 +270,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 final canLoadMore = _filter == 'all' && all.length >= _limit;
                 final items = _buildItems(notifications);
                 return RefreshIndicator(
+                  color: AppColors.primary,
+                  backgroundColor: AppColors.surface,
                   onRefresh: () async =>
                       ref.invalidate(notificationsProvider(_limit)),
                   child: ListView.builder(
@@ -283,7 +285,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             child: TextButton(
                               onPressed: () =>
                                   setState(() => _limit += _kPageSize),
-                              child: Text(context.l10n.notificationsLoadMoreButton),
+                              child: Text(
+                                context.l10n.notificationsLoadMoreButton,
+                              ),
                             ),
                           ),
                         );

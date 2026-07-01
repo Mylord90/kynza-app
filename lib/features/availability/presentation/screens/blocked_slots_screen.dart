@@ -75,7 +75,9 @@ class BlockedSlotsScreen extends ConsumerWidget {
                         onPressed: () async {
                           final confirmed = await showKynzaConfirmDialog(
                             context,
-                            title: context.l10n.availabilityBlockedSlotsConfirmTitle,
+                            title: context
+                                .l10n
+                                .availabilityBlockedSlotsConfirmTitle,
                             message: context.l10n.availabilityUnblockMessage,
                             isDestructive: false,
                           );

@@ -9,17 +9,17 @@ class VersionRepositoryImpl implements VersionRepository {
     // RPC requires auth.uid() — skip if not authenticated
     if (SupabaseService.auth.currentUser == null) return null;
 
-    final rows = await SupabaseService.client.rpc(
-      'check_app_version',
-      params: {
-        'p_platform': kAppPlatform,
-        'p_version_code': kAppVersionCode,
-      },
-    ) as List<dynamic>;
+    final rows =
+        await SupabaseService.client.rpc(
+              'check_app_version',
+              params: {
+                'p_platform': kAppPlatform,
+                'p_version_code': kAppVersionCode,
+              },
+            )
+            as List<dynamic>;
 
     if (rows.isEmpty) return null;
-    return AppVersionCheckModel.fromJson(
-      rows.first as Map<String, dynamic>,
-    );
+    return AppVersionCheckModel.fromJson(rows.first as Map<String, dynamic>);
   }
 }

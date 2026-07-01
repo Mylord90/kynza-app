@@ -29,7 +29,10 @@ class KynzaTopServicesList extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(context.l10n.dashboardTopServicesTitle, style: AppTypography.h3),
+            Text(
+              context.l10n.dashboardTopServicesTitle,
+              style: AppTypography.h3,
+            ),
             if (hasMore && onSeeAll != null)
               TextButton(
                 onPressed: onSeeAll,
@@ -64,7 +67,9 @@ class KynzaTopServicesList extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          context.l10n.dashboardServiceRdvCount(service.bookingCount),
+                          context.l10n.dashboardServiceRdvCount(
+                            service.bookingCount,
+                          ),
                           style: AppTypography.bodySmall,
                         ),
                         const SizedBox(height: AppSpacing.xs),

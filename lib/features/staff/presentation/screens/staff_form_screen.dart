@@ -90,7 +90,9 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
     final confirmed = await showKynzaConfirmDialog(
       context,
       title: context.l10n.staffFormRemoveConfirmTitle,
-      message: context.l10n.staffFormRemoveConfirmMessage(widget.staff.displayName),
+      message: context.l10n.staffFormRemoveConfirmMessage(
+        widget.staff.displayName,
+      ),
     );
     if (!confirmed) return;
     try {
@@ -137,13 +139,26 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         children: [
-          KynzaTextField(label: context.l10n.staffFormDisplayNameLabel, controller: _nameCtrl),
+          KynzaTextField(
+            label: context.l10n.staffFormDisplayNameLabel,
+            controller: _nameCtrl,
+          ),
           const SizedBox(height: AppSpacing.lg),
-          KynzaTextField(label: context.l10n.staffFormPhoneLabel, controller: _phoneCtrl),
+          KynzaTextField(
+            label: context.l10n.staffFormPhoneLabel,
+            controller: _phoneCtrl,
+          ),
           const SizedBox(height: AppSpacing.lg),
-          KynzaTextField(label: context.l10n.staffFormBioLabel, controller: _bioCtrl, maxLines: 3),
+          KynzaTextField(
+            label: context.l10n.staffFormBioLabel,
+            controller: _bioCtrl,
+            maxLines: 3,
+          ),
           const SizedBox(height: AppSpacing.xl),
-          Text(context.l10n.staffFormCommissionSectionTitle, style: AppTypography.h3),
+          Text(
+            context.l10n.staffFormCommissionSectionTitle,
+            style: AppTypography.h3,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,

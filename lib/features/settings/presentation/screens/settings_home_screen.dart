@@ -55,8 +55,11 @@ class SettingsHomeScreen extends StatelessWidget {
           _SettingsTile(
             icon: Icons.calendar_today_outlined,
             label: l10n.settingsBookingLabel,
-            onTap: () =>
-                _openCategory(context, l10n.settingsBookingLabel, bookingSettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsBookingLabel,
+              bookingSettingFields,
+            ),
           ),
           _SettingsTile(
             icon: Icons.notifications_outlined,
@@ -70,36 +73,56 @@ class SettingsHomeScreen extends StatelessWidget {
           _SettingsTile(
             icon: Icons.campaign_outlined,
             label: l10n.settingsMarketingLabel,
-            onTap: () =>
-                _openCategory(context, l10n.settingsMarketingLabel, marketingSettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsMarketingLabel,
+              marketingSettingFields,
+            ),
           ),
           _SettingsTile(
             icon: Icons.people_outline,
             label: l10n.settingsTeamLabel,
-            onTap: () => _openCategory(context, l10n.settingsTeamLabel, staffSettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsTeamLabel,
+              staffSettingFields,
+            ),
           ),
           _SettingsTile(
             icon: Icons.card_giftcard_outlined,
             label: l10n.settingsLoyaltyLabel,
-            onTap: () =>
-                _openCategory(context, l10n.settingsLoyaltyLabel, loyaltySettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsLoyaltyLabel,
+              loyaltySettingFields,
+            ),
           ),
           _SettingsTile(
             icon: Icons.star_outline,
             label: l10n.settingsReviewsLabel,
-            onTap: () => _openCategory(context, l10n.settingsReviewsLabel, reviewsSettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsReviewsLabel,
+              reviewsSettingFields,
+            ),
           ),
           _SettingsTile(
             icon: Icons.payments_outlined,
             label: l10n.settingsPaymentsLabel,
-            onTap: () =>
-                _openCategory(context, l10n.settingsPaymentsLabel, paymentSettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsPaymentsLabel,
+              paymentSettingFields,
+            ),
           ),
           _SettingsTile(
             icon: Icons.tune_outlined,
             label: l10n.settingsAdvancedLabel,
-            onTap: () =>
-                _openCategory(context, l10n.settingsAdvancedLabel, advancedSettingFields),
+            onTap: () => _openCategory(
+              context,
+              l10n.settingsAdvancedLabel,
+              advancedSettingFields,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(

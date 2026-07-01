@@ -125,7 +125,10 @@ class ExceptionsCalendarScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          Text(context.l10n.availabilityPublicHolidaysHeading, style: AppTypography.h3),
+          Text(
+            context.l10n.availabilityPublicHolidaysHeading,
+            style: AppTypography.h3,
+          ),
           const SizedBox(height: AppSpacing.sm),
           holidaysAsync.when(
             loading: () => const KynzaSkeleton(height: 100),

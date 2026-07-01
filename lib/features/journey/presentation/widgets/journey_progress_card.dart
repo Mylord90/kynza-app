@@ -125,7 +125,9 @@ class _JourneyCardBody extends ConsumerWidget {
                                   journeyDismissedProvider(salonId).notifier,
                                 )
                                 .dismiss(salonId),
-                            child: Text(context.l10n.journeyProgressCloseButton),
+                            child: Text(
+                              context.l10n.journeyProgressCloseButton,
+                            ),
                           ),
                         ],
                       )
@@ -140,7 +142,9 @@ class _JourneyCardBody extends ConsumerWidget {
                             );
                             context.go(next.route);
                           },
-                          child: Text(context.l10n.journeyProgressContinueButton),
+                          child: Text(
+                            context.l10n.journeyProgressContinueButton,
+                          ),
                         ),
                       ),
                   ],

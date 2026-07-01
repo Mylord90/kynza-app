@@ -53,7 +53,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         children: [
           const KynzaOfflineBanner(),
           Expanded(
-            child: KynzaAuthCard(child: _sent ? _buildSuccess(context) : _buildForm(context)),
+            child: KynzaAuthCard(
+              child: _sent ? _buildSuccess(context) : _buildForm(context),
+            ),
           ),
         ],
       ),

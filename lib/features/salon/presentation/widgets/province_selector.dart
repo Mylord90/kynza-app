@@ -29,7 +29,8 @@ class ProvinceSelector extends StatelessWidget {
           value: province,
           items: BurundiProvinces.provinces,
           itemLabel: (p) => p,
-          validator: (v) => v == null ? l10n.provinceSelectorProvinceRequired : null,
+          validator: (v) =>
+              v == null ? l10n.provinceSelectorProvinceRequired : null,
           onChanged: (value) {
             onProvinceChanged(value);
             onCommuneChanged(null);
@@ -41,7 +42,8 @@ class ProvinceSelector extends StatelessWidget {
           value: communes.contains(commune) ? commune : null,
           items: communes,
           itemLabel: (c) => c,
-          validator: (v) => v == null ? l10n.provinceSelectorCommuneRequired : null,
+          validator: (v) =>
+              v == null ? l10n.provinceSelectorCommuneRequired : null,
           onChanged: onCommuneChanged,
         ),
       ],

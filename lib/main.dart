@@ -19,6 +19,8 @@ import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/auth_boot_gate.dart';
 import 'l10n/app_localizations.dart';
+import 'shared/widgets/loader/providers/loader_overlay_provider.dart';
+import 'shared/widgets/loader/widgets/loader_overlay.dart';
 
 Future<void> main() async {
   runZonedGuarded(_bootstrap, (error, stack) {
@@ -59,22 +61,32 @@ class KynzaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(currentLocaleProvider);
+    final showLoaderOverlay = ref.watch(loaderOverlayProvider);
     return AuthBootGate(
-      child: MaterialApp.router(
-        title: KynzaConstants.appName,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark,
-        routerConfig: router,
-        locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localeResolutionCallback: (deviceLocale, supported) {
-          if (deviceLocale == null) return const Locale('fr');
-          for (final s in supported) {
-            if (s.languageCode == deviceLocale.languageCode) return s;
-          }
-          return const Locale('fr');
-        },
+      child: Stack(
+        children: [
+          MaterialApp.router(
+            title: KynzaConstants.appName,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.dark,
+            routerConfig: router,
+            locale: locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localeResolutionCallback: (deviceLocale, supported) {
+              if (deviceLocale == null) return const Locale('fr');
+              for (final s in supported) {
+                if (s.languageCode == deviceLocale.languageCode) return s;
+              }
+              return const Locale('fr');
+            },
+          ),
+          if (showLoaderOverlay)
+            const Directionality(
+              textDirection: TextDirection.ltr,
+              child: KynzaLoaderOverlay(),
+            ),
+        ],
       ),
     );
   }

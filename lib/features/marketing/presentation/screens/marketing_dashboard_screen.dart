@@ -54,6 +54,8 @@ class MarketingDashboardBody extends ConsumerWidget {
     final programAsync = ref.watch(loyaltyProgramProvider(salonId));
 
     return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: AppColors.surface,
       onRefresh: () async {
         ref.invalidate(clientContactsProvider(salonId));
         ref.invalidate(promotionsProvider(salonId));
@@ -107,7 +109,9 @@ class MarketingDashboardBody extends ConsumerWidget {
                     icon: Icons.person_add_outlined,
                     title: context.l10n.marketingClientsTitle,
                     subtitle: '${contacts.length} contacts',
-                    badgeLabel: contacts.isEmpty ? context.l10n.marketingNewBadge : '$unsentInvites',
+                    badgeLabel: contacts.isEmpty
+                        ? context.l10n.marketingNewBadge
+                        : '$unsentInvites',
                     badgeVariant: contacts.isEmpty
                         ? KynzaBadgeVariant.warning
                         : KynzaBadgeVariant.info,
@@ -171,7 +175,9 @@ class MarketingDashboardBody extends ConsumerWidget {
                       title: context.l10n.settingsLoyaltyLabel,
                       subtitle:
                           '${program?.stampsRequired ?? 10} tampons = récompense',
-                      badgeLabel: program == null ? context.l10n.marketingToConfigureBadge : context.l10n.marketingActiveBadge,
+                      badgeLabel: program == null
+                          ? context.l10n.marketingToConfigureBadge
+                          : context.l10n.marketingActiveBadge,
                       badgeVariant: program == null
                           ? KynzaBadgeVariant.warning
                           : KynzaBadgeVariant.success,
@@ -199,7 +205,10 @@ class MarketingDashboardBody extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          Text(context.l10n.marketingPromotionsActiveFilter, style: AppTypography.h2),
+          Text(
+            context.l10n.marketingPromotionsActiveFilter,
+            style: AppTypography.h2,
+          ),
           const SizedBox(height: AppSpacing.md),
           promotionsAsync.when(
             loading: () => const KynzaSkeleton(height: 80),
@@ -262,7 +271,10 @@ class MarketingDashboardBody extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.xl),
-          Text(context.l10n.marketingRecentContactsTitle, style: AppTypography.h2),
+          Text(
+            context.l10n.marketingRecentContactsTitle,
+            style: AppTypography.h2,
+          ),
           const SizedBox(height: AppSpacing.md),
           contactsAsync.when(
             loading: () => const KynzaSkeleton(height: 64, count: 3),

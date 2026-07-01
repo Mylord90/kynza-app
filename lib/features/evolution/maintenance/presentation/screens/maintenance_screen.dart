@@ -56,13 +56,15 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
-                  window?.title ?? context.l10n.evolutionMaintenanceDefaultTitle,
+                  window?.title ??
+                      context.l10n.evolutionMaintenanceDefaultTitle,
                   style: AppTypography.h1,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  window?.message ?? context.l10n.evolutionMaintenanceDefaultMessage,
+                  window?.message ??
+                      context.l10n.evolutionMaintenanceDefaultMessage,
                   style: AppTypography.body.copyWith(
                     color: AppColors.textSecondary,
                   ),

@@ -48,7 +48,9 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
                 final confirmed = await showKynzaConfirmDialog(
                   context,
                   title: context.l10n.permissionsGroupDeleteConfirmTitle,
-                  message: context.l10n.permissionsGroupDeleteConfirmMessage(group.name),
+                  message: context.l10n.permissionsGroupDeleteConfirmMessage(
+                    group.name,
+                  ),
                   confirmLabel: context.l10n.commonDelete,
                 );
                 if (!confirmed) return;
@@ -69,7 +71,8 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
           const KynzaOfflineBanner(),
           Expanded(
             child: groupsAsync.when(
-              loading: () => const Center(child: KynzaSpinner()),
+              loading: () =>
+                  const KynzaLoaderInline(size: KynzaLoaderSize.large),
               error: (_, __) => KynzaErrorState(
                 message: context.l10n.permissionsGroupDetailLoadError,
                 onRetry: () =>
@@ -90,7 +93,10 @@ class PermissionGroupDetailScreen extends ConsumerWidget {
                   children: [
                     _MembersSection(salonId: salonId, groupId: groupId),
                     const SizedBox(height: AppSpacing.xl),
-                    Text(context.l10n.permissionsPermissionsTitle, style: AppTypography.h2),
+                    Text(
+                      context.l10n.permissionsPermissionsTitle,
+                      style: AppTypography.h2,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     _PermissionsSection(salonId: salonId, groupId: groupId),
                   ],
@@ -261,7 +267,11 @@ class _MembersSection extends ConsumerWidget {
         child: KynzaCard(
           child: Row(
             children: [
-              KynzaAvatar(fullName: member?.displayName ?? context.l10n.permissionsMemberFallback),
+              KynzaAvatar(
+                fullName:
+                    member?.displayName ??
+                    context.l10n.permissionsMemberFallback,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
@@ -308,7 +318,10 @@ class _MembersSection extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(context.l10n.permissionsAddMemberTitle, style: AppTypography.h2),
+            Text(
+              context.l10n.permissionsAddMemberTitle,
+              style: AppTypography.h2,
+            ),
             const SizedBox(height: AppSpacing.md),
             if (candidates.isEmpty)
               Padding(

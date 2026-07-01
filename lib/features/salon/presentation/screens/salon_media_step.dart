@@ -58,7 +58,10 @@ class SalonMediaStep extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        Text(l10n.salonMediaStepGalleryLabel(portfolio.length, 20), style: AppTypography.h3),
+        Text(
+          l10n.salonMediaStepGalleryLabel(portfolio.length, 20),
+          style: AppTypography.h3,
+        ),
         const SizedBox(height: AppSpacing.sm),
         GridView.builder(
           shrinkWrap: true,

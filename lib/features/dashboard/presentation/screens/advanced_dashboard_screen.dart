@@ -37,7 +37,6 @@ import '../widgets/kynza_simple_bar_chart.dart';
 import '../widgets/kynza_top_services_list.dart';
 import '../widgets/kynza_top_staff_row.dart';
 
-
 /// Standalone Scaffold for the `/owner/analytics[...]` routes — wraps the
 /// same [AdvancedDashboardTabs] embedded inline as the owner's bottom-nav
 /// Dashboard tab (home_owner_screen.dart), so there's one tab
@@ -141,6 +140,8 @@ class _OverviewTab extends ConsumerWidget {
     final salon = ref.watch(ownerSalonProvider).valueOrNull;
 
     return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: AppColors.surface,
       onRefresh: () async => ref.invalidate(dashboardSummaryProvider(salonId)),
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -337,7 +338,9 @@ class _QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.spa_outlined,
-            label: hasServices ? context.l10n.dashboardQuickActionServices : context.l10n.dashboardQuickActionAddService,
+            label: hasServices
+                ? context.l10n.dashboardQuickActionServices
+                : context.l10n.dashboardQuickActionAddService,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ServicesListScreen()),
             ),
@@ -347,7 +350,9 @@ class _QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.person_add_outlined,
-            label: hasStaff ? context.l10n.dashboardQuickActionTeam : context.l10n.dashboardQuickActionInviteStaff,
+            label: hasStaff
+                ? context.l10n.dashboardQuickActionTeam
+                : context.l10n.dashboardQuickActionInviteStaff,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => StaffInviteScreen(salonId: salonId),
@@ -509,7 +514,9 @@ class _ClientsAnalyticsTab extends ConsumerWidget {
                                     style: AppTypography.bodySmall,
                                   ),
                                   Text(
-                                    context.l10n.dashboardClientVisitCount(clients[i].visitCount),
+                                    context.l10n.dashboardClientVisitCount(
+                                      clients[i].visitCount,
+                                    ),
                                     style: AppTypography.bodySmall,
                                   ),
                                 ],
@@ -587,7 +594,9 @@ class _ChurnRiskSection extends StatelessWidget {
                         children: [
                           Text(risk.clientName, style: AppTypography.body),
                           Text(
-                            context.l10n.dashboardChurnAbsentDays(risk.daysSinceLastVisit),
+                            context.l10n.dashboardChurnAbsentDays(
+                              risk.daysSinceLastVisit,
+                            ),
                             style: AppTypography.bodySmall,
                           ),
                         ],
@@ -899,8 +908,9 @@ class _ForecastTab extends ConsumerWidget {
                   children: [
                     _InsightChip(label: _trendLabel(context, actuals)),
                     weekdayAsync.maybeWhen(
-                      data: (counts) =>
-                          _InsightChip(label: _bestWeekdayLabel(context, counts)),
+                      data: (counts) => _InsightChip(
+                        label: _bestWeekdayLabel(context, counts),
+                      ),
                       orElse: () => const SizedBox.shrink(),
                     ),
                     TextButton.icon(
@@ -941,7 +951,9 @@ class _ForecastTab extends ConsumerWidget {
                 border: Border.all(color: AppColors.primary),
               ),
               child: Text(
-                context.l10n.dashboardOccupancyTip(summary.occupancyRate.round()),
+                context.l10n.dashboardOccupancyTip(
+                  summary.occupancyRate.round(),
+                ),
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.primary,
                 ),
@@ -959,7 +971,9 @@ class _ForecastTab extends ConsumerWidget {
     if (points.length < 2) return l10n.dashboardTrendStable;
     final first = points.first.actualBif as int;
     final last = points.last.actualBif as int;
-    if (first == 0) return last > 0 ? l10n.dashboardTrendGrowing : l10n.dashboardTrendStable;
+    if (first == 0) {
+      return last > 0 ? l10n.dashboardTrendGrowing : l10n.dashboardTrendStable;
+    }
     final change = (last - first) / first;
     if (change > 0.05) return l10n.dashboardTrendGrowing;
     if (change < -0.05) return l10n.dashboardTrendDecreasing;
@@ -968,7 +982,9 @@ class _ForecastTab extends ConsumerWidget {
 
   String _bestWeekdayLabel(BuildContext context, Map<int, int> counts) {
     final l10n = context.l10n;
-    if (counts.values.every((v) => v == 0)) return l10n.dashboardBestWeekdayNone;
+    if (counts.values.every((v) => v == 0)) {
+      return l10n.dashboardBestWeekdayNone;
+    }
     final best = counts.entries.reduce((a, b) => b.value > a.value ? b : a);
     final weekdays = [
       l10n.weekdayMondayShort,

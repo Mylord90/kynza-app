@@ -498,10 +498,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       _fadeRoute(
         RouteNames.ownerBackup,
-        (context, state) => const _RoleGuard(
-          role: UserRole.owner,
-          child: _OwnerBackupLoader(),
-        ),
+        (context, state) =>
+            const _RoleGuard(role: UserRole.owner, child: _OwnerBackupLoader()),
       ),
       _fadeRoute(
         RouteNames.ownerTemplates,
@@ -527,10 +525,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       _fadeRoute(
         RouteNames.ownerAbout,
-        (context, state) => const _RoleGuard(
-          role: UserRole.owner,
-          child: AboutScreen(),
-        ),
+        (context, state) =>
+            const _RoleGuard(role: UserRole.owner, child: AboutScreen()),
       ),
       _fadeRoute(
         RouteNames.ownerLanguage,
@@ -640,10 +636,7 @@ GoRoute _fadeRoute(
 /// re-evaluates whenever auth state, maintenance status, or version check changes.
 class _AuthRefreshNotifier extends ChangeNotifier {
   _AuthRefreshNotifier(Ref ref) {
-    _authSub = ref.listen(
-      authNotifierProvider,
-      (_, __) => notifyListeners(),
-    );
+    _authSub = ref.listen(authNotifierProvider, (_, __) => notifyListeners());
     _maintenanceSub = ref.listen(
       maintenanceStatusProvider,
       (_, __) => notifyListeners(),
@@ -656,9 +649,9 @@ class _AuthRefreshNotifier extends ChangeNotifier {
 
   late final ProviderSubscription<AsyncValue<Object?>> _authSub;
   late final ProviderSubscription<AsyncValue<MaintenanceWindowModel?>>
-      _maintenanceSub;
+  _maintenanceSub;
   late final ProviderSubscription<AsyncValue<AppVersionCheckModel?>>
-      _versionSub;
+  _versionSub;
 
   @override
   void dispose() {
@@ -724,7 +717,7 @@ class _PaymentDeepLinkLoader extends ConsumerWidget {
     return bookingAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       ),
       error: (_, __) => Scaffold(
         backgroundColor: AppColors.background,
@@ -815,7 +808,7 @@ class _OwnerStaffHoursLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     final staff = ref.watch(salonStaffProvider(salon.id)).valueOrNull;
@@ -841,7 +834,7 @@ class _OwnerBreaksPickerLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return StaffPickerScreen(
@@ -869,7 +862,7 @@ class _OwnerExceptionsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return ExceptionsCalendarScreen(salonId: salon.id);
@@ -888,7 +881,7 @@ class _StaffOwnHoursLoader extends ConsumerWidget {
     return staffAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       ),
       error: (_, __) => Scaffold(
         backgroundColor: AppColors.background,
@@ -925,7 +918,7 @@ class _OwnerMarketingLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return MarketingDashboardScreen(salonId: salon.id);
@@ -941,7 +934,7 @@ class _OwnerInviteClientsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return InviteClientsScreen(salonId: salon.id);
@@ -957,7 +950,7 @@ class _OwnerPromotionsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return PromotionCenterScreen(salonId: salon.id);
@@ -973,7 +966,7 @@ class _OwnerLoyaltySetupLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return LoyaltySetupScreen(salonId: salon.id);
@@ -989,7 +982,7 @@ class _OwnerShareLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return SocialShareCenterScreen(salonId: salon.id);
@@ -1005,7 +998,7 @@ class _OwnerReviewsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return OwnerReviewsScreen(salonId: salon.id);
@@ -1023,7 +1016,7 @@ class _OwnerAnalyticsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return AdvancedDashboardScreen(
@@ -1042,7 +1035,7 @@ class _OwnerAuditLogLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return AuditLogScreen(salonId: salon.id);
@@ -1058,7 +1051,7 @@ class _OwnerPermissionGroupsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return PermissionGroupsScreen(salonId: salon.id);
@@ -1076,7 +1069,7 @@ class _OwnerPermissionGroupDetailLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return PermissionGroupDetailScreen(salonId: salon.id, groupId: groupId);
@@ -1092,7 +1085,7 @@ class _OwnerSettingsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return SettingsHomeScreen(salonId: salon.id);
@@ -1108,7 +1101,7 @@ class _OwnerAutomationLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return AutomationListScreen(salonId: salon.id);
@@ -1124,7 +1117,7 @@ class _OwnerBackupLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return BackupScreen(salonId: salon.id);
@@ -1140,7 +1133,7 @@ class _OwnerFeatureFlagsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return FeatureFlagScreen(salonId: salon.id);
@@ -1156,7 +1149,7 @@ class _OwnerTemplatesLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return TemplateListScreen(salonId: salon.id);
@@ -1174,7 +1167,7 @@ class _OwnerTeamDetailLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     final staff = ref.watch(salonStaffProvider(salon.id)).valueOrNull;
@@ -1203,7 +1196,7 @@ class _OwnerTeamCommissionsLoader extends ConsumerWidget {
     if (salon == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       );
     }
     return CommissionScreen(salonId: salon.id);
@@ -1219,7 +1212,7 @@ class _StaffPerformanceLoader extends ConsumerWidget {
     return staffAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: KynzaSpinner()),
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
       ),
       error: (_, __) => Scaffold(
         backgroundColor: AppColors.background,

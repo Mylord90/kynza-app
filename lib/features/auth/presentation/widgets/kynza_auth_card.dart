@@ -54,11 +54,7 @@ class _KynzaLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          AppBranding.logoFull,
-          height: 64,
-          fit: BoxFit.contain,
-        ),
+        Image.asset(AppBranding.logoFull, height: 64, fit: BoxFit.contain),
         const SizedBox(height: AppSpacing.sm),
         Text(
           'KYNZA',

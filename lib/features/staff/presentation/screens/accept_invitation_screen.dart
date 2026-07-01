@@ -103,7 +103,7 @@ class _AcceptInvitationScreenState extends ConsumerState<AcceptInvitationScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: switch (_status) {
-        _InvitationStatus.verifying => KynzaLoadingOverlay(
+        _InvitationStatus.verifying => KynzaLoaderOverlay(
           message: context.l10n.staffAcceptInvitationVerifying,
         ),
         _InvitationStatus.error => KynzaErrorState(

@@ -80,6 +80,8 @@ class StaffDetailScreen extends ConsumerWidget {
           const KynzaOfflineBanner(),
           Expanded(
             child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
               onRefresh: () async {
                 ref.invalidate(_staffMonthlyBookingsProvider(staff.id!));
                 ref.invalidate(_staffRecentBookingsProvider(staff.id!));
@@ -113,7 +115,10 @@ class StaffDetailScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  Text(context.l10n.staffDetailPerformanceMonth, style: AppTypography.h3),
+                  Text(
+                    context.l10n.staffDetailPerformanceMonth,
+                    style: AppTypography.h3,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   monthlyAsync.when(
                     loading: () => const KynzaSkeleton(height: 180),
@@ -137,7 +142,10 @@ class StaffDetailScreen extends ConsumerWidget {
                   ),
                   if (isOwner) ...[
                     const SizedBox(height: AppSpacing.xl),
-                    Text(context.l10n.staffDetailCommissionsMonth, style: AppTypography.h3),
+                    Text(
+                      context.l10n.staffDetailCommissionsMonth,
+                      style: AppTypography.h3,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     commissionsAsync!.when(
                       loading: () => const KynzaSkeleton(height: 56),
@@ -153,7 +161,8 @@ class StaffDetailScreen extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: _StatTile(
-                                label: context.l10n.staffDetailCommissionsEarned,
+                                label:
+                                    context.l10n.staffDetailCommissionsEarned,
                                 amountBif: paid + pending,
                               ),
                             ),
@@ -167,7 +176,8 @@ class StaffDetailScreen extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: _StatTile(
-                                label: context.l10n.staffDetailCommissionsPending,
+                                label:
+                                    context.l10n.staffDetailCommissionsPending,
                                 amountBif: pending,
                               ),
                             ),
@@ -177,7 +187,10 @@ class StaffDetailScreen extends ConsumerWidget {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.xl),
-                  Text(context.l10n.staffDetailServicesTitle, style: AppTypography.h3),
+                  Text(
+                    context.l10n.staffDetailServicesTitle,
+                    style: AppTypography.h3,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   staff.specialties.isEmpty
                       ? Text(
@@ -198,17 +211,29 @@ class StaffDetailScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule_outlined, color: AppColors.primary),
+                        const Icon(
+                          Icons.schedule_outlined,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
-                          child: Text(context.l10n.staffDetailScheduleLabel, style: AppTypography.h3),
+                          child: Text(
+                            context.l10n.staffDetailScheduleLabel,
+                            style: AppTypography.h3,
+                          ),
                         ),
-                        const Icon(Icons.chevron_right, color: AppColors.textMuted),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.textMuted,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  Text(context.l10n.staffDetailLastBookings, style: AppTypography.h3),
+                  Text(
+                    context.l10n.staffDetailLastBookings,
+                    style: AppTypography.h3,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   recentAsync.when(
                     loading: () => const KynzaSkeleton(height: 48, count: 3),
@@ -283,7 +308,9 @@ class StaffDetailScreen extends ConsumerWidget {
                         final confirmed = await showKynzaConfirmDialog(
                           context,
                           title: context.l10n.staffDetailRemoveConfirmTitle,
-                          message: context.l10n.staffDetailRemoveConfirmMessage(staff.displayName),
+                          message: context.l10n.staffDetailRemoveConfirmMessage(
+                            staff.displayName,
+                          ),
                         );
                         if (!confirmed) return;
                         try {

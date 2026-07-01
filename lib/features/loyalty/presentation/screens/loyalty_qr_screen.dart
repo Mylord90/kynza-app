@@ -118,7 +118,7 @@ class _LoyaltyQrScreenState extends ConsumerState<LoyaltyQrScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: _loading
-                    ? const KynzaSpinner()
+                    ? const KynzaLoader(size: KynzaLoaderSize.medium)
                     : _error != null
                     ? KynzaErrorState(message: _error!, onRetry: _generate)
                     : Column(

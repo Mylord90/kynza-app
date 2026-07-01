@@ -16,8 +16,9 @@ final templatesProvider = FutureProvider.autoDispose
           .getTemplates(query.salonId, type: query.type),
     );
 
-final templateNotifierProvider =
-    AsyncNotifierProvider<TemplateNotifier, void>(TemplateNotifier.new);
+final templateNotifierProvider = AsyncNotifierProvider<TemplateNotifier, void>(
+  TemplateNotifier.new,
+);
 
 class TemplateNotifier extends AsyncNotifier<void> {
   @override
@@ -30,7 +31,9 @@ class TemplateNotifier extends AsyncNotifier<void> {
     required String body,
     bool isDefault = false,
   }) async {
-    final template = await ref.read(templateRepositoryProvider).createTemplate(
+    final template = await ref
+        .read(templateRepositoryProvider)
+        .createTemplate(
           salonId: salonId,
           type: type,
           name: name,
@@ -50,12 +53,9 @@ class TemplateNotifier extends AsyncNotifier<void> {
     required String body,
     bool? isDefault,
   }) async {
-    final template = await ref.read(templateRepositoryProvider).updateTemplate(
-          id: id,
-          name: name,
-          body: body,
-          isDefault: isDefault,
-        );
+    final template = await ref
+        .read(templateRepositoryProvider)
+        .updateTemplate(id: id, name: name, body: body, isDefault: isDefault);
     ref.invalidate(templatesProvider((salonId: salonId, type: null)));
     ref.invalidate(templatesProvider((salonId: salonId, type: type)));
     return template;

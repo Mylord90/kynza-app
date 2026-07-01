@@ -76,8 +76,14 @@ class _ClientBookingsScreenState extends ConsumerState<ClientBookingsScreen> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: SegmentedButton<bool>(
             segments: [
-              ButtonSegment(value: true, label: Text(context.l10n.bookingUpcomingTab)),
-              ButtonSegment(value: false, label: Text(context.l10n.bookingPastTab)),
+              ButtonSegment(
+                value: true,
+                label: Text(context.l10n.bookingUpcomingTab),
+              ),
+              ButtonSegment(
+                value: false,
+                label: Text(context.l10n.bookingPastTab),
+              ),
             ],
             selected: {_showUpcoming},
             onSelectionChanged: (s) => setState(() => _showUpcoming = s.first),
@@ -228,9 +234,15 @@ class _ReceiptSheet extends ConsumerWidget {
         children: [
           Text(context.l10n.bookingReceiptTitle, style: AppTypography.h2),
           const SizedBox(height: AppSpacing.lg),
-          _ReceiptRow(label: context.l10n.bookingReceiptSalon, value: salonName),
+          _ReceiptRow(
+            label: context.l10n.bookingReceiptSalon,
+            value: salonName,
+          ),
           if (serviceName != null)
-            _ReceiptRow(label: context.l10n.bookingReceiptService, value: serviceName!),
+            _ReceiptRow(
+              label: context.l10n.bookingReceiptService,
+              value: serviceName!,
+            ),
           _ReceiptRow(
             label: context.l10n.bookingReceiptDate,
             value:
@@ -242,7 +254,10 @@ class _ReceiptSheet extends ConsumerWidget {
                 '${booking.startTime.hour.toString().padLeft(2, '0')}:${booking.startTime.minute.toString().padLeft(2, '0')}',
           ),
           if (booking.paymentMethod != null)
-            _ReceiptRow(label: context.l10n.bookingPaymentMethodLabel, value: booking.paymentMethod!),
+            _ReceiptRow(
+              label: context.l10n.bookingPaymentMethodLabel,
+              value: booking.paymentMethod!,
+            ),
           const Divider(color: AppColors.border),
           KynzaAmountWidget(amountBif: booking.amountBif),
           const SizedBox(height: AppSpacing.xl),

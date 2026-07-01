@@ -30,7 +30,9 @@ class LanguageSettingsScreen extends StatelessWidget {
             ),
             child: Text(
               l10n.settingsLanguageSubtitle,
-              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           Padding(

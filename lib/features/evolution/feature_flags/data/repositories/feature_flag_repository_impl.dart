@@ -6,9 +6,9 @@ import '../../domain/repositories/feature_flag_repository.dart';
 class FeatureFlagRepositoryImpl implements FeatureFlagRepository {
   @override
   Future<List<FeatureFlagModel>> getFlags() async {
-    final rows = await SupabaseService.from('feature_flags')
-        .select()
-        .order('name');
+    final rows = await SupabaseService.from(
+      'feature_flags',
+    ).select().order('name');
     return rows.map((r) => FeatureFlagModel.fromJson(r)).toList();
   }
 
@@ -23,13 +23,10 @@ class FeatureFlagRepositoryImpl implements FeatureFlagRepository {
 
   @override
   Future<List<SalonFeatureOverrideModel>> getOverrides(String salonId) async {
-    final rows = await SupabaseService.from('salon_feature_overrides')
-        .select()
-        .eq('salon_id', salonId)
-        .order('flag_key');
-    return rows
-        .map((r) => SalonFeatureOverrideModel.fromJson(r))
-        .toList();
+    final rows = await SupabaseService.from(
+      'salon_feature_overrides',
+    ).select().eq('salon_id', salonId).order('flag_key');
+    return rows.map((r) => SalonFeatureOverrideModel.fromJson(r)).toList();
   }
 
   @override
@@ -38,14 +35,11 @@ class FeatureFlagRepositoryImpl implements FeatureFlagRepository {
     required String flagKey,
     required bool isEnabled,
   }) async {
-    await SupabaseService.from('salon_feature_overrides').upsert(
-      {
-        'salon_id': salonId,
-        'flag_key': flagKey,
-        'is_enabled': isEnabled,
-      },
-      onConflict: 'salon_id,flag_key',
-    );
+    await SupabaseService.from('salon_feature_overrides').upsert({
+      'salon_id': salonId,
+      'flag_key': flagKey,
+      'is_enabled': isEnabled,
+    }, onConflict: 'salon_id,flag_key');
   }
 
   @override
@@ -53,9 +47,8 @@ class FeatureFlagRepositoryImpl implements FeatureFlagRepository {
     required String salonId,
     required String flagKey,
   }) async {
-    await SupabaseService.from('salon_feature_overrides')
-        .delete()
-        .eq('salon_id', salonId)
-        .eq('flag_key', flagKey);
+    await SupabaseService.from(
+      'salon_feature_overrides',
+    ).delete().eq('salon_id', salonId).eq('flag_key', flagKey);
   }
 }

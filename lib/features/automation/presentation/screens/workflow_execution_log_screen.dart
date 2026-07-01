@@ -34,7 +34,9 @@ class WorkflowExecutionLogScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(workflowName ?? context.l10n.automationLogHistoryTitle)),
+      appBar: AppBar(
+        title: Text(workflowName ?? context.l10n.automationLogHistoryTitle),
+      ),
       body: Column(
         children: [
           const KynzaOfflineBanner(),

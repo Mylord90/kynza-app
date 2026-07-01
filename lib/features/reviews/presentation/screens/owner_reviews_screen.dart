@@ -111,7 +111,9 @@ class _OwnerReviewsScreenState extends ConsumerState<OwnerReviewsScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : context.l10n.reviewsFlagError,
+          message: e is AppException
+              ? e.message
+              : context.l10n.reviewsFlagError,
           level: ToastLevel.error,
         );
       }

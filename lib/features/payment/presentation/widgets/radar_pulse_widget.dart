@@ -48,7 +48,10 @@ class _RadarPulseWidgetState extends State<RadarPulseWidget>
               alignment: Alignment.center,
               children: [
                 for (final delay in [0.0, 0.33, 0.66]) _ring(delay),
-                const KynzaSpinner(size: 32),
+                const KynzaLoader(
+                  size: KynzaLoaderSize.medium,
+                  variant: KynzaLoaderVariant.pulse,
+                ),
               ],
             ),
           ),

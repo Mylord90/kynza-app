@@ -10,10 +10,9 @@ class TemplateRepositoryImpl implements TemplateRepository {
     String? type,
   }) async {
     try {
-      var q = SupabaseService.from('document_templates')
-          .select()
-          .eq('salon_id', salonId)
-          .isFilter('deleted_at', null);
+      var q = SupabaseService.from(
+        'document_templates',
+      ).select().eq('salon_id', salonId).isFilter('deleted_at', null);
       if (type != null) q = q.eq('type', type);
       final rows = await q.order('type').order('is_default', ascending: false);
       return rows.map(DocumentTemplateModel.fromJson).toList();
@@ -57,11 +56,9 @@ class TemplateRepositoryImpl implements TemplateRepository {
     try {
       final updates = <String, dynamic>{'name': name, 'body': body};
       if (isDefault != null) updates['is_default'] = isDefault;
-      final row = await SupabaseService.from('document_templates')
-          .update(updates)
-          .eq('id', id)
-          .select()
-          .single();
+      final row = await SupabaseService.from(
+        'document_templates',
+      ).update(updates).eq('id', id).select().single();
       return DocumentTemplateModel.fromJson(row);
     } catch (_) {
       throw const AppException('Impossible de mettre à jour le modèle.');
@@ -71,9 +68,9 @@ class TemplateRepositoryImpl implements TemplateRepository {
   @override
   Future<void> deleteTemplate(String id) async {
     try {
-      await SupabaseService.from('document_templates')
-          .update({'deleted_at': DateTime.now().toIso8601String()})
-          .eq('id', id);
+      await SupabaseService.from(
+        'document_templates',
+      ).update({'deleted_at': DateTime.now().toIso8601String()}).eq('id', id);
     } catch (_) {
       throw const AppException('Impossible de supprimer le modèle.');
     }
@@ -87,10 +84,7 @@ class TemplateRepositoryImpl implements TemplateRepository {
     try {
       final result = await SupabaseService.client.rpc(
         'render_template',
-        params: {
-          'p_template_id': templateId,
-          'p_variables': variables,
-        },
+        params: {'p_template_id': templateId, 'p_variables': variables},
       );
       return result as String?;
     } catch (_) {

@@ -55,7 +55,10 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
     _pendingTimers[contact.id!] = timer;
 
     final l10n = context.l10n;
-    showKynzaToast(context, message: l10n.marketingClientsDeleteSuccess(contact.fullName));
+    showKynzaToast(
+      context,
+      message: l10n.marketingClientsDeleteSuccess(contact.fullName),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 4),
@@ -89,7 +92,9 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : context.l10n.marketingClientsImportError,
+          message: e is AppException
+              ? e.message
+              : context.l10n.marketingClientsImportError,
           level: ToastLevel.error,
         );
       }
@@ -128,8 +133,14 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: SegmentedButton<bool>(
               segments: [
-                ButtonSegment(value: false, label: Text(context.l10n.marketingClientsContactsTab)),
-                ButtonSegment(value: true, label: Text(context.l10n.marketingClientsInvitationsTab)),
+                ButtonSegment(
+                  value: false,
+                  label: Text(context.l10n.marketingClientsContactsTab),
+                ),
+                ButtonSegment(
+                  value: true,
+                  label: Text(context.l10n.marketingClientsInvitationsTab),
+                ),
               ],
               selected: {_showInvitations},
               onSelectionChanged: (s) =>
@@ -279,8 +290,10 @@ class _ContactsList extends StatelessWidget {
                               children: [
                                 KynzaBadge(
                                   label: switch (contact.source) {
-                                    'booking' => context.l10n.contactSourceBooking,
-                                    'referral' => context.l10n.contactSourceReferral,
+                                    'booking' =>
+                                      context.l10n.contactSourceBooking,
+                                    'referral' =>
+                                      context.l10n.contactSourceReferral,
                                     _ => context.l10n.contactSourceManual,
                                   },
                                   variant: switch (contact.source) {
@@ -292,7 +305,9 @@ class _ContactsList extends StatelessWidget {
                                 if (contact.isKynzaUser) ...[
                                   const SizedBox(width: AppSpacing.xs),
                                   KynzaBadge(
-                                    label: context.l10n.marketingClientsOnKynzaBadge,
+                                    label: context
+                                        .l10n
+                                        .marketingClientsOnKynzaBadge,
                                     variant: KynzaBadgeVariant.success,
                                   ),
                                 ],
@@ -350,14 +365,18 @@ class _InvitationsList extends StatelessWidget {
                     children: [
                       Text(contact.fullName, style: AppTypography.h3),
                       Text(
-                        context.l10n.marketingInviteSentOnDate(_formatDate(contact.inviteSentAt!)),
+                        context.l10n.marketingInviteSentOnDate(
+                          _formatDate(contact.inviteSentAt!),
+                        ),
                         style: AppTypography.bodySmall,
                       ),
                     ],
                   ),
                 ),
                 KynzaBadge(
-                  label: accepted ? context.l10n.marketingInviteAccepted : context.l10n.marketingInviteSent,
+                  label: accepted
+                      ? context.l10n.marketingInviteAccepted
+                      : context.l10n.marketingInviteSent,
                   variant: accepted
                       ? KynzaBadgeVariant.success
                       : KynzaBadgeVariant.warning,
@@ -421,7 +440,9 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : context.l10n.marketingContactAddError,
+          message: e is AppException
+              ? e.message
+              : context.l10n.marketingContactAddError,
           level: ToastLevel.error,
         );
       }
@@ -445,12 +466,16 @@ class _AddContactSheetState extends ConsumerState<_AddContactSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(context.l10n.marketingAddContactTitle, style: AppTypography.h2),
+            Text(
+              context.l10n.marketingAddContactTitle,
+              style: AppTypography.h2,
+            ),
             const SizedBox(height: AppSpacing.lg),
             KynzaTextField(
               label: context.l10n.marketingFullNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, context.l10n.marketingFullNameLabel),
+              validator: (v) =>
+                  Validators.required(v, context.l10n.marketingFullNameLabel),
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaPhoneField(controller: _phoneCtrl),

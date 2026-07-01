@@ -92,7 +92,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (_exchanging) {
       return const Scaffold(
         backgroundColor: AppColors.background,
-        body: KynzaLoadingOverlay(),
+        body: KynzaLoaderOverlay(),
       );
     }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/data/datasources/auth_supabase_datasource.dart';
-import '../../shared/widgets/kynza_loading_overlay.dart';
+import '../../shared/widgets/loader/widgets/loader_overlay.dart';
 import '../constants/app_colors.dart';
 import '../models/user_profile.dart';
 import '../providers/app_providers.dart';
@@ -86,7 +86,7 @@ class _AuthCallbackScreenState extends ConsumerState<AuthCallbackScreen> {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: AppColors.background,
-      body: KynzaLoadingOverlay(message: 'Connexion en cours...'),
+      body: KynzaLoaderOverlay(message: 'Connexion en cours...'),
     );
   }
 }

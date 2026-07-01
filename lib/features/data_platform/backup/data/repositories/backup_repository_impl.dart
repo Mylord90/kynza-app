@@ -36,10 +36,9 @@ class BackupRepositoryImpl implements BackupRepository {
       }
       final body = res.data as Map<String, dynamic>;
       // Re-fetch the full job row so we have all fields
-      final rows = await SupabaseService.from('backup_jobs')
-          .select()
-          .eq('id', body['job_id'] as String)
-          .single();
+      final rows = await SupabaseService.from(
+        'backup_jobs',
+      ).select().eq('id', body['job_id'] as String).single();
       return BackupJobModel.fromJson(rows);
     } on AppException {
       rethrow;

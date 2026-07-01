@@ -29,11 +29,7 @@ String _typeLabel(AppLocalizations l10n, String type) => switch (type) {
 };
 
 class TemplateEditorScreen extends ConsumerStatefulWidget {
-  const TemplateEditorScreen({
-    super.key,
-    required this.salonId,
-    this.existing,
-  });
+  const TemplateEditorScreen({super.key, required this.salonId, this.existing});
 
   final String salonId;
   final DocumentTemplateModel? existing;
@@ -150,8 +146,10 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.dataPlatformTemplateVariablesTitle,
-                    style: AppTypography.label),
+                Text(
+                  l10n.dataPlatformTemplateVariablesTitle,
+                  style: AppTypography.label,
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   hints,
@@ -179,8 +177,10 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                 onChanged: (v) => setState(() => _isDefault = v),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(l10n.dataPlatformTemplateIsDefaultLabel,
-                  style: AppTypography.body),
+              Text(
+                l10n.dataPlatformTemplateIsDefaultLabel,
+                style: AppTypography.body,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),

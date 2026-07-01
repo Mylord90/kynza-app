@@ -8,16 +8,15 @@ final featureFlagRepositoryProvider = Provider<FeatureFlagRepository>(
   (ref) => FeatureFlagRepositoryImpl(),
 );
 
-final featureFlagsProvider =
-    FutureProvider<List<FeatureFlagModel>>((ref) {
+final featureFlagsProvider = FutureProvider<List<FeatureFlagModel>>((ref) {
   return ref.read(featureFlagRepositoryProvider).getFlags();
 });
 
 final salonFeatureOverridesProvider =
     FutureProvider.family<List<SalonFeatureOverrideModel>, String>(
-  (ref, salonId) =>
-      ref.read(featureFlagRepositoryProvider).getOverrides(salonId),
-);
+      (ref, salonId) =>
+          ref.read(featureFlagRepositoryProvider).getOverrides(salonId),
+    );
 
 class FeatureFlagNotifier extends AsyncNotifier<void> {
   @override
@@ -28,11 +27,9 @@ class FeatureFlagNotifier extends AsyncNotifier<void> {
     required String flagKey,
     required bool isEnabled,
   }) async {
-    await ref.read(featureFlagRepositoryProvider).setOverride(
-          salonId: salonId,
-          flagKey: flagKey,
-          isEnabled: isEnabled,
-        );
+    await ref
+        .read(featureFlagRepositoryProvider)
+        .setOverride(salonId: salonId, flagKey: flagKey, isEnabled: isEnabled);
     ref.invalidate(salonFeatureOverridesProvider(salonId));
   }
 
@@ -40,10 +37,9 @@ class FeatureFlagNotifier extends AsyncNotifier<void> {
     required String salonId,
     required String flagKey,
   }) async {
-    await ref.read(featureFlagRepositoryProvider).removeOverride(
-          salonId: salonId,
-          flagKey: flagKey,
-        );
+    await ref
+        .read(featureFlagRepositoryProvider)
+        .removeOverride(salonId: salonId, flagKey: flagKey);
     ref.invalidate(salonFeatureOverridesProvider(salonId));
   }
 }

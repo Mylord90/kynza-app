@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -33,6 +34,8 @@ class SalonReviewsTab extends ConsumerWidget {
     final namesAsync = ref.watch(_reviewerNamesProvider(salonId));
 
     return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: AppColors.surface,
       onRefresh: () async {
         ref.invalidate(salonRatingProvider(salonId));
         ref.invalidate(salonReviewsProvider(salonId));

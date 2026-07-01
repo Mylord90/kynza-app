@@ -80,9 +80,7 @@ class _LoyaltyScanScreenState extends State<LoyaltyScanScreen> {
       );
     } catch (_) {
       if (!mounted) return;
-      _showResult(
-        _ScanResult(_ScanResultKind.error, connectionMsg),
-      );
+      _showResult(_ScanResult(_ScanResultKind.error, connectionMsg));
     }
   }
 

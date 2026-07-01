@@ -106,7 +106,7 @@ class _ReferralClaimScreenState extends ConsumerState<ReferralClaimScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: switch (_status) {
-        _ClaimStatus.verifying => KynzaLoadingOverlay(
+        _ClaimStatus.verifying => KynzaLoaderOverlay(
           message: context.l10n.referralClaimVerifying,
         ),
         _ClaimStatus.error => KynzaErrorState(
@@ -141,7 +141,9 @@ class _ReferralClaimScreenState extends ConsumerState<ReferralClaimScreen>
                   Text(
                     _salonName == null
                         ? context.l10n.referralStampGranted
-                        : context.l10n.referralStampGrantedWithSalon(_salonName!),
+                        : context.l10n.referralStampGrantedWithSalon(
+                            _salonName!,
+                          ),
                     style: AppTypography.body,
                     textAlign: TextAlign.center,
                   ),

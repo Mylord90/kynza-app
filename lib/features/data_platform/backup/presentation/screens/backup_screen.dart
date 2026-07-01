@@ -129,8 +129,10 @@ class _BackupInfoCard extends StatelessWidget {
               children: [
                 const Icon(Icons.shield_outlined, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.sm),
-                Text(l10n.dataPlatformBackupSecureTitle,
-                    style: AppTypography.h3),
+                Text(
+                  l10n.dataPlatformBackupSecureTitle,
+                  style: AppTypography.h3,
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -182,15 +184,14 @@ class _BackupJobTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _formatDate(job.createdAt),
-                    style: AppTypography.body,
-                  ),
+                  Text(_formatDate(job.createdAt), style: AppTypography.body),
                   if (job.recordsExported != null || sizeLabel != null)
                     Text(
                       [
                         if (job.recordsExported != null)
-                          context.l10n.dataPlatformBackupRecordsExported(job.recordsExported!),
+                          context.l10n.dataPlatformBackupRecordsExported(
+                            job.recordsExported!,
+                          ),
                         if (sizeLabel != null) sizeLabel,
                       ].join(' · '),
                       style: AppTypography.bodySmall.copyWith(

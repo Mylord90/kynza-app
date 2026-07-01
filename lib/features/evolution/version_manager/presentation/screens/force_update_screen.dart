@@ -8,6 +8,7 @@ import '../../../../../core/constants/app_typography.dart';
 import '../../../../../core/constants/app_version.dart';
 import '../../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../../core/models/app_version_check_model.dart';
+import '../../../../../shared/widgets/loader/widgets/loader_button.dart';
 import '../../application/providers/version_providers.dart';
 
 class ForceUpdateScreen extends ConsumerWidget {
@@ -41,7 +42,8 @@ class ForceUpdateScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  check?.message ?? context.l10n.evolutionForceUpdateDefaultMessage,
+                  check?.message ??
+                      context.l10n.evolutionForceUpdateDefaultMessage,
                   style: AppTypography.body.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -108,9 +110,7 @@ class _UpdateButtonState extends State<_UpdateButton> {
   Future<void> _openStore() async {
     setState(() => _launching = true);
     try {
-      final url = Uri.parse(
-        Platform.isAndroid ? kPlayStoreUrl : kAppStoreUrl,
-      );
+      final url = Uri.parse(Platform.isAndroid ? kPlayStoreUrl : kAppStoreUrl);
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } finally {
       if (mounted) setState(() => _launching = false);
@@ -124,14 +124,7 @@ class _UpdateButtonState extends State<_UpdateButton> {
       child: FilledButton.icon(
         onPressed: _launching ? null : _openStore,
         icon: _launching
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.background,
-                ),
-              )
+            ? const KynzaLoaderButton(onGoldBackground: true)
             : const Icon(Icons.download_rounded),
         label: Text(context.l10n.evolutionForceUpdateButton),
         style: FilledButton.styleFrom(

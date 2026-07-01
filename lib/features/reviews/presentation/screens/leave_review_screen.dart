@@ -97,7 +97,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(title: Text(context.l10n.reviewsLeaveTitle)),
       body: canReviewAsync.when(
-        loading: () => const Center(child: KynzaSpinner()),
+        loading: () => const KynzaLoaderInline(size: KynzaLoaderSize.large),
         error: (_, __) => KynzaErrorState(
           message: context.l10n.reviewsLeaveBookingError,
           onRetry: () => ref.invalidate(canReviewProvider(widget.bookingId)),
@@ -113,7 +113,7 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
             );
           }
           return bookingAsync.when(
-            loading: () => const Center(child: KynzaSpinner()),
+            loading: () => const KynzaLoaderInline(size: KynzaLoaderSize.large),
             error: (_, __) => const SizedBox.shrink(),
             data: (booking) {
               if (booking == null) return const SizedBox.shrink();

@@ -50,9 +50,7 @@ class FeatureFlagScreen extends ConsumerWidget {
 
                 final flags = flagsAsync.value!;
                 final overrides = overridesAsync.value!;
-                final overrideByKey = {
-                  for (final o in overrides) o.flagKey: o,
-                };
+                final overrideByKey = {for (final o in overrides) o.flagKey: o};
 
                 if (flags.isEmpty) {
                   return KynzaEmptyState(
@@ -103,8 +101,9 @@ class _InfoCard extends StatelessWidget {
           Expanded(
             child: Text(
               context.l10n.evolutionFeatureFlagsInfoText,
-              style: AppTypography.bodySmall
-                  .copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -143,9 +142,7 @@ class _FlagTile extends ConsumerWidget {
                 size: 18,
               ),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(flag.name, style: AppTypography.body),
-              ),
+              Expanded(child: Text(flag.name, style: AppTypography.body)),
               Switch(
                 value: _effectiveValue,
                 activeThumbColor: AppColors.primary,
@@ -175,8 +172,9 @@ class _FlagTile extends ConsumerWidget {
               padding: const EdgeInsets.only(left: 26),
               child: Text(
                 flag.description!,
-                style: AppTypography.bodySmall
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -188,7 +186,9 @@ class _FlagTile extends ConsumerWidget {
                 _GlobalBadge(flag: flag),
                 if (_hasOverride) ...[
                   const SizedBox(width: AppSpacing.xs),
-                  KynzaBadge(label: context.l10n.evolutionFeatureFlagsOverrideBadge),
+                  KynzaBadge(
+                    label: context.l10n.evolutionFeatureFlagsOverrideBadge,
+                  ),
                 ],
               ],
             ),
@@ -210,7 +210,11 @@ class _GlobalBadge extends StatelessWidget {
       return KynzaBadge(label: context.l10n.evolutionFeatureFlagsDisabledBadge);
     }
     if (flag.rolloutPercentage < 100) {
-      return KynzaBadge(label: context.l10n.evolutionFeatureFlagsRollout(flag.rolloutPercentage));
+      return KynzaBadge(
+        label: context.l10n.evolutionFeatureFlagsRollout(
+          flag.rolloutPercentage,
+        ),
+      );
     }
     return KynzaBadge(label: context.l10n.evolutionFeatureFlagsEnabledBadge);
   }

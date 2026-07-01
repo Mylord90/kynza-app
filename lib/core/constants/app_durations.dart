@@ -7,4 +7,9 @@ abstract class AppDurations {
   static const spring = Duration(milliseconds: 500);
   static const shimmer = Duration(milliseconds: 1500);
   static const pageTransition = Duration(milliseconds: 320);
+
+  /// Durée d'un cycle complet de rotation du KynzaLoader — calibrée pour
+  /// rester fluide sans paraître mou ou nerveux. Ne pas modifier sans
+  /// validation produit explicite.
+  static const loaderOrbit = Duration(milliseconds: 1400);
 }

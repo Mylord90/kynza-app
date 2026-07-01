@@ -48,9 +48,11 @@ String _eventLabel(AppLocalizations l10n, String event) => switch (event) {
   'referral_claimed' => l10n.auditEventReferralClaimed,
   'permission_group_created' => l10n.auditEventPermissionGroupCreated,
   'permission_group_deleted' => l10n.auditEventPermissionGroupDeleted,
-  'permission_group_permission_changed' => l10n.auditEventPermissionGroupPermissionChanged,
+  'permission_group_permission_changed' =>
+    l10n.auditEventPermissionGroupPermissionChanged,
   'permission_group_member_added' => l10n.auditEventPermissionGroupMemberAdded,
-  'permission_group_member_removed' => l10n.auditEventPermissionGroupMemberRemoved,
+  'permission_group_member_removed' =>
+    l10n.auditEventPermissionGroupMemberRemoved,
   _ => event,
 };
 

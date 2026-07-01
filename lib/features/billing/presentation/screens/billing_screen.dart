@@ -30,7 +30,7 @@ class BillingScreen extends ConsumerWidget {
           const KynzaOfflineBanner(),
           Expanded(
             child: salon == null
-                ? const Center(child: KynzaSpinner())
+                ? const KynzaLoaderInline(size: KynzaLoaderSize.large)
                 : ListView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     children: [
@@ -66,7 +66,12 @@ class BillingScreen extends ConsumerWidget {
                                 salon.planStartedAt != null) ...[
                               const SizedBox(height: AppSpacing.sm),
                               Text(
-                                context.l10n.billingNextBillingLabel(_nextBillingLabel(salon.plan, salon.planStartedAt!)),
+                                context.l10n.billingNextBillingLabel(
+                                  _nextBillingLabel(
+                                    salon.plan,
+                                    salon.planStartedAt!,
+                                  ),
+                                ),
                                 style: AppTypography.bodySmall,
                               ),
                             ],

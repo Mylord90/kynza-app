@@ -69,7 +69,10 @@ class TimeSlotGrid extends StatelessWidget {
                 if (isRare && !isSelected)
                   Text(
                     context.l10n.bookingLastSlot,
-                    style: const TextStyle(fontSize: 11, color: AppColors.primary),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.primary,
+                    ),
                   ),
               ],
             ),

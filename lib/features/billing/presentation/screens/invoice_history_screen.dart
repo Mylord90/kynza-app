@@ -34,7 +34,7 @@ class InvoiceHistoryScreen extends ConsumerWidget {
           const KynzaOfflineBanner(),
           Expanded(
             child: salon == null
-                ? const Center(child: KynzaSpinner())
+                ? const KynzaLoaderInline(size: KynzaLoaderSize.large)
                 : _InvoiceList(salonId: salon.id),
           ),
         ],
@@ -76,6 +76,8 @@ class _InvoiceList extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: AppColors.surface,
           onRefresh: () async => ref.invalidate(salonInvoicesProvider(salonId)),
           child: ListView.builder(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -98,7 +100,8 @@ class _InvoiceList extends ConsumerWidget {
                             Text(invoice.reference, style: AppTypography.mono),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
-                              _planNames(context)[invoice.planKey] ?? invoice.planKey,
+                              _planNames(context)[invoice.planKey] ??
+                                  invoice.planKey,
                               style: AppTypography.bodySmall,
                             ),
                           ],
@@ -137,10 +140,22 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, variant) = switch (status) {
-      'paid' => (context.l10n.billingInvoiceStatusPaid, KynzaBadgeVariant.success),
-      'overdue' => (context.l10n.billingInvoiceStatusOverdue, KynzaBadgeVariant.error),
-      'void' => (context.l10n.billingInvoiceStatusVoid, KynzaBadgeVariant.neutral),
-      _ => (context.l10n.billingInvoiceStatusPending, KynzaBadgeVariant.warning),
+      'paid' => (
+        context.l10n.billingInvoiceStatusPaid,
+        KynzaBadgeVariant.success,
+      ),
+      'overdue' => (
+        context.l10n.billingInvoiceStatusOverdue,
+        KynzaBadgeVariant.error,
+      ),
+      'void' => (
+        context.l10n.billingInvoiceStatusVoid,
+        KynzaBadgeVariant.neutral,
+      ),
+      _ => (
+        context.l10n.billingInvoiceStatusPending,
+        KynzaBadgeVariant.warning,
+      ),
     };
     return KynzaBadge(label: label, variant: variant);
   }
@@ -224,7 +239,10 @@ class _InvoiceDetailSheetState extends ConsumerState<_InvoiceDetailSheet> {
           _StatusChip(status: invoice.status),
           if (invoice.isPending && invoice.paymentInstructions != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            Text(context.l10n.billingInvoicePaymentInstructionsTitle, style: AppTypography.h3),
+            Text(
+              context.l10n.billingInvoicePaymentInstructionsTitle,
+              style: AppTypography.h3,
+            ),
             const SizedBox(height: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),

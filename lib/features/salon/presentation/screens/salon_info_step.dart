@@ -42,7 +42,8 @@ class SalonInfoStep extends StatelessWidget {
             label: l10n.salonInfoStepNameLabel,
             controller: nameController,
             maxLength: 100,
-            validator: (v) => Validators.required(v, l10n.salonInfoStepNameLabel),
+            validator: (v) =>
+                Validators.required(v, l10n.salonInfoStepNameLabel),
           ),
           const SizedBox(height: 16),
           KynzaTextField(

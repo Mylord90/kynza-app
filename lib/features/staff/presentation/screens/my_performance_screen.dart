@@ -84,6 +84,8 @@ class MyPerformanceScreen extends ConsumerWidget {
     );
 
     return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: AppColors.surface,
       onRefresh: () async {
         ref.invalidate(_staffWeekRankProvider(staffId));
         ref.invalidate(_staffMonthlyBookingsProvider(staffId));
@@ -115,7 +117,10 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.myPerfMyBookings, style: AppTypography.bodySmall),
+                          Text(
+                            context.l10n.myPerfMyBookings,
+                            style: AppTypography.bodySmall,
+                          ),
                           Text(
                             '${completed.length}',
                             style: AppTypography.amountMd,
@@ -130,7 +135,10 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.myPerfMyRevenue, style: AppTypography.bodySmall),
+                          Text(
+                            context.l10n.myPerfMyRevenue,
+                            style: AppTypography.bodySmall,
+                          ),
                           KynzaAmountWidget(
                             amountBif: revenue,
                             style: AppTypography.amountMd,
@@ -152,7 +160,11 @@ class MyPerformanceScreen extends ConsumerWidget {
               if (rank == 0) return const SizedBox.shrink();
               return KynzaCard(
                 child: Text(
-                  context.l10n.myPerfRankText(rank, _ordinalSuffix(context.l10n, rank), teamSize),
+                  context.l10n.myPerfRankText(
+                    rank,
+                    _ordinalSuffix(context.l10n, rank),
+                    teamSize,
+                  ),
                   style: AppTypography.h3,
                 ),
               );
@@ -251,7 +263,10 @@ class MyPerformanceScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(context.l10n.myPerfCommissionsPaid, style: AppTypography.bodySmall),
+                          Text(
+                            context.l10n.myPerfCommissionsPaid,
+                            style: AppTypography.bodySmall,
+                          ),
                           KynzaAmountWidget(
                             amountBif: paid,
                             style: AppTypography.amountMd,

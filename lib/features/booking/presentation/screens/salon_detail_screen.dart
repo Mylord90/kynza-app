@@ -42,7 +42,7 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: salonAsync.when(
-        loading: () => const Center(child: KynzaSpinner()),
+        loading: () => const KynzaLoaderInline(size: KynzaLoaderSize.large),
         error: (_, __) => KynzaErrorState(
           message: l10n.bookingSalonDetailLoadError,
           onRetry: () => ref.invalidate(salonByIdProvider(widget.salonId)),

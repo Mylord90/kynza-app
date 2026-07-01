@@ -13,8 +13,9 @@ final backupJobsProvider = FutureProvider.autoDispose
           ref.read(backupRepositoryProvider).getBackupJobs(salonId),
     );
 
-final backupNotifierProvider =
-    AsyncNotifierProvider<BackupNotifier, void>(BackupNotifier.new);
+final backupNotifierProvider = AsyncNotifierProvider<BackupNotifier, void>(
+  BackupNotifier.new,
+);
 
 class BackupNotifier extends AsyncNotifier<void> {
   @override

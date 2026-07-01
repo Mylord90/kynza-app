@@ -170,7 +170,10 @@ class _SearchFiltersSheetState extends State<SearchFiltersSheet> {
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
-            KynzaButton(label: l10n.searchFiltersApplyButton, onPressed: _apply),
+            KynzaButton(
+              label: l10n.searchFiltersApplyButton,
+              onPressed: _apply,
+            ),
           ],
         ),
       ),

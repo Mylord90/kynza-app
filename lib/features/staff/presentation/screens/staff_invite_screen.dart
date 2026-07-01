@@ -67,7 +67,9 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : context.l10n.staffInviteError,
+          message: e is AppException
+              ? e.message
+              : context.l10n.staffInviteError,
           level: ToastLevel.error,
         );
       }
@@ -92,7 +94,8 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
             KynzaTextField(
               label: context.l10n.staffInviteNameLabel,
               controller: _nameCtrl,
-              validator: (v) => Validators.required(v, context.l10n.staffInviteNameLabel),
+              validator: (v) =>
+                  Validators.required(v, context.l10n.staffInviteNameLabel),
             ),
             const SizedBox(height: AppSpacing.lg),
             KynzaPhoneField(
@@ -102,9 +105,15 @@ class _StaffInviteScreenState extends ConsumerState<StaffInviteScreen> {
             const SizedBox(height: AppSpacing.lg),
             SegmentedButton<String>(
               segments: [
-                ButtonSegment(value: 'staff', label: Text(context.l10n.staffInviteRoleStaff)),
+                ButtonSegment(
+                  value: 'staff',
+                  label: Text(context.l10n.staffInviteRoleStaff),
+                ),
                 if (canAssignManager)
-                  ButtonSegment(value: 'manager', label: Text(context.l10n.staffInviteRoleManager)),
+                  ButtonSegment(
+                    value: 'manager',
+                    label: Text(context.l10n.staffInviteRoleManager),
+                  ),
               ],
               selected: {_role},
               onSelectionChanged: (s) => setState(() => _role = s.first),

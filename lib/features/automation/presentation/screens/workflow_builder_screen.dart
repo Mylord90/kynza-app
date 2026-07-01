@@ -111,7 +111,10 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
-          KynzaTextField(label: l10n.automationWorkflowNameLabel, controller: _nameController),
+          KynzaTextField(
+            label: l10n.automationWorkflowNameLabel,
+            controller: _nameController,
+          ),
           const SizedBox(height: AppSpacing.md),
           KynzaTextField(
             label: l10n.automationWorkflowDescriptionLabel,
@@ -139,7 +142,10 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(l10n.automationWorkflowConditionsTitle, style: AppTypography.h2),
+              Text(
+                l10n.automationWorkflowConditionsTitle,
+                style: AppTypography.h2,
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: _addCondition,
@@ -162,7 +168,10 @@ class _WorkflowBuilderScreenState extends ConsumerState<WorkflowBuilderScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(l10n.automationWorkflowActionsTitle, style: AppTypography.h2),
+              Text(
+                l10n.automationWorkflowActionsTitle,
+                style: AppTypography.h2,
+              ),
               actionTypesAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),

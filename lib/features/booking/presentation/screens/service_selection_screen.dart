@@ -50,7 +50,8 @@ class ServiceSelectionScreen extends ConsumerWidget {
                       return KynzaEmptyState(
                         icon: Icons.content_cut,
                         title: context.l10n.bookingSelectServiceEmptyTitle,
-                        subtitle: context.l10n.bookingSelectServiceEmptySubtitle,
+                        subtitle:
+                            context.l10n.bookingSelectServiceEmptySubtitle,
                         ctaLabel: context.l10n.commonBack,
                         onCta: _noop,
                       );

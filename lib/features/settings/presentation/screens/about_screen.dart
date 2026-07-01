@@ -57,11 +57,25 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.settingsAboutSectionApp, style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
+                Text(
+                  l10n.settingsAboutSectionApp,
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.sm),
-                _InfoRow(label: l10n.settingsAboutVersionLabel, value: kAppVersionName),
-                _InfoRow(label: l10n.settingsAboutBuildLabel, value: '$kAppVersionCode'),
-                _InfoRow(label: l10n.settingsAboutPlatformLabel, value: kAppPlatform),
+                _InfoRow(
+                  label: l10n.settingsAboutVersionLabel,
+                  value: kAppVersionName,
+                ),
+                _InfoRow(
+                  label: l10n.settingsAboutBuildLabel,
+                  value: '$kAppVersionCode',
+                ),
+                _InfoRow(
+                  label: l10n.settingsAboutPlatformLabel,
+                  value: kAppPlatform,
+                ),
               ],
             ),
           ),
@@ -70,11 +84,25 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.settingsAboutSectionLegal, style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
+                Text(
+                  l10n.settingsAboutSectionLegal,
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.sm),
-                _InfoRow(label: l10n.settingsAboutPublisherLabel, value: 'KYNZA SAS'),
-                _InfoRow(label: l10n.settingsAboutCountryLabel, value: 'Burundi'),
-                _InfoRow(label: l10n.settingsAboutCurrencyLabel, value: 'Franc Burundais (FBu)'),
+                _InfoRow(
+                  label: l10n.settingsAboutPublisherLabel,
+                  value: 'KYNZA SAS',
+                ),
+                _InfoRow(
+                  label: l10n.settingsAboutCountryLabel,
+                  value: 'Burundi',
+                ),
+                _InfoRow(
+                  label: l10n.settingsAboutCurrencyLabel,
+                  value: 'Franc Burundais (FBu)',
+                ),
               ],
             ),
           ),
@@ -103,7 +131,10 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+          Text(
+            label,
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
           Text(value, style: AppTypography.body),
         ],
       ),

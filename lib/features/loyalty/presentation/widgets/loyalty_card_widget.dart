@@ -82,7 +82,10 @@ class LoyaltyCardWidget extends ConsumerWidget {
                   _StampGrid(filled: card.stampsCount, total: required),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    context.l10n.loyaltyStampsProgress(card.stampsCount, required),
+                    context.l10n.loyaltyStampsProgress(
+                      card.stampsCount,
+                      required,
+                    ),
                     style: AppTypography.bodySmall,
                   ),
                   const SizedBox(height: AppSpacing.sm),

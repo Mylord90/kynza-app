@@ -157,6 +157,8 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
               ),
             Expanded(
               child: RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: AppColors.surface,
                 onRefresh: () async =>
                     ref.invalidate(salonServicesProvider(salonId)),
                 child: ListView.builder(

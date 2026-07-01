@@ -62,6 +62,8 @@ class CommissionScreen extends ConsumerWidget {
           const KynzaOfflineBanner(),
           Expanded(
             child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
               onRefresh: () async {
                 ref.invalidate(commissionSummaryProvider(salonId));
                 ref.invalidate(salonCommissionsProvider(salonId));

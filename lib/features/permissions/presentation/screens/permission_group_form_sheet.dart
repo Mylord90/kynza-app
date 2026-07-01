@@ -87,8 +87,9 @@ class _PermissionGroupFormSheetState
               label: context.l10n.permissionsGroupFormNameLabel,
               hint: context.l10n.permissionsGroupNameHint,
               controller: _nameController,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? context.l10n.permissionsGroupFormNameRequired : null,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? context.l10n.permissionsGroupFormNameRequired
+                  : null,
             ),
             const SizedBox(height: AppSpacing.md),
             KynzaTextField(

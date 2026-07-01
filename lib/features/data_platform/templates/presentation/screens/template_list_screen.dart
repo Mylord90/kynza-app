@@ -93,10 +93,8 @@ class TemplateListScreen extends ConsumerWidget {
   ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TemplateEditorScreen(
-          salonId: salonId,
-          existing: existing,
-        ),
+        builder: (_) =>
+            TemplateEditorScreen(salonId: salonId, existing: existing),
       ),
     );
   }

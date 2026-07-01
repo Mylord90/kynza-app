@@ -61,7 +61,10 @@ class _NotificationSettingsScreenState
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              Text(context.l10n.notificationsChannelsHeading, style: AppTypography.h2),
+              Text(
+                context.l10n.notificationsChannelsHeading,
+                style: AppTypography.h2,
+              ),
               const SizedBox(height: AppSpacing.sm),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -88,12 +91,17 @@ class _NotificationSettingsScreenState
                 ),
               ],
               const SizedBox(height: AppSpacing.xl),
-              Text(context.l10n.notificationsAlertTypesHeading, style: AppTypography.h2),
+              Text(
+                context.l10n.notificationsAlertTypesHeading,
+                style: AppTypography.h2,
+              ),
               const SizedBox(height: AppSpacing.sm),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(context.l10n.notificationsBookingCreatedTitle),
-                subtitle: Text(context.l10n.notificationsBookingCreatedSubtitle),
+                subtitle: Text(
+                  context.l10n.notificationsBookingCreatedSubtitle,
+                ),
                 value: draft.bookingCreated,
                 activeTrackColor: AppColors.primary,
                 onChanged: (v) =>

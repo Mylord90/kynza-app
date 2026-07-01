@@ -53,7 +53,9 @@ class KynzaTopStaffRow extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                       Text(
-                        context.l10n.dashboardStaffRdvCount(member.bookingCount),
+                        context.l10n.dashboardStaffRdvCount(
+                          member.bookingCount,
+                        ),
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),

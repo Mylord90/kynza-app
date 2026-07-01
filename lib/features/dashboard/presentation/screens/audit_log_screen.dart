@@ -178,6 +178,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                   );
                 }
                 return RefreshIndicator(
+                  color: AppColors.primary,
+                  backgroundColor: AppColors.surface,
                   onRefresh: () async =>
                       ref.invalidate(auditLogsProvider(widget.salonId)),
                   child: ListView.builder(

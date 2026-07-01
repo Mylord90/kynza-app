@@ -4,7 +4,7 @@ import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
-import '../../../../shared/widgets/kynza_spinner.dart';
+import '../../../../shared/widgets/loader/widgets/loader_button.dart';
 
 enum KynzaOAuthProvider { google, facebook, apple }
 
@@ -101,7 +101,7 @@ class _KynzaOAuthButtonState extends State<KynzaOAuthButton> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                widget.isLoading ? const KynzaSpinner(size: 20) : _icon,
+                widget.isLoading ? const KynzaLoaderButton() : _icon,
                 const SizedBox(width: 12),
                 Text(
                   _label(context),

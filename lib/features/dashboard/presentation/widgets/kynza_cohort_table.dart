@@ -36,7 +36,10 @@ class KynzaCohortTable extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Text(context.l10n.dashboardCohortHeader, style: AppTypography.bodySmall),
+              child: Text(
+                context.l10n.dashboardCohortHeader,
+                style: AppTypography.bodySmall,
+              ),
             ),
             for (final offset in _offsets)
               Padding(

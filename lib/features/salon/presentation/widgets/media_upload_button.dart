@@ -73,7 +73,7 @@ class MediaUploadButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: isLoading
-            ? const KynzaSpinner()
+            ? const KynzaLoader(size: KynzaLoaderSize.medium)
             : hasPreview
             ? Container(
                 decoration: BoxDecoration(

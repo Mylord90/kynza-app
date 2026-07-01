@@ -81,7 +81,10 @@ class SocialShareCenterScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              Text(context.l10n.marketingShareServicesTitle, style: AppTypography.h2),
+              Text(
+                context.l10n.marketingShareServicesTitle,
+                style: AppTypography.h2,
+              ),
               const SizedBox(height: AppSpacing.md),
               servicesAsync.when(
                 loading: () => const KynzaSkeleton(height: 90),

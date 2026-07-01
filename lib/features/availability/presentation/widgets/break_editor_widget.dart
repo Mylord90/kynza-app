@@ -51,7 +51,9 @@ class _BreakEditorWidgetState extends State<BreakEditorWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    _labelCtrl ??= TextEditingController(text: l10n.availabilityBreakDefaultLabel);
+    _labelCtrl ??= TextEditingController(
+      text: l10n.availabilityBreakDefaultLabel,
+    );
     final dayLabels = [
       l10n.weekdayMonday,
       l10n.weekdayTuesday,
@@ -71,7 +73,9 @@ class _BreakEditorWidgetState extends State<BreakEditorWidget> {
           const SizedBox(height: AppSpacing.lg),
           DropdownButtonFormField<int>(
             initialValue: _dayOfWeek,
-            decoration: InputDecoration(labelText: l10n.availabilityBreakDayLabel),
+            decoration: InputDecoration(
+              labelText: l10n.availabilityBreakDayLabel,
+            ),
             items: [
               for (var i = 0; i < 7; i++)
                 DropdownMenuItem(value: i, child: Text(dayLabels[i])),
@@ -84,20 +88,27 @@ class _BreakEditorWidgetState extends State<BreakEditorWidget> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _pickTime(isStart: true),
-                  child: Text(l10n.availabilityBreakStartTime(_start.format(context))),
+                  child: Text(
+                    l10n.availabilityBreakStartTime(_start.format(context)),
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _pickTime(isStart: false),
-                  child: Text(l10n.availabilityBreakEndTime(_end.format(context))),
+                  child: Text(
+                    l10n.availabilityBreakEndTime(_end.format(context)),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          KynzaTextField(label: l10n.availabilityBreakLabelField, controller: _labelCtrl!),
+          KynzaTextField(
+            label: l10n.availabilityBreakLabelField,
+            controller: _labelCtrl!,
+          ),
           const SizedBox(height: AppSpacing.xl),
           KynzaButton(
             label: l10n.commonAdd,

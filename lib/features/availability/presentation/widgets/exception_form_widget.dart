@@ -81,7 +81,9 @@ class _ExceptionFormWidgetState extends State<ExceptionFormWidget> {
           const SizedBox(height: AppSpacing.lg),
           DropdownButtonFormField<String>(
             initialValue: _type,
-            decoration: InputDecoration(labelText: l10n.availabilityExceptionTypeLabel),
+            decoration: InputDecoration(
+              labelText: l10n.availabilityExceptionTypeLabel,
+            ),
             items: [
               for (final type in _typeOptions)
                 DropdownMenuItem(value: type, child: Text(typeLabels[type]!)),
@@ -105,14 +107,22 @@ class _ExceptionFormWidgetState extends State<ExceptionFormWidget> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _pickTime(isOpen: true),
-                    child: Text(l10n.availabilityExceptionOpenTime(_opensAt.format(context))),
+                    child: Text(
+                      l10n.availabilityExceptionOpenTime(
+                        _opensAt.format(context),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _pickTime(isOpen: false),
-                    child: Text(l10n.availabilityExceptionCloseTime(_closesAt.format(context))),
+                    child: Text(
+                      l10n.availabilityExceptionCloseTime(
+                        _closesAt.format(context),
+                      ),
+                    ),
                   ),
                 ),
               ],

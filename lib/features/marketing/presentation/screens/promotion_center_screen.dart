@@ -43,7 +43,9 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
     final confirmed = await showKynzaConfirmDialog(
       context,
       title: context.l10n.marketingPromotionsDeactivateConfirmTitle,
-      message: context.l10n.marketingPromotionsDeactivateConfirmMessage(promo.title),
+      message: context.l10n.marketingPromotionsDeactivateConfirmMessage(
+        promo.title,
+      ),
       confirmLabel: context.l10n.marketingPromotionsDeactivateButton,
     );
     if (!confirmed) return;
@@ -55,7 +57,9 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
       if (mounted) {
         showKynzaToast(
           context,
-          message: e is AppException ? e.message : context.l10n.marketingPromotionsDeactivateError,
+          message: e is AppException
+              ? e.message
+              : context.l10n.marketingPromotionsDeactivateError,
           level: ToastLevel.error,
         );
       }
@@ -87,8 +91,14 @@ class _PromotionCenterScreenState extends ConsumerState<PromotionCenterScreen> {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: SegmentedButton<bool>(
               segments: [
-                ButtonSegment(value: false, label: Text(context.l10n.marketingPromotionsActiveFilter)),
-                ButtonSegment(value: true, label: Text(context.l10n.marketingPromotionsExpiredFilter)),
+                ButtonSegment(
+                  value: false,
+                  label: Text(context.l10n.marketingPromotionsActiveFilter),
+                ),
+                ButtonSegment(
+                  value: true,
+                  label: Text(context.l10n.marketingPromotionsExpiredFilter),
+                ),
               ],
               selected: {_showExpired},
               onSelectionChanged: (s) => setState(() => _showExpired = s.first),
@@ -194,7 +204,10 @@ class _PromotionCard extends StatelessWidget {
           ],
           if (serviceName != null) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(context.l10n.promotionCardServiceLabel(serviceName!), style: AppTypography.bodySmall),
+            Text(
+              context.l10n.promotionCardServiceLabel(serviceName!),
+              style: AppTypography.bodySmall,
+            ),
           ],
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -400,7 +413,8 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
               label: context.l10n.promotionFormTitleLabel,
               controller: _titleCtrl,
               maxLength: 100,
-              validator: (v) => Validators.required(v, context.l10n.promotionFormTitleLabel),
+              validator: (v) =>
+                  Validators.required(v, context.l10n.promotionFormTitleLabel),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -433,7 +447,10 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                   : context.l10n.promotionFormValueBifLabel,
               controller: _valueCtrl,
               keyboardType: TextInputType.number,
-              validator: (v) => Validators.required(v, context.l10n.promotionFormValuePercentLabel),
+              validator: (v) => Validators.required(
+                v,
+                context.l10n.promotionFormValuePercentLabel,
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -442,7 +459,8 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                 label: context.l10n.promotionFormTargetServiceLabel,
                 value: _selectedService,
                 items: [null, ...services],
-                itemLabel: (s) => s?.name ?? context.l10n.promotionFormAllServices,
+                itemLabel: (s) =>
+                    s?.name ?? context.l10n.promotionFormAllServices,
                 onChanged: (s) => setState(() => _selectedService = s),
               ),
               orElse: () => const SizedBox.shrink(),
@@ -454,7 +472,9 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                   child: OutlinedButton(
                     onPressed: () => _pickDate(isStart: true),
                     child: Text(
-                      context.l10n.promotionFormStartDate(DateFormat('dd/MM/yyyy').format(_startsAt)),
+                      context.l10n.promotionFormStartDate(
+                        DateFormat('dd/MM/yyyy').format(_startsAt),
+                      ),
                     ),
                   ),
                 ),
@@ -463,7 +483,9 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
                   child: OutlinedButton(
                     onPressed: () => _pickDate(isStart: false),
                     child: Text(
-                      context.l10n.promotionFormEndDate(DateFormat('dd/MM/yyyy').format(_endsAt)),
+                      context.l10n.promotionFormEndDate(
+                        DateFormat('dd/MM/yyyy').format(_endsAt),
+                      ),
                     ),
                   ),
                 ),
@@ -480,7 +502,9 @@ class _PromotionFormSheetState extends ConsumerState<_PromotionFormSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    _promoCode.isEmpty ? context.l10n.promotionFormNoCode : _promoCode,
+                    _promoCode.isEmpty
+                        ? context.l10n.promotionFormNoCode
+                        : _promoCode,
                     style: AppTypography.mono,
                   ),
                 ),
