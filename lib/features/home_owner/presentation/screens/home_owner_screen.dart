@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -9,6 +10,8 @@ import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/freemium_service.dart';
 import '../../../../core/services/supabase_service.dart';
+import '../../../../shared/navigation/kynza_bottom_nav.dart';
+import '../../../../shared/navigation/kynza_nav_item.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
 import '../../../booking/presentation/widgets/walkin_booking_sheet.dart';
@@ -82,28 +85,33 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
               3 => MarketingDashboardBody(salonId: salon.id),
               _ => const _ProfileTab(),
             },
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: KynzaBottomNav(
         currentIndex: _tabIndex,
-        onTap: (index) => setState(() => _tabIndex = index),
+        onItemTapped: (index) => setState(() => _tabIndex = index),
         items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.calendar_today_outlined),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.calendarCheck,
+            activeIcon: PhosphorIconsBold.calendarCheck,
             label: context.l10n.navCalendar,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.dashboard_outlined),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.chartBarHorizontal,
+            activeIcon: PhosphorIconsBold.chartBarHorizontal,
             label: context.l10n.navDashboard,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.people_outline),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.users,
+            activeIcon: PhosphorIconsBold.users,
             label: context.l10n.navClients,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.campaign_outlined),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.megaphone,
+            activeIcon: PhosphorIconsBold.megaphone,
             label: context.l10n.navMarketing,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.userCircle,
+            activeIcon: PhosphorIconsBold.userCircle,
             label: context.l10n.navProfile,
           ),
         ],

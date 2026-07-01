@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../../../shared/navigation/kynza_bottom_nav.dart';
+import '../../../../shared/navigation/kynza_nav_item.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/presentation/screens/salon_detail_screen.dart';
 import '../../../booking/presentation/screens/salon_discovery_screen.dart';
@@ -58,29 +61,33 @@ class _HomeClientScreenState extends ConsumerState<HomeClientScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: KynzaBottomNav(
         currentIndex: _tabIndex,
-        onTap: (index) => setState(() => _tabIndex = index),
-        type: BottomNavigationBarType.fixed,
+        onItemTapped: (index) => setState(() => _tabIndex = index),
         items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home_outlined),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.house,
+            activeIcon: PhosphorIconsBold.house,
             label: context.l10n.navHome,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.explore_outlined),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.compass,
+            activeIcon: PhosphorIconsBold.compass,
             label: context.l10n.homeClientNavExplorer,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.event_note_outlined),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.calendarCheck,
+            activeIcon: PhosphorIconsBold.calendarCheck,
             label: context.l10n.homeClientNavMyBookings,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.star_outline),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.star,
+            activeIcon: PhosphorIconsBold.star,
             label: context.l10n.homeClientNavMyLoyalties,
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
+          KynzaNavItem(
+            icon: PhosphorIconsRegular.userCircle,
+            activeIcon: PhosphorIconsBold.userCircle,
             label: context.l10n.navProfile,
           ),
         ],

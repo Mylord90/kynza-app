@@ -506,7 +506,7 @@ Références : `docs/I18N_GUIDE.md`, `docs/LANGUAGE_WORKFLOW.md`, `docs/PHASE_I1
 
 À tenir à jour à chaque phase. Ne pas corriger hors-scope sans instruction explicite.
 
-- Pas de `ShellRoute` GoRouter — bottom nav en state local par `Home*Screen`. À corriger avant Play Store (voir mémoire `shellrouter_refactor_backlog`).
+- Pas de `ShellRoute` GoRouter — bottom nav toujours en state local (`_tabIndex`) par `Home*Screen`. Le rendu visuel a été remplacé par `KynzaBottomNav` (`lib/shared/navigation/`, voir `docs/BOTTOM_NAVIGATION_GUIDE.md`) mais chaque onglet reste un widget swappé par `switch`, pas une route GoRouter — les tabs ne sont donc ni deep-linkables ni dans un `StatefulShellRoute`. Migration complète (extraction de chaque onglet en route + `StatefulShellRoute`) à faire avant Play Store (voir mémoire `shellrouter_refactor_backlog`).
 - 0 screens non migrés — i18n 100% complet depuis 2026-07-01 (tous les écrans utilisent `context.l10n`, parité ARB FR/EN vérifiée par test automatique).
 - Coordonnées bancaires (`KynzaConstants.bankTransferInstructions`) = placeholders, à remplacer avant toute vraie demande d'upgrade client.
 - Keystore Android debug (pas de signing release configuré).
