@@ -56,6 +56,8 @@ import '../../features/booking/presentation/screens/salon_detail_screen.dart';
 import '../../features/booking/presentation/screens/salon_discovery_screen.dart';
 import '../../features/booking/presentation/screens/service_selection_screen.dart';
 import '../../features/payment/presentation/screens/payment_screen.dart';
+import '../../features/proxipay/presentation/screens/proxipay_qr_screen.dart';
+import '../../features/proxipay/presentation/screens/proxipay_scan_screen.dart';
 import '../../features/salon/application/providers/salon_providers.dart';
 import '../../shared/widgets/kynza_widgets.dart';
 import '../../features/salon/presentation/screens/salon_creation_wizard_screen.dart';
@@ -281,6 +283,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => _RoleGuard(
           role: UserRole.client,
           child: _PaymentDeepLinkLoader(bookingId: state.pathParameters['id']!),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerProxiPay,
+        (context, state) => _RoleGuard.anyOf(
+          roles: const {UserRole.owner, UserRole.manager, UserRole.staff},
+          child: _ProxiPayLoader(bookingId: state.pathParameters['bookingId']!),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.clientProxiPayScan,
+        (context, state) => const _RoleGuard(
+          role: UserRole.client,
+          child: ProxiPayScanScreen(),
         ),
       ),
       _fadeRoute(
@@ -741,6 +757,45 @@ class _PaymentDeepLinkLoader extends ConsumerWidget {
               ),
             )
           : PaymentScreen(booking: booking),
+    );
+  }
+}
+
+class _ProxiPayLoader extends ConsumerWidget {
+  const _ProxiPayLoader({required this.bookingId});
+
+  final String bookingId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bookingAsync = ref.watch(bookingByIdProvider(bookingId));
+    return bookingAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: KynzaLoaderInline(size: KynzaLoaderSize.large),
+      ),
+      error: (_, __) => Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: TextButton(
+            onPressed: () => context.go(RouteNames.homeOwner),
+            child: const Text('Réservation introuvable — retour à l\'accueil'),
+          ),
+        ),
+      ),
+      data: (booking) => booking == null
+          ? Scaffold(
+              backgroundColor: AppColors.background,
+              body: Center(
+                child: TextButton(
+                  onPressed: () => context.go(RouteNames.homeOwner),
+                  child: const Text(
+                    'Réservation introuvable — retour à l\'accueil',
+                  ),
+                ),
+              ),
+            )
+          : ProxiPayQrScreen(booking: booking),
     );
   }
 }

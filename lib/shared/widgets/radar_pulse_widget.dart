@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_typography.dart';
-import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/localization/extensions/build_context_l10n_extension.dart';
+import '../../core/constants/app_spacing.dart';
+import '../../core/constants/app_typography.dart';
+import 'kynza_widgets.dart';
 
 /// 3 concentric gold circles expanding outward + center spinner.
 /// NEVER Lottie here (R13 — Moto G06 RAM constraint).

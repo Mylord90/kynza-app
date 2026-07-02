@@ -777,6 +777,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentInvalidPhone => 'Invalid number.';
 
   @override
+  String get proxipayQrTitle => 'Collect payment';
+
+  @override
+  String get proxipayCreateSessionError =>
+      'Couldn\'t generate the payment QR code.';
+
+  @override
+  String get proxipayQrShowToClient => 'Have the client scan this code.';
+
+  @override
+  String proxipayQrExpiresIn(String minutes, String seconds) {
+    return 'Expires in $minutes:$seconds';
+  }
+
+  @override
+  String get proxipayQrExpired => 'This code has expired. Generate a new one.';
+
+  @override
+  String get proxipayAwaitingSettlementMessage =>
+      'Waiting for payment confirmation...';
+
+  @override
+  String get proxipaySuccessMessage => 'Payment received ✓';
+
+  @override
+  String get proxipayFailedMessage =>
+      'This payment failed. No money was charged.';
+
+  @override
+  String get proxipayRetryButton => 'Retry';
+
+  @override
+  String get proxipayDoneButton => 'Done';
+
+  @override
+  String get proxipayScanTitle => 'Pay in person';
+
+  @override
+  String get proxipayScanInstruction => 'Scan the code shown by the salon.';
+
+  @override
+  String get proxipayScanInvalidError => 'Invalid or expired code.';
+
+  @override
+  String get proxipayScanConnectionError => 'Connection error. Please retry.';
+
+  @override
+  String get proxipayConfirmPayButton => 'Pay →';
+
+  @override
+  String get proxipayConfirmErrorGeneric => 'Couldn\'t confirm the payment.';
+
+  @override
+  String get proxipayConfirmSuccessMessage => 'Payment sent ✓';
+
+  @override
   String get notificationsListTitle => 'Notifications';
 
   @override

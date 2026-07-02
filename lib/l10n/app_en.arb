@@ -263,6 +263,30 @@
   "paymentRetryButton": "Retry",
   "paymentInvalidPhone": "Invalid number.",
 
+  "proxipayQrTitle": "Collect payment",
+  "proxipayCreateSessionError": "Couldn't generate the payment QR code.",
+  "proxipayQrShowToClient": "Have the client scan this code.",
+  "proxipayQrExpiresIn": "Expires in {minutes}:{seconds}",
+  "@proxipayQrExpiresIn": {
+    "placeholders": {
+      "minutes": { "type": "String" },
+      "seconds": { "type": "String" }
+    }
+  },
+  "proxipayQrExpired": "This code has expired. Generate a new one.",
+  "proxipayAwaitingSettlementMessage": "Waiting for payment confirmation...",
+  "proxipaySuccessMessage": "Payment received ✓",
+  "proxipayFailedMessage": "This payment failed. No money was charged.",
+  "proxipayRetryButton": "Retry",
+  "proxipayDoneButton": "Done",
+  "proxipayScanTitle": "Pay in person",
+  "proxipayScanInstruction": "Scan the code shown by the salon.",
+  "proxipayScanInvalidError": "Invalid or expired code.",
+  "proxipayScanConnectionError": "Connection error. Please retry.",
+  "proxipayConfirmPayButton": "Pay →",
+  "proxipayConfirmErrorGeneric": "Couldn't confirm the payment.",
+  "proxipayConfirmSuccessMessage": "Payment sent ✓",
+
   "notificationsListTitle": "Notifications",
   "notificationsDeleteSuccess": "Notification deleted.",
   "notificationsLoadMoreButton": "Load more",

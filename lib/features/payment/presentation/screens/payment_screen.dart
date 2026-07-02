@@ -11,7 +11,6 @@ import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/presentation/screens/booking_confirmation_screen.dart';
-import '../widgets/radar_pulse_widget.dart';
 
 enum _PaymentPhase { selectMethod, waiting, success, failed }
 

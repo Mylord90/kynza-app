@@ -286,6 +286,30 @@
   "paymentRetryButton": "Réessayer",
   "paymentInvalidPhone": "Numéro invalide.",
 
+  "proxipayQrTitle": "Encaisser",
+  "proxipayCreateSessionError": "Impossible de générer le QR de paiement.",
+  "proxipayQrShowToClient": "Faites scanner ce code par le client.",
+  "proxipayQrExpiresIn": "Expire dans {minutes}:{seconds}",
+  "@proxipayQrExpiresIn": {
+    "placeholders": {
+      "minutes": { "type": "String" },
+      "seconds": { "type": "String" }
+    }
+  },
+  "proxipayQrExpired": "Le code a expiré. Générez-en un nouveau.",
+  "proxipayAwaitingSettlementMessage": "En attente de confirmation du paiement...",
+  "proxipaySuccessMessage": "Paiement reçu ✓",
+  "proxipayFailedMessage": "Ce paiement n'a pas abouti. Aucun argent débité.",
+  "proxipayRetryButton": "Réessayer",
+  "proxipayDoneButton": "Terminé",
+  "proxipayScanTitle": "Payer sur place",
+  "proxipayScanInstruction": "Scannez le code affiché par le salon.",
+  "proxipayScanInvalidError": "Code invalide ou expiré.",
+  "proxipayScanConnectionError": "Erreur de connexion. Réessayez.",
+  "proxipayConfirmPayButton": "Payer →",
+  "proxipayConfirmErrorGeneric": "Impossible de confirmer le paiement.",
+  "proxipayConfirmSuccessMessage": "Paiement envoyé ✓",
+
   "notificationsListTitle": "Notifications",
   "notificationsDeleteSuccess": "Notification supprimée.",
   "notificationsLoadMoreButton": "Charger plus",

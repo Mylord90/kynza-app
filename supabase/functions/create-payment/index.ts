@@ -1,11 +1,9 @@
 // supabase/functions/create-payment/index.ts
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { buildIdempotencyKey } from "../_shared/hmac.ts";
+import { initiateLeapaPayment } from "../_shared/leapa.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
-
-const LEAPA_API_KEY = Deno.env.get("LEAPA_API_KEY");
-const LEAPA_BASE_URL = Deno.env.get("LEAPA_BASE_URL") ?? "https://api.leapa.bi/v1";
 
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
@@ -51,48 +49,22 @@ Deno.serve(async (req) => {
       return jsonResponse({ idempotencyKey, alreadyPending: true }, 200);
     }
 
-    if (!LEAPA_API_KEY) {
-      // No sandbox/production credentials configured in this environment —
-      // mark as processing so the Flutter polling UI still behaves
-      // correctly; a real deployment must set LEAPA_API_KEY.
-      await supabase.from("transactions").update({ status: "processing" }).eq(
-        "idempotency_key",
-        idempotencyKey,
-      );
-      return jsonResponse({ idempotencyKey, status: "processing", sandbox: true }, 200);
-    }
-
-    const leapaRes = await fetch(`${LEAPA_BASE_URL}/payments/initiate`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LEAPA_API_KEY}`,
-        "Idempotency-Key": idempotencyKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: booking.amount_bif,
-        currency: "BIF",
-        method,
-        phone,
-        reference: idempotencyKey,
-      }),
+    const result = await initiateLeapaPayment({
+      supabase,
+      idempotencyKey,
+      amountBif: booking.amount_bif,
+      method,
+      phone,
     });
 
-    if (!leapaRes.ok) {
-      await supabase.from("transactions").update({ status: "failed" }).eq(
-        "idempotency_key",
-        idempotencyKey,
-      );
+    if (result.status === "failed") {
       return jsonResponse({ error: "leapa_initiation_failed" }, 502);
     }
 
-    const leapaData = await leapaRes.json();
-    await supabase
-      .from("transactions")
-      .update({ status: "processing", leapa_reference: leapaData.reference ?? null })
-      .eq("idempotency_key", idempotencyKey);
-
-    return jsonResponse({ idempotencyKey, status: "processing" }, 200);
+    return jsonResponse(
+      { idempotencyKey, status: result.status, sandbox: result.sandbox },
+      200,
+    );
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown_error";
     if (message === "unauthenticated") return jsonResponse({ error: message }, 401);

@@ -1538,6 +1538,108 @@ abstract class AppLocalizations {
   /// **'Numéro invalide.'**
   String get paymentInvalidPhone;
 
+  /// No description provided for @proxipayQrTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Encaisser'**
+  String get proxipayQrTitle;
+
+  /// No description provided for @proxipayCreateSessionError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de générer le QR de paiement.'**
+  String get proxipayCreateSessionError;
+
+  /// No description provided for @proxipayQrShowToClient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faites scanner ce code par le client.'**
+  String get proxipayQrShowToClient;
+
+  /// No description provided for @proxipayQrExpiresIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expire dans {minutes}:{seconds}'**
+  String proxipayQrExpiresIn(String minutes, String seconds);
+
+  /// No description provided for @proxipayQrExpired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le code a expiré. Générez-en un nouveau.'**
+  String get proxipayQrExpired;
+
+  /// No description provided for @proxipayAwaitingSettlementMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de confirmation du paiement...'**
+  String get proxipayAwaitingSettlementMessage;
+
+  /// No description provided for @proxipaySuccessMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement reçu ✓'**
+  String get proxipaySuccessMessage;
+
+  /// No description provided for @proxipayFailedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce paiement n\'a pas abouti. Aucun argent débité.'**
+  String get proxipayFailedMessage;
+
+  /// No description provided for @proxipayRetryButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get proxipayRetryButton;
+
+  /// No description provided for @proxipayDoneButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminé'**
+  String get proxipayDoneButton;
+
+  /// No description provided for @proxipayScanTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer sur place'**
+  String get proxipayScanTitle;
+
+  /// No description provided for @proxipayScanInstruction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Scannez le code affiché par le salon.'**
+  String get proxipayScanInstruction;
+
+  /// No description provided for @proxipayScanInvalidError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code invalide ou expiré.'**
+  String get proxipayScanInvalidError;
+
+  /// No description provided for @proxipayScanConnectionError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur de connexion. Réessayez.'**
+  String get proxipayScanConnectionError;
+
+  /// No description provided for @proxipayConfirmPayButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Payer →'**
+  String get proxipayConfirmPayButton;
+
+  /// No description provided for @proxipayConfirmErrorGeneric.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de confirmer le paiement.'**
+  String get proxipayConfirmErrorGeneric;
+
+  /// No description provided for @proxipayConfirmSuccessMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement envoyé ✓'**
+  String get proxipayConfirmSuccessMessage;
+
   /// No description provided for @notificationsListTitle.
   ///
   /// In fr, this message translates to:

@@ -119,6 +119,13 @@ abstract class RouteNames {
   static const maintenance = '/maintenance';
   static const forceUpdate = '/force-update';
 
+  // ProxiPay V1 — QR-based in-person payment
+  static const ownerProxiPay = '/owner/proxipay/:bookingId';
+  static const clientProxiPayScan = '/client/proxipay/scan';
+
+  static String ownerProxiPayPath(String bookingId) =>
+      '/owner/proxipay/$bookingId';
+
   // Branding — À propos
   static const ownerAbout = '/owner/about';
 
