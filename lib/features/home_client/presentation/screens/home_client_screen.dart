@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../shared/navigation/kynza_bottom_nav.dart';
 import '../../../../shared/navigation/kynza_nav_item.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -36,6 +38,11 @@ class _HomeClientScreenState extends ConsumerState<HomeClientScreen> {
       appBar: AppBar(
         title: Text(_titleFor(_tabIndex, profile?.firstName)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner_outlined),
+            tooltip: context.l10n.proxipayScanTitle,
+            onPressed: () => context.push(RouteNames.clientProxiPayScan),
+          ),
           const UnreadCountBadge(),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.lg),

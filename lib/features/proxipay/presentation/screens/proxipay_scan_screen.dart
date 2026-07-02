@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -27,6 +28,7 @@ class ProxiPayScanScreen extends ConsumerStatefulWidget {
 class _ProxiPayScanScreenState extends ConsumerState<ProxiPayScanScreen> {
   final MobileScannerController _controller = MobileScannerController();
   final _phoneCtrl = TextEditingController();
+  final _debugSessionCtrl = TextEditingController();
   _ScanStage _stage = _ScanStage.scanning;
   ProxiPaySessionModel? _session;
   String _method = 'lumicash';
@@ -37,6 +39,7 @@ class _ProxiPayScanScreenState extends ConsumerState<ProxiPayScanScreen> {
   void dispose() {
     _controller.dispose();
     _phoneCtrl.dispose();
+    _debugSessionCtrl.dispose();
     super.dispose();
   }
 
@@ -46,7 +49,14 @@ class _ProxiPayScanScreenState extends ConsumerState<ProxiPayScanScreen> {
         ? null
         : capture.barcodes.first.rawValue;
     if (raw == null || raw.isEmpty) return;
+    await _resolveSession(raw);
+  }
 
+  /// Single-device QA affordance: with only one emulator, there's no second
+  /// phone to physically scan the staff's QR. This bypasses the camera and
+  /// resolves a session id typed/pasted in directly — same code path as a
+  /// real scan from here on. Debug builds only, never in release.
+  Future<void> _resolveSession(String raw) async {
     final invalidMsg = context.l10n.proxipayScanInvalidError;
     final connectionMsg = context.l10n.proxipayScanConnectionError;
 
@@ -157,6 +167,7 @@ class _ProxiPayScanScreenState extends ConsumerState<ProxiPayScanScreen> {
           right: 0,
           child: KynzaOfflineBanner(),
         ),
+        if (kDebugMode) _buildDebugSessionEntry(),
         if (_errorMessage != null)
           Positioned(
             left: AppSpacing.lg,
@@ -176,6 +187,47 @@ class _ProxiPayScanScreenState extends ConsumerState<ProxiPayScanScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildDebugSessionEntry() {
+    return Positioned(
+      left: AppSpacing.md,
+      right: AppSpacing.md,
+      bottom: AppSpacing.md,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(AppSpacing.sm),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _debugSessionCtrl,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'DEBUG: session id',
+                  hintStyle: TextStyle(color: Colors.white54),
+                  isDense: true,
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: _busy
+                  ? null
+                  : () {
+                      final raw = _debugSessionCtrl.text.trim();
+                      if (raw.isEmpty) return;
+                      _resolveSession(raw);
+                    },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
