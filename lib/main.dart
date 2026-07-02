@@ -63,30 +63,29 @@ class KynzaApp extends ConsumerWidget {
     final locale = ref.watch(currentLocaleProvider);
     final showLoaderOverlay = ref.watch(loaderOverlayProvider);
     return AuthBootGate(
-      child: Stack(
-        children: [
-          MaterialApp.router(
-            title: KynzaConstants.appName,
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.dark,
-            routerConfig: router,
-            locale: locale,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            localeResolutionCallback: (deviceLocale, supported) {
-              if (deviceLocale == null) return const Locale('fr');
-              for (final s in supported) {
-                if (s.languageCode == deviceLocale.languageCode) return s;
-              }
-              return const Locale('fr');
-            },
-          ),
-          if (showLoaderOverlay)
-            const Directionality(
-              textDirection: TextDirection.ltr,
-              child: KynzaLoaderOverlay(),
-            ),
-        ],
+      child: MaterialApp.router(
+        title: KynzaConstants.appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.dark,
+        routerConfig: router,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (deviceLocale, supported) {
+          if (deviceLocale == null) return const Locale('fr');
+          for (final s in supported) {
+            if (s.languageCode == deviceLocale.languageCode) return s;
+          }
+          return const Locale('fr');
+        },
+        builder: (context, child) {
+          return Stack(
+            children: [
+              if (child != null) child,
+              if (showLoaderOverlay) const KynzaLoaderOverlay(),
+            ],
+          );
+        },
       ),
     );
   }
