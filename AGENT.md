@@ -139,9 +139,11 @@ lib/
     │                    # (Phase 1.4 — salon_settings)
     ├── automation/      # Workflow builder/list/execution-log (Phase 2 —
     │                    # Trigger → Conditions → Actions)
-    └── data_platform/   # backup/ (BackupScreen) + templates/
-                          # (TemplateListScreen, TemplateEditorScreen)
-                          # Phase 3 — Enterprise Data Platform
+    ├── data_platform/   # backup/ (BackupScreen) + templates/
+    │                    # (TemplateListScreen, TemplateEditorScreen)
+    │                    # Phase 3 — Enterprise Data Platform
+    └── proxipay/        # ProxiPayQrScreen (staff) + ProxiPayScanScreen (client)
+                          # QR-based in-person payment — see SECTION 22
 ```
 
 Toute nouvelle feature respecte ce découpage : pas de logique transverse hors `core/`, pas de widget partagé dupliqué hors `shared/widgets/`.
@@ -521,6 +523,7 @@ Références : `docs/I18N_GUIDE.md`, `docs/LANGUAGE_WORKFLOW.md`, `docs/PHASE_I1
 - Data Platform (Phase 3) : `mv_daily_revenue` n'a aucun consommateur Flutter direct (les dashboards utilisent toujours `v_salon_kpis`) — `v_mv_daily_revenue` est wired mais pas encore appelée par un écran. `render_template()` RPC branché dans le repository mais pas de "preview du rendu" dans l'UI. Pas de test end-to-end live de `create-backup` (Edge Function déployée, structure vérifiée, test en conditions réelles à faire via l'app). FTS ne retrouve pas les noms de salon sans espace (ex. `'SalonBeauteQA'` n'est pas trouvé par `p_query='salon'` — comportement FTS correct, le fallback ILIKE gère ce cas).
 - Evolution Platform (Phase 4) : `kAppVersionCode = 1` est une constante hardcodée dans `app_version.dart` — doit être mise à jour manuellement en sync avec `pubspec.yaml` à chaque release (une intégration `package_info_plus` l'automatiserait). `kPlayStoreUrl` et `kAppStoreUrl` sont des placeholders jusqu'à la première soumission aux stores. `evaluate_feature_flag()` retourne `false` appelée avec `service_role` (pas de `salon_id` en contexte) — comportement attendu et sûr. `ForceUpdateScreen` et `MaintenanceScreen` ont `PopScope(canPop:false)` sans possibilité de bypass manuel pour l'Owner — prévu, mais à documenter dans les release notes internes.
 - Loader Officiel (KynzaLoader) : `KynzaLoaderVariant.linear` (progression déterministe) documenté dans `docs/LOADER_GUIDE.md` mais non codé — aucun cas d'usage réel dans le projet (pas d'upload avec % connu). Les goldens de `test/golden/kynza_loader_golden_test.dart` ont été générés puis inspectés visuellement une fois lors de cette phase ; toute régénération future (`--update-goldens`) doit repasser par une inspection visuelle avant merge.
+- ProxiPay (V1, 2026-07-02) : `bookings.payment_method` reste `'cash'` après un paiement ProxiPay réussi — `BookingRepositoryImpl.markCompleted()` (`lib/features/booking/data/repositories/booking_repository_impl.dart`) fixe cette valeur sans regarder le mode de paiement réel. Cosmétique uniquement : `transactions.method` (mis à jour par `proxipay-confirm`) est la vraie source de vérité, et c'est elle que les rapports/analytics doivent lire. À corriger si `bookings.payment_method` est un jour affiché directement dans une UI — passer `paymentMethod` en paramètre de `markCompleted()` ou le dériver de la transaction liée au booking.
 
 ---
 
@@ -535,9 +538,12 @@ via `CustomPainter`/`AnimationController`, sans dépendance externe.
   gold, pull-to-refresh natif — geste non réimplémentable sans régression).
 - Variantes d'usage : `KynzaLoaderInline` (sections/listes/gardes de route),
   `KynzaLoaderFullscreen` (écran de chargement dédié), `KynzaLoaderOverlay`
-  + `loaderOverlayProvider` (opération critique bloquante, câblé dans
-  `main.dart` au-dessus de `MaterialApp.router`), `KynzaLoaderButton` (état
-  `isLoading` d'un bouton, avec variante `onGoldBackground`).
+  + `loaderOverlayProvider` (opération critique bloquante, câblé dans le
+  `builder:` de `MaterialApp.router` dans `main.dart` — **jamais** en
+  `Stack` autour de `MaterialApp.router`, ce qui prive le `Stack` de tout
+  ancêtre `Directionality`/`Localizations` et casse le premier rebuild
+  d'`AuthBootGate`, voir dette ProxiPay 2026-07-02), `KynzaLoaderButton`
+  (état `isLoading` d'un bouton, avec variante `onGoldBackground`).
 - Distinct de `KynzaSkeleton`/`KynzaCardSkeletons` (shimmer) — systèmes
   complémentaires, jamais fusionnés.
 - Référence complète : `docs/LOADER_GUIDE.md`. Audit préalable au
@@ -553,6 +559,90 @@ via `CustomPainter`/`AnimationController`, sans dépendance externe.
 - `KynzaTextTheme.dark` (`lib/core/theme/text_theme.dart`) mappe l'échelle sur `ThemeData.textTheme` (Material 3) — accessible via `Theme.of(context).textTheme.*`.
 - Échelle historique (`h1`, `h2`, `h3`, `body`, `button`, `label`, `amount`, `amountMd`, `amountSm`, `mono`, `displayLarge`) **non renommée/modifiée** pour préserver les ~130 usages existants ; l'échelle étendue (`headlineLarge/Medium/Small`, `titleLarge/Medium/Small`, `bodyLarge/Medium`, `labelLarge/Medium/Small`, `amountLarge`, `amountLabel`, `monoBold`, `displayMedium`) s'ajoute pour les nouveaux écrans.
 - Référence complète : `docs/TYPOGRAPHY_GUIDE.md`. Rapport de la phase : `docs/PHASE_TYPOGRAPHY_SUMMARY.md`.
+
+---
+
+## SECTION 21 — DÉPENDANCES CRITIQUES
+
+### phosphor_flutter — VENDORED (2026-07-02)
+- Version : 2.1.0 (dernière version publiée sur pub.dev — aucune version plus
+  récente n'existe).
+- Localisation : `packages/phosphor_flutter/` (copie locale patchée), activée
+  via `dependency_overrides` dans le `pubspec.yaml` racine.
+- Raison : `IconData` est désormais une `final class` dans le SDK Flutter
+  installé sur ce projet — une `final class` ne peut être ni étendue ni
+  implémentée en dehors de sa propre librairie. Le code publié de
+  `phosphor_flutter` déclare `class PhosphorIconData extends IconData`, qui
+  ne compile plus du tout (`assembleDebug` échouait systématiquement avant ce
+  correctif).
+- Patch appliqué : les fichiers `phosphor_icons_*.dart` construisent
+  désormais des `IconData(...)` bruts directement (au lieu de les envelopper
+  dans `PhosphorFlatIconData`/`PhosphorDuotoneIconData`) ; ces deux classes
+  sont conservées comme classes autonomes (non liées à `IconData`) pour la
+  compatibilité de type. Le rendu duotone à double calque de `PhosphorIcon`
+  est devenu inerte (jamais utilisé dans KYNZA — vérifié par recherche
+  exhaustive de "Duotone" dans `lib/`).
+- Détail complet du patch : `packages/phosphor_flutter/README_PATCH.md`.
+- ⚠️ Ne jamais exécuter `flutter pub upgrade`/`--major-versions` sur ce
+  package sans vérifier au préalable qu'une version amont compatible existe
+  et retirer alors le `dependency_overrides` + `packages/phosphor_flutter/`.
+
+---
+
+## SECTION 22 — PROXIPAY (V1 — QR uniquement)
+
+### Commits de livraison
+- `1438e4f` — implémentation initiale (Edge Functions, migration, écrans staff/client).
+- `5971168`, `2695b43`, `2aebeb2`, `a454426` — correctifs post-E2E (voir ci-dessous).
+
+### Périmètre V1 (décision explicite, pas une limitation subie)
+- **Transport : QR uniquement.** Aucun code NFC/BLE n'existe dans ce projet —
+  ni stub, ni détecteur de transport. NFC (P2P obsolète sur Android depuis la
+  version 10, CoreNFC lecteur-seul côté iOS pour les apps tierces) et BLE
+  (`flutter_reactive_ble` n'a pas de mode GATT-serveur/périphérique) posent
+  des blocages plateforme réels — à réévaluer via un spike dédié avant
+  d'ajouter ces transports.
+- **Pas de couche crypto dédiée.** Le QR encode l'`id` brut de la ligne
+  `proxipay_sessions` (comme le QR de fidélité existant), pas une charge
+  chiffrée. Le numéro Mobile Money du client ne transite jamais par le QR ni
+  par l'appareil du staff — il va directement du client authentifié vers
+  l'Edge Function `proxipay-confirm`.
+- **Pas de sync offline/Hive.** ProxiPay exige une connexion réseau live,
+  comme le flux de paiement en ligne existant (`create-payment`) — ce n'est
+  pas un gap, c'est le comportement voulu du plan approuvé.
+- **Paiement en mode sandbox tant que Leapa n'est pas live** (compte en
+  attente d'approbation, voir dette technique) : `transactions.status` passe
+  à `'processing'` sans `leapa_reference`, pas de format de référence factice
+  généré.
+
+### Architecture réelle
+- Table `proxipay_sessions` (RLS actif, écriture uniquement via service_role
+  dans les Edge Functions — aucune policy `INSERT`/`UPDATE` pour
+  `authenticated`) : ne stocke que la paire staff↔client, le montant et
+  l'expiration (3 min). Le mouvement d'argent reste dans `transactions`
+  (table existante), créé par `proxipay-confirm` avec la même logique
+  d'idempotency-key que `create-payment`.
+- Edge Functions déployées : `proxipay-create-session` (staff, lit le
+  montant depuis `bookings.amount_bif`, jamais du client), `proxipay-confirm`
+  (client, appelle `_shared/leapa.ts` — extrait de `create-payment` pour être
+  partagé par les deux fonctions).
+- Écrans : `ProxiPayQrScreen` (staff, `lib/features/proxipay/presentation/screens/`)
+  affiche le QR + écoute Realtime `proxipay_sessions` puis `transactions`
+  pour déclencher `BookingActionNotifier.markCompleted()` automatiquement.
+  `ProxiPayScanScreen` (client) scanne en in-app (`mobile_scanner`, pas de
+  deep link/URI custom) ; contient un champ de saisie manuelle de session id
+  actif uniquement en `kDebugMode` (test single-device, jamais en release).
+- Point d'entrée : bouton "Terminer & encaisser" dans `booking_detail_sheet.dart`
+  (owner) ; bouton scan dans l'AppBar de `HomeClientScreen` (client).
+
+### Validation
+- Flux QR complet validé E2E sur émulateur Kynza_Pixel6 le 2026-07-02 :
+  booking → QR staff → confirmation client (API authentifiée) → transition
+  automatique de l'écran Owner vers "Payment received ✓" via Supabase
+  Realtime, sans action manuelle. Détail complet, y compris les 2 bugs
+  préexistants trouvés et corrigés en cours de route (patch `phosphor_flutter`
+  et ordre `Stack`/`MaterialApp.router` dans `main.dart`) :
+  `docs/TEST_PROXIPAY_E2E_REPORT.md`.
 
 ---
 
