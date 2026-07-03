@@ -1,0 +1,3 @@
+tags:
+  live:
+    skip: "Requires network access to the kynza-dr-scratch Supabase project and QA credentials (KYNZA_SCRATCH_ANON_KEY/KYNZA_SCRATCH_SERVICE_ROLE_KEY env vars) — run explicitly via `flutter test --tags live --run-skipped test/live/`"
