@@ -8,6 +8,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/marketing/client_contact_model.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -49,7 +50,7 @@ class _InviteClientsScreenState extends ConsumerState<InviteClientsScreen> {
           .deleteContact(contact.id!)
           // Already shown as removed via _hiddenIds — there's no UI left
           // to surface a failure to at this point in the undo flow.
-          .catchError((_) {});
+          .catchError(CrashReportingService.recordError);
       _pendingTimers.remove(contact.id);
     });
     _pendingTimers[contact.id!] = timer;

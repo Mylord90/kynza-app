@@ -7,6 +7,7 @@ import '../../core/constants/app_durations.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/services/crash_reporting_service.dart';
 import '../../features/legal/application/providers/legal_providers.dart';
 
 /// Non-blocking banner (R03 offline-first). Shows "Hors connexion" while
@@ -42,7 +43,7 @@ class _KynzaOfflineBannerState extends ConsumerState<KynzaOfflineBanner> {
       ref
           .read(legalAcceptanceNotifierProvider.notifier)
           .flushOfflineQueue()
-          .catchError((_) {});
+          .catchError(CrashReportingService.recordError);
     }
     _previouslyConnected = isConnected;
   }

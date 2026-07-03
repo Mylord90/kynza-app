@@ -7,6 +7,7 @@ import '../../../../core/constants/service_categories.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/service_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../journey/application/providers/journey_providers.dart';
@@ -86,7 +87,7 @@ class _ServiceFormScreenState extends ConsumerState<ServiceFormScreen> {
           ref
               .read(journeyNotifierProvider.notifier)
               .markStep(widget.salonId, 'first_service')
-              .catchError((_) {}),
+              .catchError(CrashReportingService.recordError),
         );
       }
       if (mounted) Navigator.of(context).pop();

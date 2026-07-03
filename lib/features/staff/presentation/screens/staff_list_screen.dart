@@ -9,6 +9,7 @@ import '../../../../core/localization/extensions/build_context_l10n_extension.da
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../journey/application/providers/journey_providers.dart';
 import '../../../salon/application/providers/salon_providers.dart';
@@ -120,7 +121,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
                   onPressed: () => ref
                       .read(journeyNotifierProvider.notifier)
                       .markStep(widget.salonId, 'team')
-                      .catchError((_) {}),
+                      .catchError(CrashReportingService.recordError),
                   child: Text(context.l10n.staffListSoloLink),
                 ),
               ),
@@ -130,7 +131,7 @@ class _StaffBodyState extends ConsumerState<_StaffBody> {
         ref
             .read(journeyNotifierProvider.notifier)
             .markStep(widget.salonId, 'team')
-            .catchError((_) {});
+            .catchError(CrashReportingService.recordError);
 
         final active = staff.where((s) => s.isActive && !s.isPending).toList();
         final pending = staff.where((s) => s.isPending).toList();

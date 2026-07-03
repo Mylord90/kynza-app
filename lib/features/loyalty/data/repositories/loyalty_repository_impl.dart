@@ -3,6 +3,7 @@ import '../../../../core/models/loyalty/loyalty_card_model.dart';
 import '../../../../core/models/loyalty/loyalty_program_model.dart';
 import '../../../../core/models/loyalty/loyalty_qr_token_model.dart';
 import '../../../../core/models/loyalty/loyalty_stamp_log_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/loyalty_repository.dart';
 
@@ -119,8 +120,9 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
           },
         },
       );
-    } catch (_) {
+    } catch (e, st) {
       // Best-effort — a missed push must never block stamp earning.
+      CrashReportingService.recordError(e, st);
     }
   }
 

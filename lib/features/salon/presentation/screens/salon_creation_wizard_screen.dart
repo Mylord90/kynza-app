@@ -10,6 +10,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/salon_full_model.dart';
 import '../../../../core/models/salon_media_model.dart';
 import '../../../../core/models/working_hour_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../journey/application/providers/journey_providers.dart';
 import '../../application/providers/salon_providers.dart';
@@ -154,13 +155,13 @@ class _SalonCreationWizardScreenState
         ref
             .read(journeyNotifierProvider.notifier)
             .markStep(created.id, 'salon_info')
-            .catchError((_) {}),
+            .catchError(CrashReportingService.recordError),
       );
       unawaited(
         ref
             .read(journeyNotifierProvider.notifier)
             .markStep(created.id, 'hours')
-            .catchError((_) {}),
+            .catchError(CrashReportingService.recordError),
       );
 
       if (!mounted) return;

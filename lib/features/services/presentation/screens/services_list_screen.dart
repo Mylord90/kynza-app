@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/service_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../salon/application/providers/salon_providers.dart';
 import '../../application/providers/service_providers.dart';
@@ -38,7 +39,7 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
       ref
           .read(serviceNotifierProvider.notifier)
           .softDelete(id)
-          .catchError((_) {});
+          .catchError(CrashReportingService.recordError);
       _pendingDeletes.remove(id);
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -197,7 +198,7 @@ class _ServicesListScreenState extends ConsumerState<ServicesListScreen> {
                           onToggleActive: (active) => ref
                               .read(serviceNotifierProvider.notifier)
                               .toggleActive(service.id!, active)
-                              .catchError((_) {}),
+                              .catchError(CrashReportingService.recordError),
                         ),
                       ),
                     );

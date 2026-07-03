@@ -9,6 +9,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/booking_model.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
 import '../../../booking/presentation/widgets/booking_status_chip.dart';
@@ -68,7 +69,7 @@ class BookingDetailSheet extends ConsumerWidget {
               variant: KynzaButtonVariant.secondary,
               onPressed: gracePassed
                   ? () {
-                      notifier.markNoShow(booking.id!).catchError((_) {});
+                      notifier.markNoShow(booking.id!).catchError(CrashReportingService.recordError);
                       Navigator.of(context).pop();
                     }
                   : null,

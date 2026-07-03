@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/models/booking_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../loyalty/application/providers/loyalty_providers.dart';
 import '../../data/repositories/booking_repository_impl.dart';
@@ -179,8 +180,11 @@ class BookingActionNotifier extends AsyncNotifier<void> {
         booking.clientId,
       );
       await loyalty.addStamp(card.id!, bookingId: booking.id);
-    } catch (_) {
-      // Ignored — see doc comment above.
+    } catch (e, st) {
+      // Best-effort — see doc comment above. Logged as non-fatal so a
+      // systemic failure (e.g. a broken RPC) is still visible in
+      // Crashlytics, without blocking the booking completion flow.
+      CrashReportingService.recordError(e, st);
     }
   }
 
@@ -192,8 +196,9 @@ class BookingActionNotifier extends AsyncNotifier<void> {
         'calculate-commission',
         body: {'booking_id': booking.id},
       );
-    } catch (_) {
-      // Ignored — see doc comment above.
+    } catch (e, st) {
+      // Best-effort — see doc comment above. Non-fatal log only.
+      CrashReportingService.recordError(e, st);
     }
   }
 

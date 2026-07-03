@@ -51,14 +51,20 @@ class _FakeLegalDocumentRepository implements LegalDocumentRepository {
 }
 
 class _FakeUserConsentRepository implements UserConsentRepository {
-  _FakeUserConsentRepository({List<UserLegalAcceptanceModel> existingAcceptances = const []})
-    : acceptedCalls = [...existingAcceptances];
+  _FakeUserConsentRepository({
+    List<UserLegalAcceptanceModel> existingAcceptances = const [],
+    this.alwaysFail = false,
+  }) : acceptedCalls = [...existingAcceptances];
 
   /// Doubles as both "the calls made" and "what getUserAcceptances would
   /// now return" — a real (if tiny) stateful fake, so a test can call
   /// acceptDocumentVersion and then observe getUserAcceptances reflect it,
   /// exactly like the real table would.
   final List<UserLegalAcceptanceModel> acceptedCalls;
+
+  /// When true, acceptDocumentVersion always throws — simulates a
+  /// persistently-failing write for DLQ tests.
+  final bool alwaysFail;
 
   @override
   Future<List<UserLegalAcceptanceModel>> getUserAcceptances(String userId) async =>
@@ -71,6 +77,7 @@ class _FakeUserConsentRepository implements UserConsentRepository {
     String? appVersion,
     String? platform,
   }) async {
+    if (alwaysFail) throw Exception('simulated persistent failure');
     final acceptance = UserLegalAcceptanceModel(
       userId: userId,
       documentVersionId: documentVersionId,
@@ -99,11 +106,13 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('kynza_legal_queue_test');
     Hive.init(tempDir.path);
     await Hive.openBox(LegalAcceptanceQueueService.boxName);
+    await Hive.openBox(LegalAcceptanceQueueService.deadLetterBoxName);
     queue = LegalAcceptanceQueueService();
   });
 
   tearDown(() async {
     await Hive.deleteBoxFromDisk(LegalAcceptanceQueueService.boxName);
+    await Hive.deleteBoxFromDisk(LegalAcceptanceQueueService.deadLetterBoxName);
     await tempDir.delete(recursive: true);
   });
 
@@ -186,6 +195,70 @@ void main() {
 
       expect(consentRepo.acceptedCalls, isEmpty);
     });
+  });
+
+  group('Dead-letter queue — fails 3x, moves to DLQ, never lost', () {
+    test(
+      'an item that fails every flush attempt is moved to the DLQ after '
+      'maxAttempts, removed from pending, and never simply vanishes',
+      () async {
+        final consentRepo = _FakeUserConsentRepository(alwaysFail: true);
+        final service = LegalAcceptanceService(
+          documentRepository: _FakeLegalDocumentRepository(),
+          consentRepository: consentRepo,
+          queue: queue,
+        );
+
+        await service.acceptVersion(
+          userId: 'u-1',
+          documentVersionId: 'v-1',
+          isOnline: false,
+        );
+        expect(queue.pending(), hasLength(1));
+        expect(queue.deadLetterItems(), isEmpty);
+
+        // Flush repeatedly — each attempt fails, incrementing the retry
+        // counter, until maxAttempts is reached.
+        for (var i = 0; i < LegalAcceptanceQueueService.maxAttempts; i++) {
+          await service.flushQueue();
+        }
+
+        // Doesn't loop forever: removed from the pending queue.
+        expect(queue.pending(), isEmpty);
+        // Doesn't vanish: present in the dead-letter queue instead.
+        expect(queue.deadLetterItems(), hasLength(1));
+        expect(
+          queue.deadLetterItems().single['documentVersionId'],
+          'v-1',
+        );
+        // A subsequent flush is a no-op — nothing left to retry.
+        await service.flushQueue();
+        expect(queue.deadLetterItems(), hasLength(1));
+      },
+    );
+
+    test(
+      'an item that succeeds before maxAttempts never reaches the DLQ',
+      () async {
+        final consentRepo = _FakeUserConsentRepository();
+        final service = LegalAcceptanceService(
+          documentRepository: _FakeLegalDocumentRepository(),
+          consentRepository: consentRepo,
+          queue: queue,
+        );
+
+        await service.acceptVersion(
+          userId: 'u-1',
+          documentVersionId: 'v-1',
+          isOnline: false,
+        );
+        await service.flushQueue();
+
+        expect(queue.deadLetterItems(), isEmpty);
+        expect(queue.pending(), isEmpty);
+        expect(consentRepo.acceptedCalls, hasLength(1));
+      },
+    );
   });
 
   group('LegalAcceptanceService.isUpToDate', () {

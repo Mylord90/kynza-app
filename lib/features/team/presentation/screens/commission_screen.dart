@@ -6,6 +6,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/models/staff_commission_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../staff/application/providers/staff_providers.dart';
 import '../../application/providers/commission_providers.dart';
@@ -152,7 +153,7 @@ class CommissionScreen extends ConsumerWidget {
                                 onPressed: () => ref
                                     .read(commissionNotifierProvider.notifier)
                                     .markPaid(salonId, pendingIds)
-                                    .catchError((_) {}),
+                                    .catchError(CrashReportingService.recordError),
                               ),
                             ),
                           for (final c in commissions)

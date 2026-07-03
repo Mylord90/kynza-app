@@ -8,6 +8,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/models/booking_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/navigation/kynza_bottom_nav.dart';
 import '../../../../shared/navigation/kynza_nav_item.dart';
@@ -186,7 +187,7 @@ class _TodayTab extends ConsumerWidget {
               onConfirmArrival: () => ref
                   .read(bookingActionNotifierProvider.notifier)
                   .markInProgress(next.id!)
-                  .catchError((_) {}),
+                  .catchError(CrashReportingService.recordError),
             ),
             if (rest.isNotEmpty)
               Padding(

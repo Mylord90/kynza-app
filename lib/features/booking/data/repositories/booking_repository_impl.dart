@@ -1,6 +1,7 @@
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/booking_model.dart';
+import '../../../../core/services/performance_monitoring_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/booking_repository.dart';
 
@@ -8,36 +9,38 @@ class BookingRepositoryImpl implements BookingRepository {
   static const _table = 'bookings';
 
   @override
-  Future<BookingModel> createBooking(BookingModel draft) async {
-    try {
-      final res = await SupabaseService.client.functions.invoke(
-        'create-booking',
-        body: {
-          'salonId': draft.salonId,
-          'serviceId': draft.serviceId,
-          'practitionerId': draft.practitionerId,
-          'startTime': draft.startTime.toIso8601String(),
-          'notes': draft.notes,
-        },
-      );
-      if (res.status != 200) {
-        final message = (res.data is Map)
-            ? res.data['message'] as String?
-            : null;
-        throw AppException(
-          message ??
-              'Ce créneau vient d\'être réservé. Choisissez un autre horaire.',
+  Future<BookingModel> createBooking(BookingModel draft) {
+    return PerformanceMonitoringService.traceAsync('booking_creation', () async {
+      try {
+        final res = await SupabaseService.client.functions.invoke(
+          'create-booking',
+          body: {
+            'salonId': draft.salonId,
+            'serviceId': draft.serviceId,
+            'practitionerId': draft.practitionerId,
+            'startTime': draft.startTime.toIso8601String(),
+            'notes': draft.notes,
+          },
+        );
+        if (res.status != 200) {
+          final message = (res.data is Map)
+              ? res.data['message'] as String?
+              : null;
+          throw AppException(
+            message ??
+                'Ce créneau vient d\'être réservé. Choisissez un autre horaire.',
+          );
+        }
+        return BookingModel.fromSupabase(
+          res.data['booking'] as Map<String, dynamic>,
+        );
+      } catch (e) {
+        if (e is AppException) rethrow;
+        throw const AppException(
+          'Impossible de créer la réservation. Réessayez.',
         );
       }
-      return BookingModel.fromSupabase(
-        res.data['booking'] as Map<String, dynamic>,
-      );
-    } catch (e) {
-      if (e is AppException) rethrow;
-      throw const AppException(
-        'Impossible de créer la réservation. Réessayez.',
-      );
-    }
+    });
   }
 
   @override

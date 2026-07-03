@@ -12,6 +12,7 @@ import '../../../../core/models/staff_commission_model.dart';
 import '../../../../core/models/staff_profile_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../dashboard/presentation/widgets/kynza_bar_chart_fl.dart';
@@ -281,7 +282,7 @@ class StaffDetailScreen extends ConsumerWidget {
                       onPressed: () => ref
                           .read(staffNotifierProvider.notifier)
                           .toggleActive(staff.id!, !staff.isActive)
-                          .catchError((_) {}),
+                          .catchError(CrashReportingService.recordError),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(
@@ -298,7 +299,7 @@ class StaffDetailScreen extends ConsumerWidget {
                                   : 'manager',
                             ),
                           )
-                          .catchError((_) {}),
+                          .catchError(CrashReportingService.recordError),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     KynzaButton(

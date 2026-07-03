@@ -1,5 +1,7 @@
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/search/search_result_item.dart';
+import '../../../../core/services/crash_reporting_service.dart';
+import '../../../../core/services/performance_monitoring_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/search_repository.dart';
 
@@ -8,24 +10,26 @@ class SearchRepositoryImpl implements SearchRepository {
   Future<List<SearchResultItem>> search(
     String query,
     SearchFilters filters,
-  ) async {
-    try {
-      final results = <SearchResultItem>[];
-      // Category/price are service-only concepts — once either is set,
-      // salons (which have neither) would just show up unfiltered by
-      // them, which reads as broken rather than "no match".
-      final hasServiceOnlyFilters =
-          filters.categories.isNotEmpty ||
-          filters.minPriceBif != null ||
-          filters.maxPriceBif != null;
-      if (!hasServiceOnlyFilters) {
-        results.addAll(await _searchSalons(query, filters));
+  ) {
+    return PerformanceMonitoringService.traceAsync('search', () async {
+      try {
+        final results = <SearchResultItem>[];
+        // Category/price are service-only concepts — once either is set,
+        // salons (which have neither) would just show up unfiltered by
+        // them, which reads as broken rather than "no match".
+        final hasServiceOnlyFilters =
+            filters.categories.isNotEmpty ||
+            filters.minPriceBif != null ||
+            filters.maxPriceBif != null;
+        if (!hasServiceOnlyFilters) {
+          results.addAll(await _searchSalons(query, filters));
+        }
+        results.addAll(await _searchServices(query, filters));
+        return _sort(results, filters.sortBy);
+      } catch (_) {
+        throw const AppException('Impossible de lancer la recherche.');
       }
-      results.addAll(await _searchServices(query, filters));
-      return _sort(results, filters.sortBy);
-    } catch (_) {
-      throw const AppException('Impossible de lancer la recherche.');
-    }
+    });
   }
 
   // Uses search_salon_data() RPC (Phase 3 FTS — GIN tsvector indexes).
@@ -134,8 +138,10 @@ class SearchRepositoryImpl implements SearchRepository {
     if (!hasServiceOnlyFilters) {
       try {
         return await _searchViaRpc(query, filters, 'service');
-      } catch (_) {
-        // fall through to ILIKE below
+      } catch (e, st) {
+        // Fall through to ILIKE below — but a broken FTS RPC degrading
+        // every search to the slower fallback is worth knowing about.
+        CrashReportingService.recordError(e, st);
       }
     }
 
@@ -201,8 +207,9 @@ class SearchRepositoryImpl implements SearchRepository {
       await SupabaseService.from(
         'search_logs',
       ).insert({'user_id': userId, 'query': query.trim()});
-    } catch (_) {
+    } catch (e, st) {
       // Best-effort — a failed log must never block search results.
+      CrashReportingService.recordError(e, st);
     }
   }
 
@@ -213,7 +220,10 @@ class SearchRepositoryImpl implements SearchRepository {
         'v_popular_searches',
       ).select('query').limit(10);
       return rows.map((r) => r['query'] as String).toList();
-    } catch (_) {
+    } catch (e, st) {
+      // Best-effort — an empty popular-searches list is a fine fallback,
+      // but a broken materialized view should still surface in Crashlytics.
+      CrashReportingService.recordError(e, st);
       return [];
     }
   }

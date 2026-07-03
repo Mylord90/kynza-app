@@ -10,6 +10,7 @@ import '../../../../core/localization/extensions/build_context_l10n_extension.da
 import '../../../../core/models/notification_log_model.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../application/providers/notification_providers.dart';
 import '../widgets/notification_tile.dart';
@@ -78,7 +79,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       ref
           .read(notificationNotifierProvider.notifier)
           .delete(notifId)
-          .catchError((_) {});
+          .catchError(CrashReportingService.recordError);
       _pendingDeletes.remove(notifId);
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -137,7 +138,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               onTap: () => ref
                   .read(notificationNotifierProvider.notifier)
                   .markRead(notif.id!)
-                  .catchError((_) {}),
+                  .catchError(CrashReportingService.recordError),
             ),
           ),
         ),
@@ -177,7 +178,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 : () => ref
                       .read(notificationNotifierProvider.notifier)
                       .markAllRead(profile.id)
-                      .catchError((_) {}),
+                      .catchError(CrashReportingService.recordError),
             child: Text(
               context.l10n.notificationsMarkAllRead,
               style: const TextStyle(color: AppColors.primary),

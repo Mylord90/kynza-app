@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/journey/owner_journey_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/journey_repository.dart';
 
@@ -62,8 +63,9 @@ class JourneyRepositoryImpl implements JourneyRepository {
           'data': {'pct': '${journey.completionPct}'},
         },
       );
-    } catch (_) {
+    } catch (e, st) {
       // Best-effort — never blocks the step from being marked done.
+      CrashReportingService.recordError(e, st);
     }
   }
 

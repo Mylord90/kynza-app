@@ -6,6 +6,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_profile_model.dart';
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../services/application/providers/service_providers.dart';
 import '../../../team/application/providers/commission_providers.dart';
@@ -121,9 +122,9 @@ class _StaffFormScreenState extends ConsumerState<StaffFormScreen> {
     if (assigned) {
       notifier
           .assignService(widget.staff.id!, serviceId, widget.staff.salonId)
-          .catchError((_) {});
+          .catchError(CrashReportingService.recordError);
     } else {
-      notifier.removeService(widget.staff.id!, serviceId).catchError((_) {});
+      notifier.removeService(widget.staff.id!, serviceId).catchError(CrashReportingService.recordError);
     }
   }
 

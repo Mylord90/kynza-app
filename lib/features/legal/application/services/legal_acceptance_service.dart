@@ -1,3 +1,4 @@
+import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/legal_acceptance_queue_service.dart';
 import '../../domain/repositories/legal_document_repository.dart';
 import '../../domain/repositories/user_consent_repository.dart';
@@ -44,19 +45,37 @@ class LegalAcceptanceService {
 
   /// Replays every queued offline acceptance. An item is only removed after
   /// its write succeeds, so a mid-flush failure (connectivity drops again)
-  /// leaves the rest queued for the next flush instead of losing them.
+  /// leaves it queued for the next flush instead of losing it — up to
+  /// [LegalAcceptanceQueueService.maxAttempts] times, after which it moves
+  /// to the dead-letter queue instead of retrying forever.
   Future<void> flushQueue() async {
     for (final item in queue.pending()) {
-      await consentRepository.acceptDocumentVersion(
-        userId: item['userId'] as String,
-        documentVersionId: item['documentVersionId'] as String,
-        appVersion: item['appVersion'] as String?,
-        platform: item['platform'] as String?,
-      );
-      await queue.removeQueued(
-        item['userId'] as String,
-        item['documentVersionId'] as String,
-      );
+      final userId = item['userId'] as String;
+      final documentVersionId = item['documentVersionId'] as String;
+      try {
+        await consentRepository.acceptDocumentVersion(
+          userId: userId,
+          documentVersionId: documentVersionId,
+          appVersion: item['appVersion'] as String?,
+          platform: item['platform'] as String?,
+        );
+        await queue.removeQueued(userId, documentVersionId);
+      } catch (e, st) {
+        try {
+          CrashReportingService.recordError(e, st);
+        } catch (_) {
+          // Never let a Crashlytics failure (e.g. Firebase uninitialized —
+          // this path also runs in tests with no Firebase app) block the
+          // retry/DLQ bookkeeping below.
+        }
+        final attempts = await queue.recordFailedAttempt(
+          userId,
+          documentVersionId,
+        );
+        if (attempts >= LegalAcceptanceQueueService.maxAttempts) {
+          await queue.moveToDeadLetter(userId, documentVersionId);
+        }
+      }
     }
   }
 

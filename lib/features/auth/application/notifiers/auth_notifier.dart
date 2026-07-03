@@ -128,8 +128,12 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
   Future<void> forgotPassword(String email) async {
     try {
       await _repository.sendPasswordReset(email);
-    } catch (_) {
-      // Intentionally swallowed — see security note above.
+    } catch (e, st) {
+      // Intentionally swallowed from the CLIENT's perspective — see security
+      // note above. Still logged to Crashlytics (a private, ops-only sink,
+      // not exposed to the caller) so a systemic reset-email failure is
+      // visible to the team instead of silently vanishing forever.
+      CrashReportingService.recordError(e, st);
     }
   }
 
