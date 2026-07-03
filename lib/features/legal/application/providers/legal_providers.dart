@@ -6,7 +6,9 @@ import '../../../../core/models/legal/legal_document_model.dart';
 import '../../../../core/models/legal/legal_document_version_model.dart';
 import '../../../../core/models/legal/user_legal_acceptance_model.dart';
 import '../../../../core/providers/app_providers.dart';
+import '../../../../core/providers/offline_sync_providers.dart';
 import '../../../../core/services/legal_acceptance_queue_service.dart';
+import '../../../../core/services/offline_sync_coordinator.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../data/repositories/data_deletion_repository_impl.dart';
 import '../../data/repositories/legal_document_repository_impl.dart';
@@ -275,14 +277,27 @@ class DataDeletionNotifier extends AsyncNotifier<void> {
   @override
   void build() {}
 
+  /// Offline-first: writes directly when online; when offline, queues via
+  /// the generic mutation outbox. Safe to replay on reconnect —
+  /// `OfflineSyncCoordinator` checks for an already-pending request for
+  /// this user before replaying, so a flaky-connection retry never
+  /// creates two rows for the same request.
   Future<void> requestDeletion({String? notes}) async {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
     state = const AsyncLoading();
     try {
-      await ref
-          .read(dataDeletionRepositoryProvider)
-          .createRequest(userId: userId, notes: notes);
+      final isOnline = ref.read(connectivityProvider).value ?? false;
+      if (!isOnline) {
+        await ref.read(mutationOutboxServiceProvider).enqueue(
+          type: OutboxMutationType.dataDeletionRequest,
+          payload: {'userId': userId, 'notes': notes},
+        );
+      } else {
+        await ref
+            .read(dataDeletionRepositoryProvider)
+            .createRequest(userId: userId, notes: notes);
+      }
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

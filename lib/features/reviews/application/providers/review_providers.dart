@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/review/review_model.dart';
 import '../../../../core/models/review/salon_rating_model.dart';
+import '../../../../core/providers/app_providers.dart';
+import '../../../../core/providers/offline_sync_providers.dart';
+import '../../../../core/services/offline_sync_coordinator.dart';
 import '../../data/repositories/review_repository_impl.dart';
 import '../../domain/repositories/review_repository.dart';
 
@@ -32,10 +35,32 @@ class ReviewNotifier extends AsyncNotifier<void> {
   @override
   void build() {}
 
+  /// Offline-first: writes directly when online; when offline, queues via
+  /// the generic mutation outbox (replayed by `OfflineSyncCoordinator` on
+  /// reconnect — see `KynzaOfflineBanner`). A queued review is naturally
+  /// safe to replay: `reviews.booking_id UNIQUE` means a duplicate insert
+  /// on retry always fails cleanly, and the coordinator checks
+  /// `canReview()` before replaying to avoid even attempting a doomed
+  /// duplicate insert.
   Future<void> createReview(ReviewModel review) async {
     state = const AsyncLoading();
     try {
-      await ref.read(reviewRepositoryProvider).createReview(review);
+      final isOnline = ref.read(connectivityProvider).value ?? false;
+      if (!isOnline) {
+        await ref.read(mutationOutboxServiceProvider).enqueue(
+          type: OutboxMutationType.reviewCreate,
+          payload: {
+            'salonId': review.salonId,
+            'clientId': review.clientId,
+            'bookingId': review.bookingId,
+            'rating': review.rating,
+            'comment': review.comment,
+            'isAnonymous': review.isAnonymous,
+          },
+        );
+      } else {
+        await ref.read(reviewRepositoryProvider).createReview(review);
+      }
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

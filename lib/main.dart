@@ -16,6 +16,7 @@ import 'core/router/app_router.dart';
 import 'core/services/crash_reporting_service.dart';
 import 'core/services/hive_encryption_key_service.dart';
 import 'core/services/legal_acceptance_queue_service.dart';
+import 'core/services/mutation_outbox_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/performance_monitoring_service.dart';
 import 'core/services/secure_local_storage.dart';
@@ -56,6 +57,8 @@ Future<void> _bootstrap() async {
   await Hive.openBox(PermissionCache.boxName);
   await Hive.openBox(LegalAcceptanceQueueService.boxName);
   await Hive.openBox(LegalAcceptanceQueueService.deadLetterBoxName);
+  await Hive.openBox(MutationOutboxService.boxName);
+  await Hive.openBox(MutationOutboxService.deadLetterBoxName);
   await initializeDateFormatting('fr_FR');
 
   await Firebase.initializeApp();

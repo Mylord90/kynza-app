@@ -1352,6 +1352,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reviewsLeaveSuccess => 'Avis publié ! Merci 💛';
 
   @override
+  String get reviewsLeaveQueuedOffline =>
+      'Avis enregistré hors ligne — sera publié dès la reconnexion.';
+
+  @override
   String get reviewsLeaveSkipButton => 'Passer';
 
   @override

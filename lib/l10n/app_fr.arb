@@ -502,6 +502,7 @@
   "reviewsLeaveTitle": "Laisser un avis",
   "reviewsLeaveBookingError": "Impossible de vérifier votre réservation.",
   "reviewsLeaveSuccess": "Avis publié ! Merci 💛",
+  "reviewsLeaveQueuedOffline": "Avis enregistré hors ligne — sera publié dès la reconnexion.",
   "reviewsLeaveSkipButton": "Passer",
   "reviewsLeaveRatingRequired": "Choisissez une note avant de publier.",
   "reviewsLeaveCommentLabel": "Partagez votre expérience (optionnel)",

@@ -2576,6 +2576,12 @@ abstract class AppLocalizations {
   /// **'Avis publié ! Merci 💛'**
   String get reviewsLeaveSuccess;
 
+  /// No description provided for @reviewsLeaveQueuedOffline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Avis enregistré hors ligne — sera publié dès la reconnexion.'**
+  String get reviewsLeaveQueuedOffline;
+
   /// No description provided for @reviewsLeaveSkipButton.
   ///
   /// In fr, this message translates to:

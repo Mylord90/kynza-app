@@ -461,6 +461,7 @@
   "reviewsLeaveTitle": "Leave a review",
   "reviewsLeaveBookingError": "Unable to verify your booking.",
   "reviewsLeaveSuccess": "Review posted! Thank you 💛",
+  "reviewsLeaveQueuedOffline": "Review saved offline — will be posted once reconnected.",
   "reviewsLeaveSkipButton": "Skip",
   "reviewsLeaveRatingRequired": "Please choose a rating before publishing.",
   "reviewsLeaveCommentLabel": "Share your experience (optional)",

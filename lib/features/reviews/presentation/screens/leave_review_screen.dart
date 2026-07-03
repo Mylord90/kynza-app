@@ -7,6 +7,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/review/review_model.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
@@ -66,9 +67,12 @@ class _LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
             ),
           );
       if (mounted) {
+        final isOnline = ref.read(connectivityProvider).value ?? false;
         showKynzaToast(
           context,
-          message: context.l10n.reviewsLeaveSuccess,
+          message: isOnline
+              ? context.l10n.reviewsLeaveSuccess
+              : context.l10n.reviewsLeaveQueuedOffline,
           level: ToastLevel.success,
         );
         context.pop();
