@@ -52,7 +52,7 @@ draft migration adding the missing ones is at
 
 | Key | Default | Status | Fallback UX if disabled |
 |---|---|---|---|
-| `feature_google_maps` | off, 0% | **NOT IMPLEMENTED** — no `google_maps_flutter`/`geolocator`/`geocoding` package in `pubspec.yaml` | n/a today; when built, must fall back to the existing manual text-based salon search (`AdvancedSearchScreen`), never a blank map |
+| `feature_google_maps` | off, 0% | **Scaffolded, inert (Phase 7 of the Enterprise Hardening pass)** — repository interfaces + gated impls exist (`lib/features/maps/`), but no `google_maps_flutter`/`geolocator`/`geocoding` package is installed and no API key is configured; every method either returns null/empty (gate off) or throws `UnimplementedError` (gate on, but still no SDK) — see `docs/GOOGLE_MAPS_ARCHITECTURE.md` | Already satisfied today, not new work: `AdvancedSearchScreen` is purely list-based and `SalonLocationStep` is purely manual entry — there is no map/autocomplete UI to fall back *from* yet |
 | `feature_proxipay` | on, 100% | Live (`proxipay_sessions`, `proxipay-create-session`, `proxipay-confirm`) | If disabled: hide the "Payer sur place" entry point, fall back to Mobile Money only — never show a broken QR screen |
 | `feature_ble` | off, 0% | **NOT IMPLEMENTED** — no Bluetooth package anywhere, no `TransportDetector` class (confirmed absent in Part 1 grounding) | n/a — QR is currently the only ProxiPay transport, so this flag has no observable effect either way |
 | `feature_nfc` | off, 0% | **NOT IMPLEMENTED** — same as BLE | n/a, same as above |

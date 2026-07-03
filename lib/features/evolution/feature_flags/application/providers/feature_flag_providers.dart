@@ -18,6 +18,15 @@ final salonFeatureOverridesProvider =
           ref.read(featureFlagRepositoryProvider).getOverrides(salonId),
     );
 
+/// `evaluateFlag(key)` was wired into the repository when this system was
+/// first built but never actually used to gate anything anywhere in the
+/// app (confirmed: zero call sites besides the repository itself) — this
+/// is the first reactive provider wrapping it, added for the Google Maps
+/// scaffold (Phase 7 of the Enterprise Hardening pass) to gate on.
+final featureFlagEvaluationProvider = FutureProvider.family<bool, String>(
+  (ref, key) => ref.read(featureFlagRepositoryProvider).evaluateFlag(key),
+);
+
 class FeatureFlagNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}

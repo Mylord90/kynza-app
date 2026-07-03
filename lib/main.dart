@@ -24,6 +24,7 @@ import 'core/services/session_service.dart';
 import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/auth_boot_gate.dart';
+import 'features/maps/data/salon_location_cache.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/widgets/loader/providers/loader_overlay_provider.dart';
 import 'shared/widgets/loader/widgets/loader_overlay.dart';
@@ -59,6 +60,7 @@ Future<void> _bootstrap() async {
   await Hive.openBox(LegalAcceptanceQueueService.deadLetterBoxName);
   await Hive.openBox(MutationOutboxService.boxName);
   await Hive.openBox(MutationOutboxService.deadLetterBoxName);
+  await Hive.openBox(SalonLocationCache.boxName);
   await initializeDateFormatting('fr_FR');
 
   await Firebase.initializeApp();
