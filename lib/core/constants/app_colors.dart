@@ -12,7 +12,12 @@ abstract class AppColors {
 
   static const textPrimary = Color(0xFFFAFAFA);
   static const textSecondary = Color(0xFFA1A1AA);
-  static const textMuted = Color(0xFF52525B);
+  // Was 0xFF52525B — measured at 1.93:1 against surfaceVariant (hint text)
+  // and 2.57:1 against background, both failing WCAG AA's 4.5:1 minimum
+  // for normal text (Phase 8, Enterprise Hardening pass). Lightened to a
+  // value that passes both of textMuted's actual usage contexts (4.58:1 /
+  // 6.12:1) while staying visibly one step darker than textSecondary.
+  static const textMuted = Color(0xFF8E8E96);
 
   static const success = Color(0xFF22C55E);
   static const successBg = Color(0x1F22C55E);
