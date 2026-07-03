@@ -1881,6 +1881,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsRemoteConfigLabel => 'Remote configuration';
 
   @override
+  String get settingsHealthCenterLabel => 'Health Center';
+
+  @override
   String get settingsAboutLabel => 'About KYNZA';
 
   @override
@@ -2029,6 +2032,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get evolutionRemoteConfigRollbackSuccess => 'Version restored.';
+
+  @override
+  String get evolutionHealthCenterTitle => 'Health Center';
+
+  @override
+  String get evolutionHealthCenterEmptyTitle => 'No data yet';
+
+  @override
+  String get evolutionHealthCenterEmptySubtitle =>
+      'This metric has no data to show yet.';
+
+  @override
+  String get evolutionHealthCenterRealtimeLabel => 'LIVE';
+
+  @override
+  String get evolutionHealthCenterPolledLabel => 'POLLED';
+
+  @override
+  String get evolutionHealthCenterClientOnlyLabel => 'THIS DEVICE ONLY';
+
+  @override
+  String get evolutionHealthCenterUnavailableLabel => 'NO READ API';
+
+  @override
+  String get evolutionHealthCenterForbiddenTitle =>
+      'System admin access required';
+
+  @override
+  String get evolutionHealthCenterForbiddenSubtitle =>
+      'This surface is restricted to KYNZA system administrators.';
 
   @override
   String get evolutionMaintenanceDefaultTitle => 'Maintenance in progress';

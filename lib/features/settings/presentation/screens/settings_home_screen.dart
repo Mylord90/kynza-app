@@ -145,6 +145,11 @@ class SettingsHomeScreen extends StatelessWidget {
             label: l10n.settingsRemoteConfigLabel,
             onTap: () => context.push(RouteNames.ownerRemoteConfig),
           ),
+          _SettingsTile(
+            icon: Icons.monitor_heart_outlined,
+            label: l10n.settingsHealthCenterLabel,
+            onTap: () => context.push(RouteNames.ownerHealthCenter),
+          ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.language_outlined,

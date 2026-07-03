@@ -3590,6 +3590,12 @@ abstract class AppLocalizations {
   /// **'Configuration à distance'**
   String get settingsRemoteConfigLabel;
 
+  /// No description provided for @settingsHealthCenterLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre de supervision'**
+  String get settingsHealthCenterLabel;
+
   /// No description provided for @settingsAboutLabel.
   ///
   /// In fr, this message translates to:
@@ -3871,6 +3877,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Version restaurée.'**
   String get evolutionRemoteConfigRollbackSuccess;
+
+  /// No description provided for @evolutionHealthCenterTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre de supervision'**
+  String get evolutionHealthCenterTitle;
+
+  /// No description provided for @evolutionHealthCenterEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune donnée pour le moment'**
+  String get evolutionHealthCenterEmptyTitle;
+
+  /// No description provided for @evolutionHealthCenterEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette métrique n\'a pas encore de données à afficher.'**
+  String get evolutionHealthCenterEmptySubtitle;
+
+  /// No description provided for @evolutionHealthCenterRealtimeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'EN DIRECT'**
+  String get evolutionHealthCenterRealtimeLabel;
+
+  /// No description provided for @evolutionHealthCenterPolledLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'PÉRIODIQUE'**
+  String get evolutionHealthCenterPolledLabel;
+
+  /// No description provided for @evolutionHealthCenterClientOnlyLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'CET APPAREIL UNIQUEMENT'**
+  String get evolutionHealthCenterClientOnlyLabel;
+
+  /// No description provided for @evolutionHealthCenterUnavailableLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'AUCUNE API DE LECTURE'**
+  String get evolutionHealthCenterUnavailableLabel;
+
+  /// No description provided for @evolutionHealthCenterForbiddenTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès administrateur système requis'**
+  String get evolutionHealthCenterForbiddenTitle;
+
+  /// No description provided for @evolutionHealthCenterForbiddenSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette surface est réservée aux administrateurs système de KYNZA.'**
+  String get evolutionHealthCenterForbiddenSubtitle;
 
   /// No description provided for @evolutionMaintenanceDefaultTitle.
   ///

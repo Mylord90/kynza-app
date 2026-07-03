@@ -46,7 +46,9 @@ import '../../features/data_platform/templates/presentation/screens/template_lis
 import '../../core/models/app_version_check_model.dart';
 import '../../core/models/maintenance_window_model.dart';
 import '../../features/evolution/feature_flags/presentation/screens/feature_flag_screen.dart';
+import '../../features/evolution/health_center/presentation/screens/health_center_screen.dart';
 import '../../features/evolution/remote_config/presentation/screens/remote_config_screen.dart';
+import '../localization/extensions/build_context_l10n_extension.dart';
 import '../../features/evolution/maintenance/application/providers/maintenance_providers.dart';
 import '../../features/evolution/maintenance/presentation/screens/maintenance_screen.dart';
 import '../../features/evolution/version_manager/application/providers/version_providers.dart';
@@ -545,6 +547,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           role: UserRole.owner,
           child: RemoteConfigScreen(),
         ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerHealthCenter,
+        (context, state) => const _SystemAdminGuard(child: HealthCenterScreen()),
       ),
       _fadeRoute(
         RouteNames.maintenance,
@@ -1221,6 +1227,55 @@ class _OwnerBackupLoader extends ConsumerWidget {
       );
     }
     return BackupScreen(salonId: salon.id);
+  }
+}
+
+/// Gates `/owner/health-center` — SYSTEM_ADMIN scope (Phase 1 audit finding,
+/// docs/backend-completion/PHASE_1_FINAL_AUDIT.md §3 item 9), stricter than
+/// the plain owner `_RoleGuard`: an owner who is not also flagged
+/// `is_system_admin` in `public.users` still sees the lock screen.
+class _SystemAdminGuard extends ConsumerWidget {
+  const _SystemAdminGuard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider).valueOrNull;
+    final isSystemAdmin = authState?.whenOrNull(
+      authenticated: (user) => user.role == UserRole.owner && user.isSystemAdmin,
+    );
+    if (isSystemAdmin != true) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, size: 48, color: AppColors.textMuted),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  context.l10n.evolutionHealthCenterForbiddenTitle,
+                  style: AppTypography.h3,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  context.l10n.evolutionHealthCenterForbiddenSubtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return child;
   }
 }
 

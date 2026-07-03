@@ -33,6 +33,7 @@ class UserProfile with _$UserProfile {
     @Default('BI') String countryCode,
     @Default('BIF') String preferredCurrency,
     @Default('fr_BI') String locale,
+    @Default(false) bool isSystemAdmin,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? deletedAt,

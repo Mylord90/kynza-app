@@ -86,10 +86,28 @@ async function checkAdvancedAvailability(
   return null;
 }
 
+// Phase 2 (Backend Enterprise Completion) — wraps the handler purely to
+// measure invocation latency/status into edge_function_invocations
+// (Edge Function Dashboard). No business logic below this point changed —
+// this is the one function instrumented as a proof-of-concept; the other
+// ~19 remain an explicit, documented follow-up
+// (docs/backend-completion/PHASE_2_OBSERVABILITY.md).
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
+  const startedAt = Date.now();
+  const response = await handleCreateBooking(req);
+  const admin = createServiceRoleClient();
+  admin.from("edge_function_invocations").insert({
+    function_name: "create-booking",
+    status: response.status < 400 ? "success" : "error",
+    duration_ms: Date.now() - startedAt,
+  }).then(() => {}, () => {});
+  return response;
+});
+
+async function handleCreateBooking(req: Request): Promise<Response> {
   try {
     logAppCheckStatus(req, "create-booking");
     const user = await getAuthenticatedUser(req);
@@ -243,4 +261,4 @@ Deno.serve(async (req) => {
     if (message === "unauthenticated") return jsonResponse({ error: message }, 401);
     return jsonResponse({ error: "create_booking_failed", message }, 500);
   }
-});
+}

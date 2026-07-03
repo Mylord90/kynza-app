@@ -184,7 +184,7 @@ class BookingActionNotifier extends AsyncNotifier<void> {
       // Best-effort — see doc comment above. Logged as non-fatal so a
       // systemic failure (e.g. a broken RPC) is still visible in
       // Crashlytics, without blocking the booking completion flow.
-      CrashReportingService.recordError(e, st);
+      CrashReportingService.recordErrorForSalon(e, st, booking.salonId);
     }
   }
 
@@ -198,7 +198,7 @@ class BookingActionNotifier extends AsyncNotifier<void> {
       );
     } catch (e, st) {
       // Best-effort — see doc comment above. Non-fatal log only.
-      CrashReportingService.recordError(e, st);
+      CrashReportingService.recordErrorForSalon(e, st, booking.salonId);
     }
   }
 

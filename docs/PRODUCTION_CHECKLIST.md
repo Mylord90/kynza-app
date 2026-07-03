@@ -439,3 +439,24 @@ PHASE_1_FINAL_AUDIT.md`), explicitly out of that pass's Phase 2-11 scope and log
   `SYSTEM_ADMIN`** — remote config is platform-wide, not salon-scoped, so this is broader than
   ideal. Interim only, until Phase 2/CP3 creates a `SYSTEM_ADMIN` scope (see
   `docs/backend-completion/PHASE_1_FINAL_AUDIT.md` §3, item 9).
+
+## Update — 2026-07-04 (Backend Enterprise Completion, Phase 2/5 — CP3)
+
+`SYSTEM_ADMIN` scope now exists (`public.users.is_system_admin`, draft migration), closing the
+item above — `update-remote-config`/`rollback-remote-config` should be tightened to check it
+instead of `role === 'owner'` as a follow-up (not done in this checkpoint, out of Phase 2/5 scope).
+
+- [ ] **Edge Function Dashboard: only 1 of ~20 functions instrumented** — `create-booking` writes
+  to the new `edge_function_invocations` table as a proof of the pipeline; the other ~19 Edge
+  Functions need the same timing-wrapper treatment to make the dashboard's data complete.
+- [ ] **Crash Dashboard: only 2 of ~21 `CrashReportingService.recordError` call sites use the new
+  `recordErrorForSalon`** (both in `booking_providers.dart`) — the dashboard's data will be
+  sparse until more call sites (ideally every one with real salon context available) are
+  migrated. `recordError` itself is unchanged, so no existing call site broke.
+- [ ] **Performance Dashboard has no real data source** — Firebase Performance Monitoring has no
+  in-app read API (Console-only); the dashboard section honestly renders an "unavailable" state.
+  Would need either a custom client-side trace-summary cache or Firebase's server-side REST API
+  (out of scope for a Flutter client) to ever show real numbers in-app.
+- [ ] **Realtime Dashboard and Network Dashboard are per-device, not fleet-wide** — Supabase's
+  platform-level Realtime health isn't exposed to a Flutter client at all; both dashboards
+  honestly show only the current device's own connection state.

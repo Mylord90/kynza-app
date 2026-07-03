@@ -122,6 +122,9 @@ abstract class RouteNames {
   // Backend Enterprise Completion — Phase 4: Remote Configuration
   static const ownerRemoteConfig = '/owner/remote-config';
 
+  // Backend Enterprise Completion — Phase 2/5: Observability + Health Center
+  static const ownerHealthCenter = '/owner/health-center';
+
   // ProxiPay V1 — QR-based in-person payment
   static const ownerProxiPay = '/owner/proxipay/:bookingId';
   static const clientProxiPayScan = '/client/proxipay/scan';
