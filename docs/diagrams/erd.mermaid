@@ -1,0 +1,297 @@
+%% KYNZA — Entity-Relationship Diagram, all 55 tables (verified against
+%% all 58 files in supabase/migrations/, 2026-07-03). Grouped by domain via
+%% comments (Mermaid erDiagram has no visual subgraph support). Attributes
+%% are abbreviated to PK/FK/notable business columns — full column lists
+%% live in docs/DATABASE_ARCHITECTURE.md.
+erDiagram
+    %% ===== IDENTITY / RBAC =====
+    salons ||--o{ users : "salon_id"
+    users ||--o{ permission_definitions : "(global catalog, no FK)"
+    salons ||--o{ permission_groups : "salon_id"
+    permission_groups ||--o{ permission_group_permissions : "group_id"
+    permission_definitions ||--o{ permission_group_permissions : "permission_id"
+    salons ||--o{ user_permission_groups : "salon_id"
+    users ||--o{ user_permission_groups : "user_id"
+    permission_groups ||--o{ user_permission_groups : "group_id"
+    salons ||--o{ user_permission_overrides : "salon_id"
+    users ||--o{ user_permission_overrides : "user_id"
+    permission_definitions ||--o{ user_permission_overrides : "permission_id"
+    salons ||--o{ user_effective_permissions_cache : "salon_id"
+    users ||--o{ user_effective_permissions_cache : "user_id"
+
+    users {
+        uuid id PK "FK auth.users(id)"
+        uuid salon_id FK
+        text role "owner|manager|staff|client"
+        int reliability_score
+        bool is_guest
+        timestamptz deleted_at
+    }
+    permission_definitions {
+        uuid id PK
+        text feature
+        text action
+        text resource
+        text risk_level
+    }
+    permission_groups {
+        uuid id PK
+        uuid salon_id FK
+        text base_role
+        bool is_system
+    }
+    user_effective_permissions_cache {
+        uuid id PK
+        uuid salon_id FK
+        uuid user_id FK
+        text feature
+        text action
+        bool has_permission
+        timestamptz expires_at "15min TTL"
+    }
+
+    %% ===== SALON CORE =====
+    salons ||--o{ salon_media : "salon_id"
+    salons ||--|| salon_settings : "salon_id (1:1)"
+    salons ||--o{ working_hours : "salon_id"
+    salons ||--o{ services : "salon_id"
+    salons ||--o{ staff_profiles : "salon_id"
+    users ||--o| staff_profiles : "user_id"
+    staff_profiles ||--o{ staff_services : "staff_id"
+    services ||--o{ staff_services : "service_id"
+    staff_profiles ||--o{ staff_working_hours : "staff_id"
+    staff_profiles ||--o{ staff_breaks : "staff_id"
+    salons ||--o{ availability_overrides : "salon_id"
+    staff_profiles ||--o{ availability_overrides : "staff_id (nullable)"
+    salons ||--o{ availability_exceptions : "salon_id"
+    staff_profiles ||--o{ availability_exceptions : "staff_id (nullable)"
+
+    salons {
+        uuid id PK
+        text name
+        text owner_id "NOT a declared FK -- gap"
+        text plan "free|pro|premium"
+        text plan_status
+        tsvector search_vector
+        timestamptz deleted_at
+    }
+    salon_settings {
+        uuid id PK
+        uuid salon_id FK "UNIQUE"
+        int booking_advance_days
+        int loyalty_stamps_per_card
+        text timezone "default Africa/Bujumbura"
+    }
+    services {
+        uuid id PK
+        uuid salon_id FK
+        text category "free text, NOT normalized"
+        int price_bif
+        int duration_min
+        timestamptz deleted_at
+    }
+    staff_profiles {
+        uuid id PK
+        uuid user_id FK
+        uuid salon_id FK
+        text commission_type "percent|fixed"
+        uuid invitation_token
+        timestamptz deleted_at
+    }
+
+    %% ===== BOOKING =====
+    salons ||--o{ bookings : "salon_id"
+    users ||--o{ bookings : "client_id"
+    staff_profiles ||--o{ bookings : "practitioner_id"
+    services ||--o{ bookings : "service_id"
+    salons ||--o{ client_contacts : "salon_id"
+    users ||--o{ client_contacts : "owner_id"
+
+    bookings {
+        uuid id PK
+        uuid salon_id FK
+        uuid client_id FK
+        uuid practitioner_id FK
+        uuid service_id FK
+        text status "pending_payment|confirmed|in_progress|completed|cancelled|no_show"
+        text payment_status
+        text idempotency_key UK
+        timestamptz start_time
+        string note "UNIQUE(practitioner_id,start_time)"
+    }
+
+    %% ===== PAYMENTS =====
+    salons ||--o{ transactions : "salon_id"
+    bookings ||--o{ transactions : "booking_id"
+    bookings ||--o{ proxipay_sessions : "booking_id"
+    salons ||--o{ proxipay_sessions : "salon_id"
+    subscription_plans ||--o{ invoices : "plan_key"
+    salons ||--o{ invoices : "salon_id"
+    staff_profiles ||--|| staff_commissions : "staff_id"
+    bookings ||--|| staff_commissions : "booking_id (UNIQUE)"
+
+    transactions {
+        uuid id PK
+        uuid salon_id FK
+        uuid booking_id FK
+        text method "lumicash|ecocash|enoti|cash"
+        text status
+        text idempotency_key UK
+    }
+    proxipay_sessions {
+        uuid id PK
+        uuid booking_id FK
+        uuid salon_id FK
+        uuid staff_id FK
+        text status "pending|confirmed|expired|cancelled"
+        timestamptz expires_at "3min default"
+        string note "no deleted_at -- ephemeral"
+    }
+    invoices {
+        uuid id PK
+        uuid salon_id FK
+        text plan_key FK
+        text reference UK
+        text status "pending|paid|overdue|void"
+    }
+    staff_commissions {
+        uuid id PK
+        uuid staff_id FK
+        uuid booking_id FK "UNIQUE"
+        text status "pending|paid"
+    }
+
+    %% ===== LOYALTY / MARKETING =====
+    salons ||--|| loyalty_programs : "salon_id (1:1)"
+    salons ||--o{ loyalty_cards : "salon_id"
+    users ||--o{ loyalty_cards : "client_id"
+    loyalty_cards ||--o{ loyalty_stamp_logs : "card_id"
+    loyalty_cards ||--o{ loyalty_qr_tokens : "card_id"
+    users ||--o{ referrals : "referrer_id"
+    salons ||--o{ promotions : "salon_id"
+    services ||--o{ promotions : "service_id (nullable)"
+
+    loyalty_cards {
+        uuid id PK
+        uuid salon_id FK
+        uuid client_id FK
+        int stamps_count
+        string note "UNIQUE(salon_id,client_id)"
+    }
+    referrals {
+        uuid id PK
+        uuid referrer_id FK
+        uuid referred_id FK
+        text status "pending|signed_up|booked|rewarded"
+        string note "no deleted_at -- tech debt"
+    }
+
+    %% ===== REVIEWS =====
+    salons ||--o{ reviews : "salon_id"
+    bookings ||--|| reviews : "booking_id (UNIQUE)"
+    users ||--o{ reviews : "client_id"
+    reviews ||--o{ review_media : "review_id"
+
+    reviews {
+        uuid id PK
+        uuid salon_id FK
+        uuid booking_id FK "UNIQUE"
+        int rating "1-5"
+        text owner_reply
+        bool is_flagged
+    }
+
+    %% ===== JOURNEY =====
+    salons ||--|| owner_journey_progress : "salon_id (1:1)"
+    users ||--o{ owner_journey_progress : "owner_id"
+
+    %% ===== AUTOMATION =====
+    salons ||--o{ automation_workflows : "salon_id"
+    automation_trigger_types ||--o{ automation_workflows : "trigger_type"
+    automation_workflows ||--o{ automation_conditions : "workflow_id"
+    automation_workflows ||--o{ automation_actions : "workflow_id"
+    automation_action_types ||--o{ automation_actions : "action_type"
+    automation_workflows ||--o{ automation_execution_logs : "workflow_id"
+    salons ||--o{ automation_execution_logs : "salon_id"
+    automation_execution_logs ||--o{ automation_action_runs : "execution_log_id"
+    automation_actions ||--o{ automation_action_runs : "action_id"
+    salons ||--o{ automation_action_runs : "salon_id (unindexed FK -- gap)"
+
+    automation_workflows {
+        uuid id PK
+        uuid salon_id FK
+        text trigger_type FK
+        bool is_system "protected: cannot edit/delete"
+        string note "no updated_at trigger -- bug"
+    }
+
+    %% ===== NOTIFICATIONS =====
+    salons ||--o{ notification_quota : "salon_id (composite PK)"
+    users ||--o{ notification_logs : "user_id"
+    salons ||--o{ notification_logs : "salon_id (nullable, unindexed -- gap)"
+    bookings ||--o{ notification_logs : "related_booking_id"
+    users ||--|| notification_preferences : "user_id (1:1)"
+
+    notification_logs {
+        uuid id PK
+        uuid user_id FK
+        uuid salon_id FK "nullable, no index -- gap"
+        text channel "push|whatsapp|in_app"
+        bool is_read
+    }
+
+    %% ===== OPS / PLATFORM =====
+    salons ||--o{ activity_logs : "salon_id (nullable)"
+    users ||--o{ activity_logs : "user_id (nullable)"
+    salons ||--o{ entity_versions : "salon_id (nullable)"
+    salons ||--o{ backup_jobs : "salon_id"
+    salons ||--o{ document_templates : "salon_id"
+    feature_flags ||--o{ salon_feature_overrides : "flag_key"
+    salons ||--o{ salon_feature_overrides : "salon_id"
+
+    activity_logs {
+        uuid id PK
+        uuid salon_id FK "nullable"
+        uuid user_id FK "nullable"
+        text type_action "whitelisted on client INSERT"
+        text severity "debug|info|warning|error|critical"
+        string note "no deleted_at -- immutable by design"
+    }
+    entity_versions {
+        uuid id PK
+        text entity_type
+        uuid entity_id
+        int version_number
+        string note "UNIQUE(entity_type,entity_id,version_number)"
+    }
+    feature_flags {
+        uuid id PK
+        text key UK
+        bool is_enabled
+        int rollout_percentage
+    }
+    maintenance_windows {
+        uuid id PK
+        text title
+        timestamptz starts_at
+        timestamptz ends_at
+        string note "no salon_id -- uses affected_salon_ids array"
+    }
+    app_versions {
+        uuid id PK
+        text platform "android|ios"
+        int version_code
+        string note "UNIQUE(platform,version_code)"
+    }
+    rate_limit_buckets {
+        text key PK
+        timestamptz window_start PK
+        int count
+        string note "composite PK, no surrogate id"
+    }
+    search_logs {
+        uuid id PK
+        uuid user_id FK "nullable"
+        text query
+        string note "no SELECT policy -- write-only via RLS"
+    }

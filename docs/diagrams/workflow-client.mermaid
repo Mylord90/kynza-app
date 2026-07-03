@@ -1,0 +1,40 @@
+%% KYNZA — CLIENT role workflow (verified against lib/core/router/app_router.dart, 2026-07-03)
+flowchart TB
+    START(["App opens"]) --> SPLASH["/ (SplashScreen)"]
+    SPLASH -->|unauthenticated| LOGIN["/auth/login"]
+    LOGIN -->|email/password or Google| CHECKVERIFY{"email verified?"}
+    LOGIN -->|"Créer un compte"| REGISTER["/auth/register"]
+    REGISTER --> CHECKVERIFY
+    CHECKVERIFY -->|no| VERIFYEMAIL["/auth/verify-email"]
+    CHECKVERIFY -->|yes| CHECKPROFILE{"profile_completed?"}
+    CHECKPROFILE -->|no| COMPLETEPROFILE["/auth/complete-profile\npicks role: client/staff/owner\n(client-side UPDATE users.role)"]
+    COMPLETEPROFILE -->|role=client| HOMECLIENT
+    CHECKPROFILE -->|yes| HOMECLIENT["/client/home\n(HomeClientScreen — 5-tab KynzaBottomNav)"]
+
+    HOMECLIENT -->|tab 0| HOMETAB["Accueil (_HomeTab)"]
+    HOMECLIENT -->|tab 1| DISCOVER["/client/discover\nSalonDiscoveryScreen"]
+    HOMECLIENT -->|tab 2| MYBOOKINGS["/client/bookings\nClientBookingsScreen"]
+    HOMECLIENT -->|tab 3| MYLOYALTY["/client/loyalty\nClientLoyaltyScreen"]
+    HOMECLIENT -->|tab 4| PROFILE["/client/profile\nClientProfileScreen"]
+
+    DISCOVER --> SALONDETAIL["/client/salon/:id\nSalonDetailScreen"]
+    SALONDETAIL -->|"Réserver"| BOOKINGENTRY["/client/booking\n_BookingEntryGuard\n(resumes bookingFlowProvider\nor falls back to discovery)"]
+    BOOKINGENTRY --> SERVICESELECT["ServiceSelectionScreen\n(in-flow, no dedicated route)"]
+    SERVICESELECT --> BOOKINGCONFIRM["/client/booking/confirm\n(RouteNames constant exists,\nNO GoRoute — reached via\nNavigator.push in-flow only)"]
+    BOOKINGCONFIRM -->|create-booking Edge Fn| PAYMENT["/client/payment/:id\n_PaymentDeepLinkLoader → PaymentScreen"]
+    PAYMENT -->|Mobile Money| USSDWAIT["USSD wait (Leapa) — network required"]
+    PAYMENT -->|"Payer sur place"| PROXISCAN["/client/proxipay/scan\nProxiPayScanScreen"]
+    USSDWAIT -->|leapa-webhook confirms| PAYSUCCESS["Booking CONFIRMED_PAID\n(Realtime push <300ms)"]
+    PROXISCAN --> PAYSUCCESS
+
+    MYBOOKINGS -->|after completed booking| LEAVEREVIEW["/client/review/:bookingId\nLeaveReviewScreen"]
+    MYLOYALTY --> LOYALTYQR["/client/loyalty/qr/:cardId\nLoyaltyQrScreen"]
+
+    subgraph DEEPLINKS["Deep links — bypass login requirement"]
+        DLINVITE["com.kynza.app://accept-invitation?token=...\n(only if landed while logged out AND\nrole ends up staff via Edge Function)"]
+        DLREFERRAL["com.kynza.app://accept-referral?token=...\n→ /accept-referral → ReferralClaimScreen\n→ claim-referral Edge Fn → force-nav homeClient"]
+    end
+    DLREFERRAL -.->|logged out: queued via\nSessionService.savePendingReferralToken,\nconsumed after login/register| HOMECLIENT
+
+    classDef gap fill:#3a0000,stroke:#EF4444,color:#EF4444,stroke-dasharray:4 4
+    class BOOKINGCONFIRM gap

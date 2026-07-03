@@ -1,0 +1,40 @@
+%% KYNZA — Clean Architecture Layering Per Feature
+%% Verified pattern across booking/, dashboard/, team/, billing/, proxipay/ (2026-07-03)
+%% DIVERGENCE FROM TEXTBOOK CLEAN ARCHITECTURE (documented, not silently accepted):
+%%  1. No datasource abstraction: data/repositories/*_repository_impl.dart calls
+%%     SupabaseService.client directly (PostgREST/RPC/Realtime/Functions) instead of
+%%     going through a separate local/remote datasource pair.
+%%  2. Riverpod providers double as the "application" layer AND as controllers that
+%%     screens watch directly — there is no separate use-case/interactor class per
+%%     action; the AsyncNotifier IS the use case.
+%%  3. domain/repositories holds only abstract interfaces, no entities distinct from
+%%     the Freezed models in core/models — models are shared, not re-mapped per layer.
+flowchart TB
+    subgraph SCREEN["Presentation — presentation/screens, presentation/widgets"]
+        S1["Screen (ConsumerWidget/ConsumerStatefulWidget)\nimplements 5 UI states: loading/error/empty/offline/data"]
+    end
+    subgraph APP["Application — application/providers"]
+        A1["Riverpod Provider / AsyncNotifier\n(acts as controller + use case combined)"]
+    end
+    subgraph DOMAIN["Domain — domain/repositories"]
+        D1["abstract XRepository\n(interface only, no logic)"]
+    end
+    subgraph DATA["Data — data/repositories"]
+        DA1["XRepositoryImpl\nimplements domain interface"]
+    end
+    subgraph EXTERNAL["External"]
+        E1["SupabaseService.client\n(PostgREST / RPC / Realtime stream / functions.invoke)"]
+    end
+
+    S1 -->|watch/read| A1
+    A1 -->|depends on abstract type| D1
+    DA1 -.implements.-> D1
+    A1 -->|resolved via Riverpod provider override to Impl| DA1
+    DA1 --> E1
+
+    S1 -.never imports.-> DA1
+    A1 -.never imports.-> E1
+
+    subgraph MODULES["Every lib/features/* module follows this exact 4-box shape"]
+        M["auth · automation · availability · billing · booking · dashboard ·\ndata_platform · evolution · home_client · home_manager · home_owner ·\nhome_staff · journey · loyalty · marketing · notifications · payment ·\npermissions · proxipay · referral · reviews · salon · search · services ·\nsettings · splash · staff · team"]
+    end

@@ -1,0 +1,39 @@
+%% KYNZA — Supabase Realtime Subscription Lifecycle (verified 2026-07-03)
+%% Actual pattern: NOT a hand-rolled RealtimeChannel/.channel() service — every
+%% consumer uses the supabase_flutter SDK's high-level query builder:
+%% SupabaseService.client.from(table).stream(primaryKey: ['id']).eq(column, value)
+%% Confirmed real consumers (grep across lib/): bookings (by client_id, salon_id,
+%% practitioner_id), payment_screen (single booking by id), proxipay_qr_screen
+%% (transactions by booking_id) & proxipay session (by id), services (by salon_id),
+%% staff_profiles (by salon_id), loyalty_cards (by client_id), marketing contacts
+%% + promotions (by salon_id), notification_logs (by user_id) x2, journey (by salon_id).
+%% Enabled at DB level via 20260624040000_enable_realtime_publication.sql.
+sequenceDiagram
+    participant Screen as Screen/Provider (per role)
+    participant SDK as supabase_flutter SDK
+    participant WS as Realtime WebSocket
+    participant PG as Postgres (logical replication)
+
+    Screen->>SDK: client.from('bookings').stream(primaryKey:['id']).eq('salon_id', id)
+    SDK->>WS: open WS connection, subscribe to postgres_changes\nfiltered server-side by salon_id/client_id/user_id
+    WS->>PG: attach to supabase_realtime publication
+    PG-->>WS: initial snapshot (first .listen() emission)
+    WS-->>SDK: row set
+    SDK-->>Screen: List<Model> via .map()
+
+    Note over PG,WS: any INSERT/UPDATE/DELETE on the filtered table
+
+    PG-->>WS: change event
+    WS-->>SDK: pushed row diff
+    SDK-->>Screen: new List<Model> emission (screen rebuilds)
+
+    Note over Screen,WS: Reconnection — handled internally by the SDK's\nRealtimeClient (auto-retry with backoff), no app-level\nreconnect/backoff code exists in lib/ today — this is\nSDK-default behavior, not a KYNZA-authored strategy.
+
+    WS--xSDK: connection dropped (network loss)
+    SDK->>SDK: internal reconnect attempt (SDK default backoff)
+    SDK->>WS: re-subscribe on reconnect
+    WS-->>SDK: resync snapshot
+
+    rect rgb(40,30,0)
+    Note over Screen: Per-role scoping is achieved purely by the .eq() filter\nvalue (salon_id for owner/manager/staff feeds, client_id\nfor client feeds, user_id for notifications) — there is no\nseparate "channel per role" concept in the codebase.
+    end

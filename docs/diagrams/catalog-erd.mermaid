@@ -1,0 +1,44 @@
+%% KYNZA — Service Catalog data model (Part 5, drafted — not applied to remote)
+%% See supabase/migrations/20260703130000_catalog_schema.sql
+erDiagram
+    categories ||--o{ categories : "parent_id (self-ref, unlimited depth)"
+    categories ||--o{ service_templates : "category_id"
+    categories ||--o{ services : "category_id (NEW, nullable)"
+    service_templates ||--o| services : "source_template_id (NEW, nullable,\ntracks which template a real\nservice was instantiated from)"
+    services ||--o{ service_variants : "service_id"
+    services ||--o{ service_tags : "service_id"
+    services ||--o{ service_filters : "service_id"
+
+    categories {
+        uuid id PK
+        uuid parent_id FK "nullable, self-ref"
+        text slug UK
+        text name_fr
+        text gender_scope "femme|homme|mixte|enfant"
+        bool is_active
+        timestamptz deleted_at
+    }
+    service_templates {
+        uuid id PK
+        uuid category_id FK
+        text name
+        int default_duration_minutes
+        int default_price_bif
+        jsonb default_variants "seed-only, no FK integrity needed"
+        string note "UNIQUE(category_id,name)"
+        timestamptz deleted_at
+    }
+    services {
+        uuid id PK "EXISTING table -- unchanged"
+        uuid salon_id FK "EXISTING -- real per-salon service"
+        text category "EXISTING free text -- untouched,\nstill works for custom/Autre"
+        uuid category_id FK "NEW, nullable"
+        uuid source_template_id FK "NEW, nullable"
+    }
+    service_variants {
+        uuid id PK
+        uuid service_id FK
+        text name
+        int price_delta_bif
+        timestamptz deleted_at
+    }

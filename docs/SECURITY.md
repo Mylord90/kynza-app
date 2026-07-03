@@ -269,3 +269,26 @@ These rules are encoded in AGENT.md and enforced in every phase:
 - TOUJOURS `RLS ENABLE` sur chaque nouvelle table
 - TOUJOURS `has_role()` comme seul mécanisme RLS
 - TOUJOURS `salon_id` extrait du JWT (via `public.users`) côté serveur
+
+---
+
+## Update — 2026-07-03 (Enterprise Architecture Expansion, Part 12)
+
+**Correction to §4 "Permission resolution chain"**: that section (as originally written)
+describes a `users.permission_group_id` column and a `permission_groups.permissions`/
+`role_defaults` JSONB shape. The **real, deployed** `check_permission()` function
+(`supabase/migrations/20260629100000_rbac_enterprise.sql`) uses a different, junction-table-based
+schema: `permission_definitions` (global catalog) ← `permission_group_permissions` →
+`permission_groups` ← `user_permission_groups` → `users`, plus a separate
+`user_permission_overrides` table — not a JSONB blob on `users`. Real resolution order: **owner
+role → always `TRUE`** (no table lookup needed) → `user_permission_overrides` (highest priority
+override) → `bool_or` across every `permission_groups` row the user belongs to via
+`user_permission_groups` → default `FALSE`. Cached in `user_effective_permissions_cache`
+(server-side, 15-min TTL) and mirrored client-side in the `permission_cache` Hive box (same TTL).
+Full schema detail: `docs/DATABASE_ARCHITECTURE.md` §3.1. This correction is appended rather than
+rewriting §4 in place, per this pass's additive-only rule — §4 above should be read as
+superseded by this note.
+
+Also see `docs/security/SECURITY_ENTERPRISE.md` for the OWASP Mobile Top 10 mapping and
+forward-looking hardening items (certificate pinning, Hive encryption, biometric auth, root/
+jailbreak detection — all honestly marked ⏳ Planned, none currently implemented).

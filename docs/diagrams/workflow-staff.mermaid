@@ -1,0 +1,29 @@
+%% KYNZA — STAFF role workflow (verified against lib/core/router/app_router.dart, 2026-07-03)
+flowchart TB
+    INVITE["Owner sends invitation\n(staff_profiles.invitation_token)"] --> DLTOKEN["com.kynza.app://accept-invitation?token=...\nor in-app link"]
+    DLTOKEN --> LOGGEDIN{"logged in?"}
+    LOGGEDIN -->|no| STASH["SessionService.savePendingInvitationToken\n→ /auth/register"]
+    STASH --> SIGNUP["signup completes"]
+    SIGNUP --> RESOLVE["resolvePostAuthRoute() detects\npending invitation token"]
+    LOGGEDIN -->|yes| ACCEPT
+    RESOLVE --> ACCEPT["/accept-invitation\nAcceptInvitationScreen\n→ accept-invitation Edge Function\n(sets role=staff server-side)"]
+    ACCEPT -->|force-navigate,\nbypasses redirectAfterAuth| HOMESTAFF["/staff/today\n(HomeStaffScreen — 4-tab KynzaBottomNav)"]
+
+    HOMESTAFF -->|tab 0| TODAYTAB["Aujourd'hui (_TodayTab)"]
+    HOMESTAFF -->|tab 1| AGENDATAB["Agenda (_AgendaTab)"]
+    HOMESTAFF -->|tab 2| CLIENTSTAB["Mes clients (_MyClientsTab)"]
+    HOMESTAFF -->|tab 3| PERFTAB["Performance (MyPerformanceScreen)"]
+
+    HOMESTAFF --> STAFFAVAIL["/staff/availability\n_StaffOwnHoursLoader → StaffHoursScreen\n(own profile only — never a :staffId param,\nunlike the owner's equivalent route)"]
+    HOMESTAFF --> PERFORMANCE["/staff/performance\nMyPerformanceScreen"]
+    HOMESTAFF -->|shared route,\nanyOf owner/manager/staff| PROXIPAY["/owner/proxipay/:bookingId\nProxiPayQrScreen\n(staff scans/confirms in-person payment)"]
+    HOMESTAFF -->|shared route,\nanyOf owner/manager/staff| LOYALTYSCAN["/owner/loyalty/scan\nLoyaltyScanScreen\n(staff can stamp/redeem directly —\nRLS allows staff write on loyalty_cards)"]
+
+    subgraph BOOKINGACTIONS["Booking actions available from Aujourd'hui/Agenda tabs\n(in-flow, no dedicated routes)"]
+        MARKNOSHOW["mark-no-show Edge Function\n(15-min grace period after start_time,\nNOT idempotent — disable button after 1 tap)"]
+        COMPLETE["Mark completed →\ncalculate-commission Edge Function\n(best-effort, non-blocking)"]
+    end
+    TODAYTAB -.-> MARKNOSHOW
+    TODAYTAB -.-> COMPLETE
+
+    classDef gap fill:#3a0000,stroke:#EF4444,color:#EF4444,stroke-dasharray:4 4

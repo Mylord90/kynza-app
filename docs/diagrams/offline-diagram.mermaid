@@ -1,0 +1,33 @@
+%% KYNZA — Offline Architecture: CURRENT STATE (verified against code, 2026-07-03)
+%% IMPORTANT: docs/ai/skills/kynza-offline-realtime.md describes a TARGET spec
+%% (outbox_queue, OutboxSyncService, ConflictResolver, per-salon RealtimeService,
+%% encrypted agenda/clients caches) that does NOT exist in lib/ yet — grep for
+%% hive_service.dart / realtime_service.dart / outbox_sync_service.dart returns
+%% zero matches. This diagram shows what is ACTUALLY implemented today; the target
+%% architecture is described separately in docs/OFFLINE_STRATEGY.md as a gap.
+flowchart TB
+    CONN["ConnectivityService\n(wraps connectivity_plus)\nStream<bool> onConnectivityChanged"]
+    BANNER["UI reads connectivity state\n(offline indicator pattern exists;\nnot yet a single global KynzaOfflineBanner\nwired to every mutating screen)"]
+
+    subgraph HIVE["Hive — 2 boxes actually opened in lib/main.dart"]
+        PREFS["kynza_prefs box\n(SessionService)\nsession_persisted, onboarding_done, role,\nlanguage, confidential_mode, pending invitation/\nreferral tokens, journey dismissal, recent searches\nNOT encrypted (no HiveAesCipher in use)"]
+        PCACHE["permission_cache box\n(PermissionCache)\nRBAC check_permission() results, 15-min TTL"]
+    end
+
+    subgraph GAP["NOT YET BUILT (target only, see kynza-offline-realtime.md)"]
+        OUTBOX["outbox_queue box\nqueued newBooking / statusChange /\ncashPayment / clientNote mutations"]
+        SYNC["OutboxSyncService.syncAll()\npriority order + retry + manual-review flag"]
+        CONFLICT["ConflictResolver\nserver-wins on slot_taken/conflict"]
+        AGENDA["agenda_j7 / clients_cache_readonly\nencrypted read/write local cache"]
+    end
+
+    CONN --> BANNER
+    BANNER -.watched by.-> PREFS
+    APP["App boot"] --> PREFS
+    APP --> PCACHE
+
+    OUTBOX -.->|reconnect trigger, not implemented| SYNC
+    SYNC -.-> CONFLICT
+
+    classDef missing fill:#3a0000,stroke:#EF4444,color:#EF4444,stroke-dasharray: 4 4
+    class OUTBOX,SYNC,CONFLICT,AGENDA missing

@@ -1,0 +1,48 @@
+%% KYNZA — Full Stack Architecture Layers
+%% Source of truth verified against lib/, supabase/migrations/, supabase/functions/ (2026-07-03)
+flowchart TB
+    subgraph CLIENT["Flutter Client (lib/)"]
+        UI["Presentation\nscreens/ + widgets/\n(shared/widgets: KynzaButton, KynzaCard,\nKynzaSkeleton, KynzaEmptyState, KynzaErrorState,\nKynzaOfflineBanner, KynzaLoaderOverlay)"]
+        PROV["Application\nRiverpod providers/notifiers\n(FutureProvider, FutureProvider.family,\nStreamProvider, AsyncNotifier — hand-written, no codegen)"]
+        DOM["Domain\nabstract *_repository.dart interfaces"]
+        DATA["Data\n*_repository_impl.dart\n(talks directly to SupabaseService.client —\nno separate datasource abstraction layer)"]
+        HIVE["Local cache — Hive\nkynza_prefs box (session flags, role, language,\nconfidential mode, pending tokens, recent searches)\npermission_cache box (RBAC 15-min TTL cache)"]
+    end
+
+    subgraph SUPA["Supabase Backend-as-a-Service"]
+        SDK["supabase_flutter SDK client\n(SupabaseService.client)"]
+        REST["PostgREST\n(direct table reads, RLS-enforced)"]
+        RT["Realtime\n.stream(primaryKey:).eq(...) per query\n(booking, proxipay session, notifications,\nservices, loyalty cards, journey, marketing feeds)"]
+        FN["Edge Functions (Deno)\n18 callable + run-scheduled-actions (cron)"]
+        PG[("PostgreSQL 15\n55 tables, RLS on all business tables,\nhas_role() policy function")]
+        STORAGE["Storage\nsalon media, backups (backup_jobs)"]
+        AUTH["Auth (GoTrue)\nJWT issuance, PKCE flow"]
+    end
+
+    subgraph EXT["External Services"]
+        LEAPA["Leapa API\nMobile Money (Lumicash/EcoCash)\ncalled ONLY from create-payment /\nleapa-webhook Edge Functions — never from client"]
+        FCM["Firebase Cloud Messaging\npush notifications"]
+        CRASH["Firebase Crashlytics\nCrashReportingService"]
+    end
+
+    UI --> PROV --> DOM
+    DATA -.implements.-> DOM
+    PROV --> DATA
+    DATA --> SDK
+    UI -.direct read/write.-> HIVE
+    PROV -.direct read/write.-> HIVE
+
+    SDK --> REST --> PG
+    SDK --> RT --> PG
+    SDK --> AUTH
+    SDK -->|functions.invoke| FN --> PG
+    FN --> STORAGE
+    FN <--> LEAPA
+    FN --> FCM
+    UI -.uncaught errors.-> CRASH
+
+    RT -.push row change.-> PROV
+    FCM -.push notification.-> UI
+
+    classDef divergence fill:#3a2a00,stroke:#EAB308,color:#EAB308
+    class DATA divergence

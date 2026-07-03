@@ -93,10 +93,23 @@ flutter:
 
   assets:
     - assets/icons/
+    - assets/icons/premium/
     - assets/images/
     - assets/fonts/
     - assets/branding/
     - assets/branding/splash/
+    - assets/flags/
+    - assets/animations/
+    - assets/lottie/
+    - assets/illustrations/
+    - assets/avatars/
+    - assets/categories/
+    - assets/onboarding/
+    - assets/empty_states/
+    - assets/sounds/
+    - assets/notifications/
+    - assets/pdf/
+    - assets/marketing/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -1,0 +1,40 @@
+%% KYNZA — Security Boundary: JWT Issuance → RLS → Edge Function Service-Role
+%% Verified against docs/SECURITY.md, supabase/migrations/*rbac*, *security_hardening*
+%% and supabase/functions/_shared/supabase_admin.ts pattern (2026-07-03)
+flowchart TB
+    LOGIN["User authenticates\n(email/password, Google, or Facebook)"]
+    GOTRUE["Supabase Auth (GoTrue)\nissues JWT — PKCE flow\nclaims: uid, role='authenticated'"]
+    STORE["flutter_secure_storage\n(JWT persisted client-side,\nnever in Hive plaintext)"]
+
+    subgraph CLIENT_BOUNDARY["Client boundary — never has service_role key"]
+        LOGIN --> GOTRUE --> STORE
+        CALL["Every REST/RPC/Realtime/Functions call\nsends JWT as Bearer token"]
+        STORE --> CALL
+    end
+
+    subgraph PG_BOUNDARY["PostgreSQL — RLS enforced, SECURITY INVOKER"]
+        RLSCHECK["RLS policy evaluates\nhas_role(auth.uid(), role, salon_id)\nreads public.users table — never auth.jwt() directly"]
+        SALONID["salon_id is ALWAYS resolved server-side\nfrom auth.uid() → users.salon_id —\nclient-passed salonId is a UI hint only,\nnever trusted as a filter source of truth"]
+    end
+
+    subgraph FN_BOUNDARY["Edge Functions — service_role boundary"]
+        FNAUTH["1. supabase.auth.getUser(jwt) — validates caller"]
+        FNROLE["2. Role/permission check against public.users\nor check_permission() RPC"]
+        FNADMIN["3. Switches to admin client (service_role key,\nDeno.env only, never sent to client) to bypass\nRLS for the specific mutation being performed"]
+        FNAUTH --> FNROLE --> FNADMIN
+    end
+
+    subgraph SECRETS["Secrets — Supabase Vault only, never in Flutter code"]
+        VAULT["LEAPA_API_KEY, LEAPA_SECRET, LEAPA_WEBHOOK_SECRET,\nFCM_KEY, WA_TOKEN\n⚠ gap: no ProxiPay-specific secret documented yet\ndespite proxipay_sessions table existing"]
+    end
+
+    CALL -->|REST/RPC/Realtime| RLSCHECK --> SALONID
+    CALL -->|functions.invoke + JWT| FNAUTH
+    FNADMIN --> VAULT
+    FNADMIN -->|writes/reads bypassing RLS,\nscoped by the role check above| PG_BOUNDARY
+
+    LWEBHOOK["leapa-webhook — special case:\nno user JWT (external caller),\nauthenticated instead by HMAC-SHA256\nsignature over the raw request body"]
+    LWEBHOOK --> FNADMIN
+
+    PROXIROW["proxipay_sessions table:\nRLS policy locks down direct client\nwrite access — sessions are created/confirmed\nonly via proxipay-create-session /\nproxipay-confirm Edge Functions"]
+    RLSCHECK -.applies to.-> PROXIROW

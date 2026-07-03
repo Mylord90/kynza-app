@@ -1,0 +1,54 @@
+%% KYNZA — OWNER role workflow (verified against lib/core/router/app_router.dart, 2026-07-03)
+flowchart TB
+    LOGIN["/auth/login"] --> COMPLETEPROFILE["/auth/complete-profile\n(role=owner selected)"]
+    COMPLETEPROFILE --> ONBOARDGUARD{"ownerSalonProvider\nnon-null?"}
+    ONBOARDGUARD -->|no| CREATESALON["/owner/salon/create\nSalonCreationWizardScreen\n(_OwnerOnboardingGuard blocks re-entry\nonce a salon exists)"]
+    ONBOARDGUARD -->|yes| HOMEOWNER
+    CREATESALON --> HOMEOWNER["/owner/dashboard\n(HomeOwnerScreen — 5-tab KynzaBottomNav,\nall 5 tabs implemented)"]
+
+    HOMEOWNER -->|tab 0| CALTAB["Calendrier (_CalendarTab)"]
+    HOMEOWNER -->|tab 1| DASHTAB["📊 Dashboard (AdvancedDashboardTabs)"]
+    HOMEOWNER -->|tab 2| CLIENTSTAB["Clients (_ClientsTab)"]
+    HOMEOWNER -->|tab 3| MKTTAB["Marketing (MarketingDashboardBody)"]
+    HOMEOWNER -->|tab 4| PROFILETAB["Profil (_ProfileTab)"]
+
+    HOMEOWNER --> SERVICES["/owner/services\nServicesListScreen"]
+    HOMEOWNER --> STAFF["/owner/staff (= /owner/team)\nStaffListScreen"]
+    STAFF --> STAFFDETAIL["/owner/team/:staffId\nStaffDetailScreen"]
+    HOMEOWNER --> AVAIL["/owner/availability\nAvailabilityManagementScreen"]
+    AVAIL --> AVAILSALON["/owner/availability/salon\nSalonHoursScreen"]
+    AVAIL --> AVAILSTAFF["/owner/availability/staff/:staffId\nStaffHoursScreen"]
+    AVAIL --> AVAILBREAKS["/owner/availability/breaks\nStaffPickerScreen → BreaksManagementScreen"]
+    AVAIL --> AVAILEXC["/owner/availability/exceptions\nExceptionsCalendarScreen"]
+
+    HOMEOWNER --> MARKETING["/owner/marketing\nMarketingDashboardScreen"]
+    MARKETING --> MKTCLIENTS["/owner/marketing/clients\nInviteClientsScreen"]
+    MARKETING --> MKTPROMO["/owner/marketing/promotions\nPromotionCenterScreen"]
+    MARKETING --> MKTLOYALTY["/owner/marketing/loyalty\nLoyaltySetupScreen"]
+    HOMEOWNER --> SHARE["/owner/share\nSocialShareCenterScreen"]
+    HOMEOWNER --> REVIEWS["/owner/reviews\nOwnerReviewsScreen"]
+    HOMEOWNER --> LOYALTYSCAN["/owner/loyalty/scan\nLoyaltyScanScreen (owner/manager/staff)"]
+
+    HOMEOWNER --> ANALYTICS["/owner/analytics\nAdvancedDashboardScreen"]
+    ANALYTICS --> ANCLIENTS["/owner/analytics/clients"]
+    ANALYTICS --> ANTEAM["/owner/analytics/team"]
+    ANALYTICS --> ANFORECAST["/owner/analytics/forecast"]
+    HOMEOWNER --> AUDITLOGS["/owner/audit-logs\nAuditLogScreen"]
+    HOMEOWNER --> PERMGROUPS["/owner/permissions\nPermissionGroupsScreen"]
+    PERMGROUPS --> PERMDETAIL["/owner/permissions/:groupId"]
+
+    HOMEOWNER --> SETTINGS["/owner/settings\nSettingsHomeScreen"]
+    HOMEOWNER --> AUTOMATION["/owner/automation\nAutomationListScreen"]
+    HOMEOWNER --> BACKUP["/owner/backup\nBackupScreen (max 1/6h cooldown)"]
+    HOMEOWNER --> TEMPLATES["/owner/templates\nTemplateListScreen"]
+    HOMEOWNER --> FLAGS["/owner/feature-flags\nFeatureFlagScreen"]
+    HOMEOWNER --> COMMISSIONS["/owner/team/commissions\nCommissionScreen"]
+
+    HOMEOWNER --> SUBSCRIPTION["/owner/subscription\nSubscriptionPlansScreen"]
+    SUBSCRIPTION -->|create-manual-invoice| BILLING["/owner/billing\nBillingScreen"]
+    BILLING --> INVOICES["/owner/billing/invoices\nInvoiceHistoryScreen"]
+    BILLING -->|mark_invoice_paid RPC,\ndirect from Flutter| SUCCESS["/owner/billing/success\nUpgradeSuccessScreen"]
+
+    HOMEOWNER --> PROXIPAY["/owner/proxipay/:bookingId\n_ProxiPayLoader → ProxiPayQrScreen\n(owner/manager/staff)"]
+
+    classDef gap fill:#3a0000,stroke:#EF4444,color:#EF4444,stroke-dasharray:4 4

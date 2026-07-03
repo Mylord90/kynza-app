@@ -1,0 +1,36 @@
+%% KYNZA — MANAGER role workflow (verified against lib/core/router/app_router.dart +
+%% lib/features/home_manager/, 2026-07-03). Manager is a scoped subset of OWNER by
+%% route guard (_RoleGuard.anyOf({owner, manager}) on shared screens) — there is no
+%% separate manager-only screen set beyond the home shell.
+flowchart TB
+    LOGIN["/auth/login"] --> HOMEMANAGER["/manager/dashboard\n(HomeManagerScreen — 5-tab KynzaBottomNav,\nSAME 5 tabs/icons as owner)"]
+
+    subgraph STUB["KNOWN GAP — verified in code"]
+        HOMEMANAGER -.-> STUBBODY["All 5 tab bodies render the SAME\nstatic KynzaEmptyState placeholder\nregardless of selected tab index.\nNone of Calendrier/Dashboard/Clients/\nMarketing/Profil is actually implemented\nfor the manager shell today."]
+    end
+
+    HOMEMANAGER -->|shared route,\nanyOf owner/manager| SERVICES["/owner/services\nServicesListScreen"]
+    HOMEMANAGER -->|shared route| AVAIL["/owner/availability\n+ salon/staff/breaks/exceptions sub-routes"]
+    HOMEMANAGER -->|shared route| MARKETING["/owner/marketing\n+ clients/promotions/loyalty sub-routes"]
+    HOMEMANAGER -->|shared route| REVIEWS["/owner/reviews\nOwnerReviewsScreen"]
+    HOMEMANAGER -->|shared route,\nanyOf owner/manager/staff| LOYALTYSCAN["/owner/loyalty/scan\nLoyaltyScanScreen"]
+    HOMEMANAGER -->|shared route,\nanyOf owner/manager/staff| PROXIPAY["/owner/proxipay/:bookingId\nProxiPayQrScreen"]
+
+    subgraph OWNERONLY["Owner-ONLY routes — manager has NO access\n(_RoleGuard(owner) exact match, not anyOf)"]
+        STAFF["/owner/staff, /owner/team,\n/owner/team/commissions"]
+        ANALYTICS["/owner/analytics + sub-routes"]
+        AUDITLOGS["/owner/audit-logs"]
+        PERMGROUPS["/owner/permissions"]
+        SETTINGS["/owner/settings"]
+        AUTOMATION["/owner/automation"]
+        BACKUP["/owner/backup"]
+        TEMPLATES["/owner/templates"]
+        FLAGS["/owner/feature-flags"]
+        SUBSCRIPTION["/owner/subscription, /owner/billing"]
+        SALONCREATE["/owner/salon/create"]
+    end
+
+    classDef gap fill:#3a0000,stroke:#EF4444,color:#EF4444,stroke-dasharray:4 4
+    classDef restricted fill:#111,stroke:#666,color:#999,stroke-dasharray:2 2
+    class STUBBODY gap
+    class STAFF,ANALYTICS,AUDITLOGS,PERMGROUPS,SETTINGS,AUTOMATION,BACKUP,TEMPLATES,FLAGS,SUBSCRIPTION,SALONCREATE restricted

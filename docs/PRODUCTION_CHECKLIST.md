@@ -142,3 +142,217 @@ as part of this audit (noted inline).
 - **`feature_flags` table was never built** — referenced in the original
   Phase 3B spec but nothing across Phases 3B→6 + Advanced ever actually
   reads or writes it.
+
+## Update — 2026-07-03 (Enterprise Architecture & Documentation Expansion, Parts 1/3/4)
+
+Two claims above are now stale and are corrected here rather than edited in place, per the
+additive-only rule for this pass:
+
+- **"32/32 tables match RLS" is superseded.** The schema has grown since 2026-06-27 through the
+  RBAC, audit, entity-versioning, automation, data-platform, and evolution-platform phases. A
+  full re-audit against all 58 migration files (`docs/DATABASE_ARCHITECTURE.md`) found **55
+  tables, all 55 with RLS enabled — still zero gaps**, just a higher accurate count.
+- **"`feature_flags` table was never built" is superseded.** It was built in
+  `20260630110000_phase4_feature_flags.sql` and is seeded with 5 flags (`advanced_analytics`,
+  `ai_scheduling`, `multi_location`, `client_app_v2`, `instant_booking`). See
+  `docs/FEATURE_FLAGS.md` (Phase C).
+
+New tech-debt items found during the Part 3 database audit (`docs/DATABASE_ARCHITECTURE.md` §4):
+
+- [ ] **`salon_settings` and `owner_journey_progress` have no `deleted_at`** — both are 1:1-with-
+  salon tables, inconsistent with every other "core" salon table's soft-delete convention.
+- [ ] **`referrals` has no `deleted_at`** — the only loyalty/marketing table without one; no way
+  to soft-delete a stale/spam referral today.
+- [ ] **`salon_settings`, `permission_groups`, `automation_workflows` have an `updated_at` column
+  but no trigger to maintain it** — a real correctness bug (silently stale timestamp), not a
+  design choice.
+- [ ] **Missing index on `salon_id` FK**: `staff_services`, `staff_working_hours`,
+  `staff_breaks`, `automation_action_runs`, `notification_logs`. Draft fix (not applied):
+  `supabase/migrations/20260703120000_indexes_optimization.sql`.
+- [ ] **`salons.owner_id` is not a declared FK and has no index**, despite being used throughout
+  RLS/insert checks.
+- [ ] **`check-subscription` does not exist** (Edge Function, RPC, or cron) — a paid plan that
+  lapses is never automatically reverted to `free`. The `subscription.expiring` automation
+  trigger type is seeded with `wired: FALSE` for exactly this reason. See
+  `docs/EDGE_FUNCTIONS_REFERENCE.md` §4.
+- [ ] **`proxipay-create-session` has no unique constraint against `booking_id`** — multiple
+  concurrent ProxiPay sessions can be created for the same booking.
+- [ ] **No Edge Function sets an explicit timeout** — all 18 functions rely on the Supabase Edge
+  Function platform default; no function-specific timeout budget is configured anywhere.
+- [ ] **`docs/ai/skills/kynza-offline-realtime.md` describes an unbuilt target architecture** —
+  the outbox queue, `OutboxSyncService`, `ConflictResolver`, and encrypted agenda/clients caches
+  it specifies do not exist in `lib/`. Current offline support is limited to two unencrypted Hive
+  boxes (session prefs, permission cache). See `docs/OFFLINE_STRATEGY.md` (Phase E) for the full
+  gap analysis.
+
+## Update — 2026-07-03 (Enterprise Architecture & Documentation Expansion, Parts 2/6/7)
+
+New tech-debt items found during the Part 2 (workflows) and Part 6/7 (feature flags, external
+APIs) audits:
+
+- [ ] **🔴 CANDIDATE RELEASE-BLOCKER: `android/app/src/main/AndroidManifest.xml` (the release
+  manifest) declares zero `<uses-permission>` entries, including `INTERNET`.** `INTERNET` is
+  present only in `android/app/src/debug/AndroidManifest.xml` and `.../profile/AndroidManifest.xml`
+  (Flutter's default dev-tooling template, not meant for the app's own network calls). A release
+  build may have no network access at all. Not confirmed against an actual merged/built manifest
+  in this pass — recommend running `flutter build apk --release` and inspecting the merged
+  manifest before the next Play Store submission. See `docs/API_REFERENCE_ENTERPRISE.md`.
+- [ ] **Camera/Photo-library permissions missing on both platforms** — `image_picker` and
+  `mobile_scanner` are real, used dependencies (ProxiPay scan, loyalty scan, avatar/salon photo
+  upload) but neither `AndroidManifest.xml` nor `Info.plist` declares `CAMERA`,
+  `READ_MEDIA_IMAGES`, `NSCameraUsageDescription`, or `NSPhotoLibraryUsageDescription`. No
+  `permission_handler` package exists either. iOS will hard-crash the process on first camera/
+  photo-library access without the `Info.plist` keys.
+- [ ] **iOS deep links likely unwired** — `Info.plist` has no `CFBundleURLSchemes` entry for
+  `com.kynza.app://`, while Android's intent-filters for the same 4 hosts are confirmed present
+  and correct. Unconfirmed without an iOS device test.
+- [ ] **`PermissionGuard` (RBAC fine-grained gating) is built but wired into zero screens** — all
+  current access control is coarse role-level (`_RoleGuard`) and RLS; the permission-groups
+  system exists at the DB/service layer only. See `docs/WORKFLOWS.md` §2.5.
+- [ ] **Manager home shell is a UI stub** — same 5-tab nav as Owner, all 5 tab bodies render the
+  same static `KynzaEmptyState` regardless of selection. See `docs/WORKFLOWS.md` §3.3.
+- [ ] **CLIENT_SUPPORT role does not exist at any layer** (enum, router guard, or
+  `permission_groups.base_role` CHECK) — flagged as unbuilt, not invented. See
+  `docs/WORKFLOWS.md` §3.5.
+- [ ] **`feature_flags`/`evaluate_feature_flag()` exist and are functional but are called from
+  nowhere in the app besides their own admin screen** — toggling any flag today has zero
+  observable effect on any other screen. See `docs/FEATURE_FLAGS.md`.
+- [ ] **`leapa_enabled` (referenced in the original roadmap as "the Leapa go-live switch") does
+  not exist as a flag** — Leapa is unconditionally live via Vault secret presence, not gated by
+  any flag. See `docs/FEATURE_FLAGS.md`.
+- [ ] **Facebook and Apple sign-in are both stubs** (`throw UnimplementedError`), buttons
+  disabled behind a "coming soon" tooltip. Only email/password and Google are real.
+- [ ] **No Google Maps/Places/Directions/Geocoding/Geolocation, no Firebase Analytics, no local-
+  notifications package** — none of these integrations named in the original roadmap have any
+  matching dependency or code. See `docs/API_REFERENCE_ENTERPRISE.md` for the full per-API status
+  table.
+- [ ] **`route_names.dart`'s `clientBookingConfirm` constant has no matching `GoRoute`** — reached
+  only via in-flow `Navigator.push`, not `context.go`. Low risk, but a stale/misleading constant.
+
+## Update — 2026-07-03 (Enterprise Architecture & Documentation Expansion, Parts 11/12/13)
+
+- [ ] **No offline outbox/local-cache system exists** — only two unencrypted Hive boxes (session
+  prefs, permission cache). Every mutating flow (booking status change, cash payment, review,
+  profile edit) requires network today; a cold start offline has no cached data to render for any
+  `.stream()`-backed screen. See `docs/OFFLINE_STRATEGY.md` for the full per-flow gap table.
+- [ ] **Both Hive boxes are unencrypted** (no `HiveAesCipher` anywhere in the codebase) — low
+  current risk (no payment/password data cached), but inconsistent with the offline target spec.
+  See `docs/security/SECURITY_ENTERPRISE.md` (OWASP M9).
+- [ ] **No CI/CD pipeline exists at all** — no `.github/` workflows, no automated test/lint/
+  dependency-scan gate on any branch. Blocks OWASP M2 (supply chain) mitigation and any future
+  automated performance regression testing (Part 13).
+- [ ] **No certificate pinning, no biometric auth, no root/jailbreak detection** — none
+  implemented, none partially started. See `docs/security/SECURITY_ENTERPRISE.md` §3 for
+  priority/roadmap notes on each.
+- [ ] **`docs/SECURITY.md` §4 "Permission resolution chain" described a schema that doesn't match
+  the real deployed `check_permission()` function** — corrected via an appended note in that file
+  rather than an in-place rewrite; the real schema is junction-table-based
+  (`permission_definitions`/`permission_groups`/`user_permission_groups`/
+  `user_permission_overrides`), not a JSONB column on `users`.
+- [ ] **No performance profiling has ever been run against a real target device** — every numeric
+  target in `docs/PERFORMANCE_TARGETS.md` is a goal, not a measured baseline; no
+  `firebase_performance` package exists to even start collecting real data.
+- [ ] **`proxipay-confirm`'s 3G round-trip and every other Edge Function have no explicit timeout
+  configured** (restated from the Part 4 finding) — directly blocks being able to guarantee the
+  "<3s ProxiPay confirm" performance target.
+
+## Part 14 — Extended Production Checklist (2026-07-03)
+
+### Google Play
+
+- [ ] **Store listing** — not started. `kPlayStoreUrl` in `lib/core/constants/app_version.dart`
+  points to `com.kynza.app` (real package id, confirms the app identity is decided), but no
+  listing copy, screenshots, or feature graphic exist in this repo (none would — they're
+  Play Console assets, not app assets — flagged as a checklist item to produce, not a code gap).
+- [ ] **Data Safety form** — must map to data *actually* collected, verified against real schema:
+  personal info (name, phone, email — `users` table), location (**none collected** — no
+  geolocation package exists, `docs/API_REFERENCE_ENTERPRISE.md`), photos (`salon_media`,
+  `review_media`, avatars via `image_picker` — collected), financial info (`transactions`,
+  `invoices` — collected, but KYNZA is explicitly non-custodial per R01, money never touches
+  KYNZA's own accounts, only transaction *records*), app activity (`activity_logs`,
+  `search_logs` — collected). This form must be filled out in Play Console directly; this
+  checklist item is to ensure whoever fills it has the real, verified data inventory above rather
+  than guessing.
+- [ ] **Screenshots spec** — not produced (design-asset task, outside this doc pass's scope).
+- [ ] **Feature graphic spec** — not produced (same).
+- [ ] **Release notes template** — not established; recommend a simple `FR: ... / EN: ...`
+  two-line format per release, stored wherever release notes are currently drafted (not found in
+  this repo).
+- [ ] **Versioning scheme** — confirmed real and consistent: `pubspec.yaml` `version: 1.0.0+1`
+  matches `lib/core/constants/app_version.dart`'s `kAppVersionCode`/`kAppVersionName` (both must
+  be updated together per that file's own comment) and is checked server-side against the real
+  `app_versions` table via `check_app_version()` RPC (`docs/DATABASE_ARCHITECTURE.md` §3.10) for
+  the force-update gate. `MAJOR.MINOR.PATCH+build` scheme already in use — no change needed.
+
+### App Store (iOS — Phase 8, not blocking current Play Store push)
+
+- [ ] **`kAppStoreUrl` is a literal placeholder** (`id000000000`) — confirms iOS submission
+  hasn't started, consistent with `docs/CATALOG_ARCHITECTURE.md`/roadmap references to "Phase 8."
+- [ ] **`Info.plist` gaps found in this pass are iOS-submission-blocking regardless of Phase 8
+  timing**: missing `NSCameraUsageDescription`/`NSPhotoLibraryUsageDescription` (would fail App
+  Store review, not just crash at runtime — Apple explicitly rejects apps using camera/photo APIs
+  without these keys) and missing `CFBundleURLSchemes` for the `com.kynza.app://` deep link
+  scheme. See `docs/API_REFERENCE_ENTERPRISE.md`.
+
+### Privacy Policy & Terms
+
+- [ ] **Status: MISSING.** No privacy policy or terms-of-service file/screen found anywhere in
+  this repo (checked for common filenames and a `help_center`/`support`/`legal` screen — none
+  exist). This is a hard Play Store *and* App Store submission requirement (a live URL is
+  mandatory in both consoles) — flagged as the single most concrete pre-launch blocker found in
+  this entire documentation pass, alongside the AndroidManifest permissions gap (Part 7).
+
+### Monitoring
+
+- [ ] **Crashlytics**: real and initialized (`CrashReportingService.init()`, `runZonedGuarded` in
+  `main()`, confirmed `docs/PRODUCTION_CHECKLIST.md`'s original audit). **No alert thresholds
+  configured** — that's a Firebase Console setting, not code; recommend setting a crash-free-users
+  threshold alert (e.g. <99%) once real user volume exists.
+- [ ] **No Firebase Performance Monitoring** — package absent (Part 13 finding); would be the
+  natural companion to Crashlytics for the numeric targets in `docs/PERFORMANCE_TARGETS.md`.
+
+### Analytics
+
+- [ ] **No Firebase Analytics / event-taxonomy system exists** (`docs/API_REFERENCE_ENTERPRISE.md`)
+  — "event taxonomy completeness" cannot be checked because there is no event taxonomy. The
+  in-house `analytics_views`/`mv_daily_revenue` SQL views power the owner dashboard, which is a
+  different, business-metrics system, not a product/engagement analytics pipeline.
+
+### Backup / Rollback Procedure
+
+- [ ] **Real, implemented, verified**: `create-backup` Edge Function (owner/manager-triggered,
+  max 1/6h cooldown) exports `salons`/`services`/`staff_profiles`/deduplicated clients/`bookings`
+  (90-day lookback)/`reviews`/`invoices` (90-day lookback) to the `kynza-backups` Storage bucket,
+  tracked in `backup_jobs` (`docs/EDGE_FUNCTIONS_REFERENCE.md` §5, `docs/DATABASE_ARCHITECTURE.md`
+  §3.10). **Gap**: this is an *export*, not a *restore* mechanism — no code path reads a
+  `backup_jobs` artifact back into the database. "Rollback procedure" as commonly understood
+  (restore-from-backup) does not exist; only data export does.
+- [ ] **Database-level rollback**: relies entirely on Supabase's platform-level point-in-time
+  recovery (a paid-tier Supabase feature, not independently configured or verified from this
+  repo) — not a KYNZA-authored capability.
+
+### Support Process
+
+- [ ] **No formal support process or CLIENT_SUPPORT role exists** (`docs/WORKFLOWS.md` §3.5,
+  restated here since Part 14 explicitly asks "who handles CLIENT_SUPPORT escalations"). Today,
+  by process of elimination from what's actually built, an owner is the only role with audit-log
+  visibility (`ownerAuditLogs` route) — any client-facing support today would have to happen
+  entirely outside the app (phone, WhatsApp, in-person), since no in-app help/contact/ticketing
+  screen exists.
+
+### Maintenance Mode Procedure
+
+- [ ] **Real, implemented, verified**: `maintenance_windows` table + `is_maintenance_active()` RPC
+  + the router's maintenance gate (`docs/WORKFLOWS.md` §2.3) — a window is created (service-role
+  only, no in-app UI to create one), and every authenticated user is redirected to
+  `MaintenanceScreen` while a window is active; `MaintenanceScreen` polls every 30s and
+  self-clears on window end. **Gap**: no in-app or admin-tool UI exists to *create* a maintenance
+  window — it must be inserted directly via Supabase Studio/SQL today.
+
+### Known tech-debt items — full running list (all phases of this documentation pass)
+
+Every `[ ]` item across the three "Update — 2026-07-03" sections above (Parts 3, 2/6/7, 11/12/13)
+plus this Part 14 section is carried forward as open, unresolved tech debt — none were fixed as
+part of this documentation-only pass, per its additive-only scope. The original 8 pre-existing
+tracked items (bank transfer placeholder, i18n retrofit, plan-gating, etc., "Known gaps" section
+above) remain open and unchanged.

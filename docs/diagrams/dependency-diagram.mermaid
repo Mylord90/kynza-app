@@ -1,0 +1,79 @@
+%% KYNZA — Package / Module Dependency Graph
+%% Verified: lib/features/* (26 folders), lib/core/*, lib/shared/* (2026-07-03)
+%% Rule: features never import each other directly; shared state crosses via
+%% core/providers (auth, connectivity) or by one feature reading another's
+%% *_repository interface through Riverpod (e.g. booking reading services).
+flowchart LR
+    subgraph FEATURES["lib/features/ — feature-first modules (no circular deps)"]
+        direction TB
+        subgraph IDENTITY["Identity & Access"]
+            auth
+            permissions
+            settings
+        end
+        subgraph CORE_DOMAIN["Salon Core"]
+            salon
+            services
+            staff
+            availability
+            team
+        end
+        subgraph COMMERCE["Booking & Payments"]
+            booking
+            payment
+            proxipay
+            billing
+        end
+        subgraph ENGAGEMENT["Engagement"]
+            loyalty
+            reviews
+            marketing
+            referral
+            journey
+            notifications
+            search
+        end
+        subgraph OPS["Owner Ops"]
+            dashboard
+            data_platform
+            automation
+            evolution
+        end
+        subgraph HOMES["Role shells"]
+            home_owner
+            home_manager
+            home_staff
+            home_client
+            splash
+        end
+    end
+
+    subgraph SHARED["lib/shared/widgets — KynzaButton, KynzaCard, KynzaSkeleton,\nKynzaEmptyState, KynzaErrorState, KynzaOfflineBanner, KynzaBadge,\nKynzaTextField, loader/*"]
+    end
+
+    subgraph CORE["lib/core — constants, enums, errors, models, providers,\nrouter, services (Supabase/Connectivity/Session/Freemium/\nNotification/Storage/Export/Share/Crash/Timezone/Currency),\nutils, permissions/, audit/, localization/"]
+    end
+
+    subgraph EXTPKG["External packages"]
+        riverpod["flutter_riverpod"]
+        gorouter["go_router"]
+        supa["supabase_flutter"]
+        hive["hive_flutter"]
+        firebase["firebase_core / _messaging / _crashlytics"]
+        flchart["fl_chart"]
+        pdfpkg["pdf / printing"]
+        qr["mobile_scanner / qr_flutter"]
+    end
+
+    FEATURES --> SHARED
+    FEATURES --> CORE
+    SHARED --> CORE
+    CORE --> EXTPKG
+    FEATURES -.->|via core/router route names only| HOMES
+
+    dashboard -->|reads via provider, not direct import| flchart
+    data_platform --> pdfpkg
+    proxipay --> qr
+    loyalty --> qr
+
+    classDef note fill:#111,stroke:#EAB308,color:#EAB308,stroke-dasharray: 3 3

@@ -1,0 +1,50 @@
+%% KYNZA — Generic Edge Function Request Flow (verified against all 18 functions, 2026-07-03)
+flowchart TB
+    subgraph TRIGGERS["Trigger sources"]
+        T1["Flutter client\nsupabase.functions.invoke(name, body)"]
+        T2["Other Edge Function\n(service-role client, server-to-server)"]
+        T3["pg_cron\nnet.http_post + service-role bearer\n(schedule-reminders hourly,\nrun-scheduled-actions every 5 min)"]
+        T4["External webhook\nLeapa → leapa-webhook\n(HMAC-SHA256 signature, no JWT)"]
+    end
+
+    subgraph FN["Edge Function (Deno)"]
+        AUTH{"Client-invoked?"}
+        JWTCHECK["getAuthenticatedUser(req)\nvalidate JWT, load role+salon_id\nfrom public.users (never trust body)"]
+        HMACCHECK["verifyLeapaSignature(rawBody, sig, secret)\ntimingSafeEqual — read rawBody BEFORE JSON.parse"]
+        NOAUTH["No auth check\n(trusted server-to-server /\ncron bearer token only)"]
+        RATE["checkRateLimit()\nfixed window, fails open on error\n(most client-invoked functions)"]
+        VALIDATE["Input validation\n(missing_fields, business rules)"]
+        BIZ["Business logic —\nservice-role client bypasses RLS\nfor the specific scoped mutation"]
+        IDEMP{"Idempotency guard?\n(UNIQUE constraint / atomic\nconditional UPDATE / cooldown)"}
+    end
+
+    subgraph SIDE["Side effects (function-specific, not all functions do all of these)"]
+        AL["activity_logs insert"]
+        EV["entity_versions\n(via DB trigger, not function code —\ne.g. invoices AFTER INSERT)"]
+        SN["send-notification invoke\n(often best-effort, fire-and-forget)"]
+        EW["execute-workflow invoke\n(automation trigger)"]
+        RT["Realtime push\n(row change on the mutated table,\npicked up by .stream() consumers)"]
+    end
+
+    RESP["Response\n{ ...result } 200, or\n{ error, message? } 4xx/5xx"]
+
+    T1 --> AUTH
+    T2 --> NOAUTH
+    T3 --> NOAUTH
+    T4 --> HMACCHECK
+
+    AUTH -->|yes| JWTCHECK --> RATE --> VALIDATE
+    HMACCHECK --> VALIDATE
+    NOAUTH --> VALIDATE
+
+    VALIDATE -->|invalid| RESP
+    VALIDATE -->|valid| IDEMP
+    IDEMP -->|duplicate detected| RESP
+    IDEMP -->|proceed| BIZ
+
+    BIZ --> AL
+    BIZ --> EV
+    BIZ --> SN
+    BIZ --> EW
+    BIZ --> RT
+    BIZ --> RESP

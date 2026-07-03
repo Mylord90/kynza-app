@@ -1,0 +1,14 @@
+%% KYNZA — CLIENT_SUPPORT role: DOES NOT EXIST in this codebase (verified 2026-07-03).
+%% lib/core/enums/user_role.dart defines exactly 4 values: owner, manager, staff, client.
+%% No _RoleGuard usage, no permission_groups.base_role CHECK value, no migration, no
+%% comment anywhere references a "client_support"/"support" role. This diagram
+%% intentionally shows NOTHING implemented, per the hard rule against inventing
+%% routes/roles that don't exist in the code — see docs/WORKFLOWS.md §CLIENT_SUPPORT
+%% for what a real implementation would require.
+flowchart TB
+    NOTFOUND["CLIENT_SUPPORT role: NOT IMPLEMENTED\n\nVerified absent from:\n- lib/core/enums/user_role.dart (only owner/manager/staff/client)\n- lib/core/router/app_router.dart (_RoleGuard never references it)\n- supabase/migrations/*rbac* (permission_groups.base_role CHECK\n  constraint only allows owner/manager/staff/client)\n- repo-wide grep for client_support / clientSupport / CLIENT_SUPPORT:\n  zero matches"]
+
+    NOTFOUND --> REQUIRES["To implement, would require (not built):\n1. Add 'client_support' to UserRole enum + users.role CHECK\n2. Add to permission_groups.base_role CHECK\n3. New _RoleGuard-gated route(s) for read-only\n   audit/support screens\n4. New RLS policies (read-only, no financial\n   mutation rights per the original brief)\n5. Seed permission_definitions rows scoped\n   to this role's restricted feature set"]
+
+    classDef missing fill:#3a0000,stroke:#EF4444,color:#EF4444,stroke-dasharray:4 4
+    class NOTFOUND,REQUIRES missing

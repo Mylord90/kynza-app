@@ -1,0 +1,54 @@
+%% KYNZA — Communication Sequence: Create Booking (representative request)
+%% Verified against lib/features/booking/*, supabase/functions/create-booking/index.ts,
+%% docs/ARCHITECTURE.md §8 (2026-07-03). Error paths included per Part 1 requirement.
+sequenceDiagram
+    participant U as Client (UI)
+    participant P as bookingFlowProvider (Riverpod)
+    participant R as BookingRepositoryImpl
+    participant SDK as Supabase Client
+    participant FN as create-booking (Edge Function)
+    participant DB as PostgreSQL
+    participant WF as execute-workflow (Edge Function)
+    participant RT as Realtime (.stream)
+
+    U->>P: tap "Confirmer"
+    P->>R: createBooking(payload)
+    R->>SDK: functions.invoke('create-booking', body)
+    SDK->>FN: HTTPS POST + JWT Bearer
+
+    FN->>FN: validate JWT (auth.getUser)
+    alt JWT invalid/missing
+        FN-->>SDK: 401 Unauthorized
+        SDK-->>R: error
+        R-->>P: Left(AppException)
+        P-->>U: error state (KynzaErrorState + retry)
+    else JWT valid
+        FN->>DB: check freemium quota (bookings this month)
+        alt quota exceeded
+            FN-->>SDK: 402/403 quota_exceeded
+            SDK-->>R: error
+            R-->>P: Left(AppException)
+            P-->>U: error state, upsell to subscription
+        else quota OK
+            FN->>DB: BEGIN, SELECT ... FOR UPDATE (slot lock)
+            alt slot already taken
+                FN->>DB: ROLLBACK
+                FN-->>SDK: 409 slot_taken
+                SDK-->>R: error
+                R-->>P: Left(AppException)
+                P-->>U: error state "Créneau déjà pris"
+            else slot free
+                FN->>DB: INSERT booking (status=pending_payment), COMMIT
+                FN->>WF: invoke (automation triggers, fire-and-forget)
+                WF->>DB: evaluate automation_workflows, insert automation_execution_logs
+                FN-->>SDK: 200 { booking_id, payment_url }
+                SDK-->>R: success
+                R-->>P: Right(Booking)
+                P-->>U: navigate to PaymentScreen(booking)
+                U->>RT: subscribe .from('bookings').stream().eq('id', booking.id)
+                Note over RT,DB: leapa-webhook later updates booking.status=CONFIRMED_PAID
+                RT-->>U: row update pushed (<300ms typical)
+                U->>U: show PaymentSuccessView
+            end
+        end
+    end
