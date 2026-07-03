@@ -356,3 +356,37 @@ plus this Part 14 section is carried forward as open, unresolved tech debt — n
 part of this documentation-only pass, per its additive-only scope. The original 8 pre-existing
 tracked items (bank transfer placeholder, i18n retrofit, plan-gating, etc., "Known gaps" section
 above) remain open and unchanged.
+
+## Update — 2026-07-03 (Phase 10, Enterprise Hardening pass — Production Readiness)
+
+Unlike the documentation-only passes above, this update reflects items **actually fixed**, not
+just newly documented. Full detail: `docs/PRODUCTION_READINESS.md`.
+
+- [x] **Release signing** — the "release signs with the debug keystore" gap (flagged at Phase 0
+  baseline of this hardening pass) is resolved: `android/app/build.gradle.kts` now conditionally
+  loads a real keystore from `android/key.properties` (git-ignored) and falls back to debug
+  signing only when that file is absent. The wiring itself was verified with a real, disposable
+  test keystore (built a real signed release APK, confirmed via `apksigner verify --print-certs`
+  that the certificate was the test one, then deleted it) — the real production upload keystore
+  was deliberately **not** generated in this session (one-way secret; see
+  `docs/android/RELEASE_SIGNING_PROCEDURE.md` for the exact procedure Mylord runs).
+- [x] **R8/shrink/obfuscation** — previously absent entirely (Part 11/12/13 update above), now
+  enabled (`isMinifyEnabled`/`isShrinkResources = true`, `android/app/proguard-rules.pro`).
+  Verified: a real shrunk release APK built cleanly with zero R8 warnings; `mapping.txt`/
+  `usage.txt` inspected directly, showing real class removal and renaming. **Gap, honestly
+  documented, not silently skipped**: no Android device/emulator exists in this environment
+  (confirmed at Phase 8), so the shrunk APK's *runtime* behavior (does it actually launch, do
+  login/browse/book still work) could not be verified — only build-time correctness was.
+- [x] **App Check / Play Integrity** — was fully greenfield (no code, no doc, no dependency)
+  before this phase; now has a real double-gate architecture (inert by default, mirroring the
+  Google Maps scaffold's discipline from Phase 7) wired into `create-booking`/`proxipay-confirm`,
+  logging-only server-side, never blocking. See `docs/security/APP_CHECK_ARCHITECTURE.md`.
+- [x] **"No CI/CD pipeline exists at all"** (Part 11/12/13 update above) — no longer accurate as
+  stated: `.github/workflows/ci.yml` now exists (analyze → test → build-release → manual-approval
+  gate → deploy-stub). **Still a gap**: no CI service has actually run this pipeline yet (it
+  activates the moment this repo is pushed to GitHub with Actions enabled — nothing else to do),
+  and the deploy stage is a placeholder until a real Play Store deploy target/service account is
+  wired.
+- [x] **Versioning scheme** — re-confirmed unchanged and correct (`pubspec.yaml` `1.0.0+1`
+  matching `app_version.dart`, per the Part 14 entry above) — no action needed, cross-referenced
+  in `docs/PRODUCTION_READINESS.md` rather than re-documented.

@@ -1,0 +1,126 @@
+# KYNZA CI/CD pipeline (Phase 10, Enterprise Hardening pass).
+#
+# This is a ready-to-adopt pipeline definition — no CI service is actually
+# provisioned for this repo today (confirmed: no .github/ existed before
+# this file, no other CI config anywhere). It costs nothing to have this
+# file sit unused; it activates automatically the moment this repo is
+# pushed to GitHub with Actions enabled (the free tier covers this
+# comfortably for a repo this size), and needs zero secrets to run the
+# analyze/test/build stages — only the "deploy" stage (§4 below) needs
+# real secrets, and it's a manually-gated stub until someone wires a real
+# deploy target.
+#
+# Flutter version pinned to 3.44.2 to match this repo's confirmed toolchain
+# (docs/audit/PHASE_0_BASELINE.md) — bump deliberately, not by "latest".
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  analyze-and-test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.2"
+          channel: "stable"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        # --exclude-tags live: test/live/* needs a real, seeded Supabase
+        # project + credentials as CI secrets (KYNZA_SCRATCH_ANON_KEY,
+        # KYNZA_SCRATCH_SERVICE_ROLE_KEY — see test/live/live_test_env.dart)
+        # that aren't provisioned here yet. Explicit for clarity even
+        # though dart_test.yaml's own skip config already excludes them by
+        # default.
+        run: flutter test --exclude-tags live
+
+  build-release:
+    name: Build Release APK
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.2"
+          channel: "stable"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # No android/key.properties secret is wired here yet — the release
+      # build type falls back to debug signing in that case (see
+      # android/app/build.gradle.kts + docs/android/RELEASE_SIGNING_PROCEDURE.md),
+      # so this step succeeds today but produces a debug-signed artifact,
+      # not one ready for the Play Store. Wiring real signing secrets here
+      # is the one prerequisite for turning this into a real release
+      # pipeline (see the commented block below).
+      #
+      # To wire real signing once a keystore exists (GitHub Actions
+      # secrets: KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD):
+      #
+      #   - name: Decode signing keystore
+      #     run: |
+      #       echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+      #       cat > android/key.properties <<EOF
+      #       storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+      #       keyPassword=${{ secrets.KEY_PASSWORD }}
+      #       keyAlias=${{ secrets.KEY_ALIAS }}
+      #       storeFile=upload-keystore.jks
+      #       EOF
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14
+
+  # Manual gate — configure a GitHub Environment named "production" with
+  # required reviewers (Settings -> Environments) to make this job actually
+  # pause for approval. Until that's configured, this job runs
+  # automatically (no gate) — documented here as the missing setup step,
+  # not something this file can enable on its own from inside the repo.
+  approve-deploy:
+    name: Manual approval gate
+    needs: build-release
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Approved
+        run: echo "Deploy approved."
+
+  deploy:
+    name: Deploy (stub)
+    needs: approve-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy placeholder
+        run: |
+          echo "No deploy target is wired yet."
+          echo "Real deploy would upload build/app/outputs/bundle/release/app-release.aab"
+          echo "to the Play Console (e.g. via r0adkll/upload-google-play or the official"
+          echo "Google Play Developer API), gated behind the approval above."
