@@ -3584,6 +3584,12 @@ abstract class AppLocalizations {
   /// **'Drapeaux de fonctionnalités'**
   String get settingsFeatureFlagsLabel;
 
+  /// No description provided for @settingsRemoteConfigLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Configuration à distance'**
+  String get settingsRemoteConfigLabel;
+
   /// No description provided for @settingsAboutLabel.
   ///
   /// In fr, this message translates to:
@@ -3745,6 +3751,126 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Activez ou désactivez des fonctionnalités pour ce salon. Les overrides locaux priment sur les paramètres globaux.'**
   String get evolutionFeatureFlagsInfoText;
+
+  /// No description provided for @evolutionFeatureFlagsScopeTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer la portée (rôle / utilisateur)'**
+  String get evolutionFeatureFlagsScopeTooltip;
+
+  /// No description provided for @evolutionFeatureFlagsRoleOverridesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Substitutions par rôle'**
+  String get evolutionFeatureFlagsRoleOverridesTitle;
+
+  /// No description provided for @evolutionFeatureFlagsUserOverridesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Substitutions par utilisateur'**
+  String get evolutionFeatureFlagsUserOverridesTitle;
+
+  /// No description provided for @evolutionFeatureFlagsUserIdHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'ID utilisateur'**
+  String get evolutionFeatureFlagsUserIdHint;
+
+  /// No description provided for @evolutionFeatureFlagsUserIdEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entrez d\'abord un ID utilisateur'**
+  String get evolutionFeatureFlagsUserIdEmpty;
+
+  /// No description provided for @evolutionFeatureFlagsAuditTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'historique'**
+  String get evolutionFeatureFlagsAuditTooltip;
+
+  /// No description provided for @evolutionFeatureFlagsAuditTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des modifications'**
+  String get evolutionFeatureFlagsAuditTitle;
+
+  /// No description provided for @evolutionFeatureFlagsAuditEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune modification'**
+  String get evolutionFeatureFlagsAuditEmptyTitle;
+
+  /// No description provided for @evolutionFeatureFlagsAuditEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chaque changement de substitution apparaîtra ici.'**
+  String get evolutionFeatureFlagsAuditEmptySubtitle;
+
+  /// No description provided for @evolutionRemoteConfigTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Configuration à distance'**
+  String get evolutionRemoteConfigTitle;
+
+  /// No description provided for @evolutionRemoteConfigEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune entrée de configuration'**
+  String get evolutionRemoteConfigEmptyTitle;
+
+  /// No description provided for @evolutionRemoteConfigEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les entrées de configuration à distance apparaîtront ici.'**
+  String get evolutionRemoteConfigEmptySubtitle;
+
+  /// No description provided for @evolutionRemoteConfigEditTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la valeur'**
+  String get evolutionRemoteConfigEditTooltip;
+
+  /// No description provided for @evolutionRemoteConfigHistoryTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'historique des versions'**
+  String get evolutionRemoteConfigHistoryTooltip;
+
+  /// No description provided for @evolutionRemoteConfigNewValueHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle valeur'**
+  String get evolutionRemoteConfigNewValueHint;
+
+  /// No description provided for @evolutionRemoteConfigChangeReasonHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Raison du changement (optionnel)'**
+  String get evolutionRemoteConfigChangeReasonHint;
+
+  /// No description provided for @evolutionRemoteConfigUpdateSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Configuration mise à jour.'**
+  String get evolutionRemoteConfigUpdateSuccess;
+
+  /// No description provided for @evolutionRemoteConfigHistoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des versions'**
+  String get evolutionRemoteConfigHistoryTitle;
+
+  /// No description provided for @evolutionRemoteConfigRollbackButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Restaurer cette version'**
+  String get evolutionRemoteConfigRollbackButton;
+
+  /// No description provided for @evolutionRemoteConfigRollbackSuccess.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version restaurée.'**
+  String get evolutionRemoteConfigRollbackSuccess;
 
   /// No description provided for @evolutionMaintenanceDefaultTitle.
   ///

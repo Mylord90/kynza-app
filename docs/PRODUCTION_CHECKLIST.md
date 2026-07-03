@@ -424,3 +424,18 @@ PHASE_1_FINAL_AUDIT.md`), explicitly out of that pass's Phase 2-11 scope and log
   `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, or `CFBundleURLTypes` present.
   Re-confirmed unchanged since the prior hardening pass. Still out of scope (iOS submission is
   an explicitly separate, later workstream), re-logged here so it isn't lost between passes.
+
+## Update — 2026-07-04 (Backend Enterprise Completion, Phase 4 — CP2)
+
+- [ ] **Remote Config Edge Functions never exercised live** — `update-remote-config`'s value/
+  category validation and `rollback-remote-config`'s exact-version restoration are implemented
+  and traced by code review (`docs/backend-completion/PHASE_4_REMOTE_CONFIG.md` §8), but never
+  invoked against a real Postgres/Edge Function runtime (no Docker/local Postgres, no Deno CLI in
+  this environment, and applying the draft migration to any project requires explicit approval
+  this autonomous run doesn't have). Required before this reaches production: apply
+  `20260704110000_remote_config_engine.sql` to a scratch/staging project, deploy the 2 functions,
+  and run a real update → rollback → malformed-value-rejection cycle.
+- [ ] **`update-remote-config`/`rollback-remote-config` gated to `role === 'owner'`, not
+  `SYSTEM_ADMIN`** — remote config is platform-wide, not salon-scoped, so this is broader than
+  ideal. Interim only, until Phase 2/CP3 creates a `SYSTEM_ADMIN` scope (see
+  `docs/backend-completion/PHASE_1_FINAL_AUDIT.md` §3, item 9).

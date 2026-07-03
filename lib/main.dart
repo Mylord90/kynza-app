@@ -24,6 +24,8 @@ import 'core/services/session_service.dart';
 import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/auth_boot_gate.dart';
+import 'features/evolution/feature_flags/data/feature_flag_cache.dart';
+import 'features/evolution/remote_config/data/remote_config_cache.dart';
 import 'features/maps/data/salon_location_cache.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/widgets/loader/providers/loader_overlay_provider.dart';
@@ -61,6 +63,8 @@ Future<void> _bootstrap() async {
   await Hive.openBox(MutationOutboxService.boxName);
   await Hive.openBox(MutationOutboxService.deadLetterBoxName);
   await Hive.openBox(SalonLocationCache.boxName);
+  await Hive.openBox(FeatureFlagCache.boxName);
+  await Hive.openBox(RemoteConfigCache.boxName);
   await initializeDateFormatting('fr_FR');
 
   await Firebase.initializeApp();

@@ -12,6 +12,7 @@ class FeatureFlagModel with _$FeatureFlagModel {
     String? description,
     required bool isEnabled,
     required int rolloutPercentage,
+    @Default('general') String category,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _FeatureFlagModel;

@@ -1906,6 +1906,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsFeatureFlagsLabel => 'Drapeaux de fonctionnalités';
 
   @override
+  String get settingsRemoteConfigLabel => 'Configuration à distance';
+
+  @override
   String get settingsAboutLabel => 'À propos de KYNZA';
 
   @override
@@ -1994,6 +1997,75 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get evolutionFeatureFlagsInfoText =>
       'Activez ou désactivez des fonctionnalités pour ce salon. Les overrides locaux priment sur les paramètres globaux.';
+
+  @override
+  String get evolutionFeatureFlagsScopeTooltip =>
+      'Gérer la portée (rôle / utilisateur)';
+
+  @override
+  String get evolutionFeatureFlagsRoleOverridesTitle =>
+      'Substitutions par rôle';
+
+  @override
+  String get evolutionFeatureFlagsUserOverridesTitle =>
+      'Substitutions par utilisateur';
+
+  @override
+  String get evolutionFeatureFlagsUserIdHint => 'ID utilisateur';
+
+  @override
+  String get evolutionFeatureFlagsUserIdEmpty =>
+      'Entrez d\'abord un ID utilisateur';
+
+  @override
+  String get evolutionFeatureFlagsAuditTooltip => 'Voir l\'historique';
+
+  @override
+  String get evolutionFeatureFlagsAuditTitle => 'Historique des modifications';
+
+  @override
+  String get evolutionFeatureFlagsAuditEmptyTitle => 'Aucune modification';
+
+  @override
+  String get evolutionFeatureFlagsAuditEmptySubtitle =>
+      'Chaque changement de substitution apparaîtra ici.';
+
+  @override
+  String get evolutionRemoteConfigTitle => 'Configuration à distance';
+
+  @override
+  String get evolutionRemoteConfigEmptyTitle =>
+      'Aucune entrée de configuration';
+
+  @override
+  String get evolutionRemoteConfigEmptySubtitle =>
+      'Les entrées de configuration à distance apparaîtront ici.';
+
+  @override
+  String get evolutionRemoteConfigEditTooltip => 'Modifier la valeur';
+
+  @override
+  String get evolutionRemoteConfigHistoryTooltip =>
+      'Voir l\'historique des versions';
+
+  @override
+  String get evolutionRemoteConfigNewValueHint => 'Nouvelle valeur';
+
+  @override
+  String get evolutionRemoteConfigChangeReasonHint =>
+      'Raison du changement (optionnel)';
+
+  @override
+  String get evolutionRemoteConfigUpdateSuccess => 'Configuration mise à jour.';
+
+  @override
+  String get evolutionRemoteConfigHistoryTitle => 'Historique des versions';
+
+  @override
+  String get evolutionRemoteConfigRollbackButton => 'Restaurer cette version';
+
+  @override
+  String get evolutionRemoteConfigRollbackSuccess => 'Version restaurée.';
 
   @override
   String get evolutionMaintenanceDefaultTitle => 'Maintenance en cours';

@@ -119,6 +119,9 @@ abstract class RouteNames {
   static const maintenance = '/maintenance';
   static const forceUpdate = '/force-update';
 
+  // Backend Enterprise Completion — Phase 4: Remote Configuration
+  static const ownerRemoteConfig = '/owner/remote-config';
+
   // ProxiPay V1 — QR-based in-person payment
   static const ownerProxiPay = '/owner/proxipay/:bookingId';
   static const clientProxiPayScan = '/client/proxipay/scan';

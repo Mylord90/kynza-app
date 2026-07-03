@@ -133,3 +133,53 @@ mandated states, never a blank/crashed screen.
   (INSERT ... ON CONFLICT DO NOTHING), not applied**. Lower-risk than Part 5's schema migration
   since it touches no schema — flagging for your review on whether to apply this one now or hold
   it with the others.
+
+## 11. Update — 2026-07-04 (Backend Enterprise Completion, Phase 3 — CP2)
+
+Extends the system above rather than replacing it — see
+`docs/backend-completion/PHASE_3_FEATURE_FLAGS_ENGINE.md` for the full phase report. Summary of
+what changed:
+
+- **Category column added** (`feature_flags.category`) — every flag from the §3 registry above
+  now carries one of: Booking, Loyalty, Referral, Promotion, Analytics, Reviews, Subscriptions,
+  Commission, Notifications, ProxiPay, Google Maps, Leapa, Staff, Owner, Client, Manager, Beta,
+  Experimental. Grouping only — does not change evaluation.
+- **Per-role and per-user overrides added** (`role_feature_overrides`, `user_feature_overrides`,
+  both salon-scoped, mirroring the existing `salon_feature_overrides`/`user_permission_groups`
+  ownership model). `evaluate_feature_flag()`'s resolution order is now: user override → role
+  override (caller's own salon) → salon override → global rollout. A truly global (cross-salon)
+  per-role override is deliberately deferred until a `SYSTEM_ADMIN` scope exists (§3 item 9 of
+  `docs/backend-completion/PHASE_1_FINAL_AUDIT.md`, assigned to Phase 2/CP3).
+- **Realtime propagation is now real** — `featureFlagsRealtimeProvider` subscribes to
+  `feature_flags` via Supabase Realtime and mirrors every snapshot into a new Hive box
+  (`FeatureFlagCache`), so a flag flipped in Supabase reaches a running app instance without a
+  restart, and reads fall back to the last-cached snapshot offline. Proven by
+  `test/unit/feature_flag_realtime_test.dart` using a fake repository + `StreamController` (no
+  live network needed to prove the propagation logic itself).
+- **`evaluateFlag()` is still uncalled by any actual feature gate** — this specific finding from
+  §1 above is unchanged by this update; Realtime propagation and scope resolution are now real,
+  but no screen has been wired to *act* on an evaluated flag as part of this phase. That remains
+  future work, same honest caveat as before.
+- **Audit trail** — `setOverride`/`removeOverride` (all 3 scopes) now write to the existing
+  `activity_logs` table via `AuditLogger.featureFlagOverrideSet/Removed()`, reusing the
+  established audit pipeline rather than a new one (`logs_self_insert_safe`'s whitelist extended
+  with `feature_flag_override_set`/`feature_flag_override_removed`). Viewable via the new
+  `FeatureFlagAuditScreen` (icon in `FeatureFlagScreen`'s app bar).
+- **Kill-switch semantics per category** (what happens to in-flight state when a flag is disabled
+  mid-session — none of these corrupt data, all degrade to one of the 5 UI states):
+  - *ProxiPay, Loyalty, Referral, Reviews, Commission, Notifications, Subscriptions*: hide the
+    relevant entry point/CTA on the next rebuild; any screen already open finishes its current
+    action (e.g. an in-flight ProxiPay session is not aborted) and simply isn't re-openable after.
+  - *Dashboard, Analytics (pdf/csv/export)*: the owning tab/button disappears on next rebuild; no
+    in-flight export is interrupted (short-lived, completes before the next flag read).
+  - *Google Maps, Leapa*: already-inert scaffolds (Phase 7/App-Check discipline) — disabling has
+    no observable effect since no live code path depends on them yet.
+  - *Staff/Owner/Client/Manager*: role-existence flags, not screen-level gates — disabling one
+    does not revoke an already-issued session; would require `_RoleGuard`-level enforcement, not
+    built today (unchanged finding from §3 above).
+  - *Beta/Experimental*: reserved for whatever is added under them later; no current code depends
+    on these two categories specifically.
+- Admin UI (`FeatureFlagScreen`) now groups flags by category and adds a per-flag scope sheet
+  (role toggles for owner/manager/staff/client, plus a raw-user-ID override field) — deliberately
+  no user-search UX yet (internal enterprise admin surface, not client-facing; a follow-up, not
+  required for the underlying engine to be real).

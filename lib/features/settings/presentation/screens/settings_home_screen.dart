@@ -140,6 +140,11 @@ class SettingsHomeScreen extends StatelessWidget {
             label: l10n.settingsFeatureFlagsLabel,
             onTap: () => context.push(RouteNames.ownerFeatureFlags),
           ),
+          _SettingsTile(
+            icon: Icons.tune_outlined,
+            label: l10n.settingsRemoteConfigLabel,
+            onTap: () => context.push(RouteNames.ownerRemoteConfig),
+          ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.language_outlined,

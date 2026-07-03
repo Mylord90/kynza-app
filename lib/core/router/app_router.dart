@@ -46,6 +46,7 @@ import '../../features/data_platform/templates/presentation/screens/template_lis
 import '../../core/models/app_version_check_model.dart';
 import '../../core/models/maintenance_window_model.dart';
 import '../../features/evolution/feature_flags/presentation/screens/feature_flag_screen.dart';
+import '../../features/evolution/remote_config/presentation/screens/remote_config_screen.dart';
 import '../../features/evolution/maintenance/application/providers/maintenance_providers.dart';
 import '../../features/evolution/maintenance/presentation/screens/maintenance_screen.dart';
 import '../../features/evolution/version_manager/application/providers/version_providers.dart';
@@ -536,6 +537,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (context, state) => const _RoleGuard(
           role: UserRole.owner,
           child: _OwnerFeatureFlagsLoader(),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.ownerRemoteConfig,
+        (context, state) => const _RoleGuard(
+          role: UserRole.owner,
+          child: RemoteConfigScreen(),
         ),
       ),
       _fadeRoute(

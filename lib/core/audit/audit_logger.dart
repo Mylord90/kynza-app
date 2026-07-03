@@ -137,4 +137,38 @@ abstract class AuditLogger {
     severity: 'warning',
     isSensitive: true,
   );
+
+  /// [scope] is one of `salon`/`role`/`user`; [scopeTarget] is the salon_id
+  /// (redundant with [salonId] but kept explicit), the role name, or the
+  /// target user_id, depending on [scope].
+  static Future<void> featureFlagOverrideSet(
+    String salonId,
+    String flagKey,
+    String scope,
+    String scopeTarget,
+    bool isEnabled,
+  ) => log(
+    salonId: salonId,
+    typeAction: 'feature_flag_override_set',
+    tableName: '${scope}_feature_overrides',
+    recordId: flagKey,
+    newValues: {'scope': scope, 'target': scopeTarget, 'isEnabled': isEnabled},
+    severity: 'warning',
+    isSensitive: true,
+  );
+
+  static Future<void> featureFlagOverrideRemoved(
+    String salonId,
+    String flagKey,
+    String scope,
+    String scopeTarget,
+  ) => log(
+    salonId: salonId,
+    typeAction: 'feature_flag_override_removed',
+    tableName: '${scope}_feature_overrides',
+    recordId: flagKey,
+    oldValues: {'scope': scope, 'target': scopeTarget},
+    severity: 'warning',
+    isSensitive: true,
+  );
 }

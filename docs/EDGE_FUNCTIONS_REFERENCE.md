@@ -55,8 +55,17 @@ Generic error shape: `{ error: "<code>", message?: string }`. 401 for `unauthent
 | `proxipay-create-session` | Flutter client (staff) | JWT + role + `booking.salon_id` match | **None** — multiple concurrent sessions possible per booking | Yes (30/60s) |
 | `proxipay-confirm` | Flutter client (client) | JWT, any authenticated | `status === confirmed` short-circuit + `idempotency_key` UNIQUE | Yes (20/60s) |
 | `run-scheduled-actions` | pg_cron, every 5 min (`*/5 * * * *`) | Service-role bearer (cron), no in-function check | Picks `pending` rows, `attempt_count < 3`, shared backoff w/ execute-workflow | N/A |
+| `update-remote-config` | Flutter client (owner, Backend Enterprise Completion Phase 4) | JWT + `role === owner` (interim — see note below) | Per-key JSON-schema-style validation before any write; never partial | Yes (60/60s) |
+| `rollback-remote-config` | Flutter client (owner, Backend Enterprise Completion Phase 4) | JWT + `role === owner` (interim — see note below) | Restores to a prior `remote_config_versions` row, always append-only | Yes (30/60s) |
 
 **Extra function not in the original 18 named in prior specs: `run-scheduled-actions`** — included above.
+
+**Access-control note for the 2 Phase 4 functions**: gated to `role === 'owner'` as an interim
+measure, because no `SYSTEM_ADMIN` scope exists yet (`docs/backend-completion/
+PHASE_1_FINAL_AUDIT.md` §3, item 9 — assigned to Phase 2/CP3 of the Backend Enterprise
+Completion pass). Remote config values are platform-wide, not salon-scoped, so any owner being
+able to change them is broader than ideal — flagged honestly in the function source itself, to
+be tightened once `SYSTEM_ADMIN` lands.
 
 ## 4. `check-subscription` — confirmed does not exist
 
@@ -202,6 +211,19 @@ entirely, consistent with the intent.
 - **Output**: `{ status: "processed", count }`
 - **Idempotency**: picks `automation_action_runs` where `status = pending AND scheduled_at <= now() AND attempt_count < 3`, batch 50; shares backoff policy with `execute-workflow`.
 - **Side effects**: updates `automation_action_runs`; can write `activity_logs`/call `send-notification`; finalizes `automation_execution_logs` once all runs for an execution are no longer pending.
+
+### update-remote-config
+- **Input**: `key, value, change_reason?`
+- **Output**: `{ success: true, key, value, version }`
+- **Errors**: `400 missing_fields`, `400 malformed_value` (type or category-refinement mismatch), `403 forbidden`, `404 unknown_key`, `429 rate_limit_exceeded`
+- **Validation**: looks up the entry's `value_type`, rejects any submitted value whose runtime type doesn't match; additionally rejects negative numbers for `prices`/`quotas`/`rate_limits` categories and non-`#RRGGBB` strings for `theming` — a malformed value never reaches `remote_config_entries`, let alone a client.
+- **Side effects**: `remote_config_versions` (new row, `version_number` incremented), `remote_config_audit` (`action: 'updated'`).
+
+### rollback-remote-config
+- **Input**: `key, version_number`
+- **Output**: `{ success: true, key, value, version }` (the newly created version number, not the target one — rollback is append-only, never destructive)
+- **Errors**: `400 missing_fields`, `403 forbidden`, `404 unknown_key`, `404 unknown_version`, `429 rate_limit_exceeded`
+- **Side effects**: `remote_config_entries.value_json` restored to the target version's exact value; `remote_config_versions` (new row copying that value), `remote_config_audit` (`action: 'rolled_back'`).
 
 ## 6. Sécurité
 
