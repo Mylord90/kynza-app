@@ -119,3 +119,38 @@
 None of these were run against the remote project (`hhdkjfpgaklhrhfoxlhj`) — this repo has no
 local Supabase/Docker stack, so `supabase db push` always targets the live project directly, per
 the decision made before this pass began.
+
+## Enterprise Hardening & Production Readiness pass (Phases 0–11, 2026-07-03)
+
+> A separate, later, sequential 12-phase pass — "feature-complete" to "release-safe." Full
+> narrative: [`ENTERPRISE_HARDENING_REPORT.md`](ENTERPRISE_HARDENING_REPORT.md). Tagged
+> `pre-hardening-baseline` (start) → `post-hardening-v1` (end).
+
+- **Phase 0 — Baseline**: [`audit/PHASE_0_BASELINE.md`](audit/PHASE_0_BASELINE.md)
+- **Phase 1 — Android Release Hardening**: [`audit/ANDROID_RELEASE_HARDENING_REPORT.md`](audit/ANDROID_RELEASE_HARDENING_REPORT.md)
+- **Phase 2 — Schema Reconciliation**: [`audit/SCHEMA_RECONCILIATION_REPORT.md`](audit/SCHEMA_RECONCILIATION_REPORT.md) (+ `diagrams/erd.mermaid` corrected)
+- **Phase 3 — Legal Center**: [`LEGAL_CENTER_ARCHITECTURE.md`](LEGAL_CENTER_ARCHITECTURE.md);
+  `../supabase/migrations/20260703150000_legal_center.sql` — drafted, **not applied**
+- **Phase 4 — Observability & DR**: [`OBSERVABILITY_MONITORING.md`](OBSERVABILITY_MONITORING.md),
+  [`DISASTER_RECOVERY_RUNBOOK.md`](DISASTER_RECOVERY_RUNBOOK.md);
+  `../supabase/migrations/20260703160000_health_dashboard_views.sql` — drafted, **not applied**
+- **Phase 5 — Security Hardening**: [`security/SECURITY_AUDIT_V2.md`](security/SECURITY_AUDIT_V2.md)
+- **Phase 6 — Offline-First Upgrade**: [`OFFLINE_STRATEGY.md`](OFFLINE_STRATEGY.md) — extensively
+  rewritten in place (this file originated in the Documentation Expansion pass above, Part 11)
+- **Phase 7 — Google Maps Scaffold**: [`GOOGLE_MAPS_ARCHITECTURE.md`](GOOGLE_MAPS_ARCHITECTURE.md)
+- **Phase 8 — Accessibility & Performance**: [`audit/ACCESSIBILITY_PERFORMANCE_PASS.md`](audit/ACCESSIBILITY_PERFORMANCE_PASS.md)
+- **Phase 9 — Testing Enterprise Expansion**: [`TESTING_ENTERPRISE_STRATEGY.md`](TESTING_ENTERPRISE_STRATEGY.md)
+- **Phase 10 — Production Readiness**: [`PRODUCTION_READINESS.md`](PRODUCTION_READINESS.md),
+  [`android/RELEASE_SIGNING_PROCEDURE.md`](android/RELEASE_SIGNING_PROCEDURE.md),
+  [`security/APP_CHECK_ARCHITECTURE.md`](security/APP_CHECK_ARCHITECTURE.md),
+  `../.github/workflows/ci.yml`
+- **Phase 11 — Final Audit**: [`ENTERPRISE_HARDENING_REPORT.md`](ENTERPRISE_HARDENING_REPORT.md) (this pass's closing report)
+
+### Pre-existing documents further extended by this pass
+
+| File | What changed |
+|---|---|
+| `PRODUCTION_CHECKLIST.md` | A further "Phase 10" dated section appended (signing/R8/App-Check/CI-CD resolutions) |
+| `SECURITY.md` | Corrected via Phase 5 findings (JWT storage was not actually Keychain-encrypted before this pass) |
+| `OFFLINE_STRATEGY.md` | Rewritten to reflect the real Phase 6 outbox/DLQ architecture, superseding its Documentation-Expansion-pass content |
+| `DOCUMENTATION_INDEX.md` | This section |
