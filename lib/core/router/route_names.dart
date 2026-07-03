@@ -131,4 +131,17 @@ abstract class RouteNames {
 
   // i18n — Language settings
   static const ownerLanguage = '/owner/language';
+
+  // Enterprise Hardening Phase 3 — Legal Center Infrastructure
+  static const legalCenter = '/legal';
+  static const legalDocument = '/legal/:slug';
+  static const legalDocumentHistory = '/legal/:slug/history';
+  static const legalAcceptanceHistory = '/legal/my-acceptances';
+  static const legalSupportContact = '/legal/support-contact';
+  static const settingsConsent = '/settings/consent';
+  static const settingsDataRights = '/settings/data-rights';
+
+  static String legalDocumentPath(String slug) => '/legal/$slug';
+  static String legalDocumentHistoryPath(String slug) =>
+      '/legal/$slug/history';
 }

@@ -3515,4 +3515,200 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paymentRadarWaitMessage =>
       'Your request has been sent. Wait for the message on your phone.';
+
+  @override
+  String get legalCenterTitle => 'Legal Center';
+
+  @override
+  String get legalCenterLoadError => 'Unable to load legal documents.';
+
+  @override
+  String get legalCenterEmptyTitle => 'No documents available';
+
+  @override
+  String get legalCenterEmptySubtitle =>
+      'Check back later, our legal documents are being published.';
+
+  @override
+  String get legalDocTypePrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get legalDocTypeTermsOfService => 'Terms of Service';
+
+  @override
+  String get legalDocTypeCookiePolicy => 'Cookie Policy';
+
+  @override
+  String get legalDocTypeAcceptableUsePolicy => 'Acceptable Use Policy';
+
+  @override
+  String get legalDocTypeRefundPolicy => 'Refund Policy';
+
+  @override
+  String get legalDocTypeCommunityGuidelines => 'Community Guidelines';
+
+  @override
+  String get legalDocTypeDataDeletionPolicy => 'Data Deletion Policy';
+
+  @override
+  String get legalDocTypeSupportPolicy => 'Support Policy';
+
+  @override
+  String get legalDocTypeLegalNotices => 'Legal Notices';
+
+  @override
+  String get policyViewerLoadError => 'Unable to load this document.';
+
+  @override
+  String get policyViewerHistoryLink => 'View version history';
+
+  @override
+  String get policyViewerAcceptButton => 'I accept';
+
+  @override
+  String get policyViewerAcceptedLabel => 'Already accepted';
+
+  @override
+  String get policyViewerAcceptedOfflineLabel =>
+      'Acceptance saved offline — will sync';
+
+  @override
+  String get policyVersionHistoryTitle => 'Version history';
+
+  @override
+  String get policyVersionHistoryLoadError => 'Unable to load version history.';
+
+  @override
+  String get policyVersionHistoryEmptyTitle => 'No published version';
+
+  @override
+  String get policyVersionHistoryEmptySubtitle =>
+      'This document has no published version yet.';
+
+  @override
+  String get policyVersionHistoryCurrentBadge => 'Current version';
+
+  @override
+  String get acceptanceHistoryTitle => 'My acceptances';
+
+  @override
+  String get acceptanceHistoryLoadError =>
+      'Unable to load your acceptance history.';
+
+  @override
+  String get acceptanceHistoryEmptyTitle => 'No acceptance recorded';
+
+  @override
+  String get acceptanceHistoryEmptySubtitle =>
+      'Documents you accept will appear here.';
+
+  @override
+  String get consentManagementTitle => 'Consent management';
+
+  @override
+  String get consentManagementLoadError =>
+      'Unable to load your consent preferences.';
+
+  @override
+  String get consentTypeMarketingEmailsLabel => 'Marketing emails';
+
+  @override
+  String get consentTypeMarketingEmailsSubtitle =>
+      'Receive our offers and news by email.';
+
+  @override
+  String get consentTypeAnalyticsLabel => 'Usage analytics';
+
+  @override
+  String get consentTypeAnalyticsSubtitle =>
+      'Help us improve KYNZA by sharing anonymized usage data.';
+
+  @override
+  String get consentTypePushNotificationsLabel => 'Push notifications';
+
+  @override
+  String get consentTypePushNotificationsSubtitle =>
+      'Receive reminders and alerts on your device.';
+
+  @override
+  String get consentTypeDataProcessingLabel => 'Personal data processing';
+
+  @override
+  String get consentTypeDataProcessingSubtitle =>
+      'Allow processing of your data for the service to function.';
+
+  @override
+  String get dataRightsTitle => 'My data';
+
+  @override
+  String get dataRightsExportSectionTitle => 'Export my data';
+
+  @override
+  String get dataRightsExportDescription =>
+      'Receive a copy of your personal KYNZA data.';
+
+  @override
+  String get dataRightsExportButton => 'Request an export';
+
+  @override
+  String get dataRightsDeletionSectionTitle => 'Delete my account';
+
+  @override
+  String get dataRightsDeletionDescription =>
+      'Request permanent deletion of your account and data.';
+
+  @override
+  String get dataRightsDeletionButton => 'Request deletion';
+
+  @override
+  String get dataRightsDeletionConfirmTitle => 'Confirm request';
+
+  @override
+  String get dataRightsDeletionConfirmMessage =>
+      'This starts a request to delete your account, handled by our team. Do you want to continue?';
+
+  @override
+  String get dataRightsRequestSubmitted => 'Your request has been sent.';
+
+  @override
+  String get dataRightsRequestsLoadError => 'Unable to load your requests.';
+
+  @override
+  String get dataRightsRequestsEmptyTitle => 'No pending request';
+
+  @override
+  String get dataRightsRequestsEmptySubtitle =>
+      'Your data deletion requests will appear here.';
+
+  @override
+  String get dataRightsRequestStatusPending => 'Pending';
+
+  @override
+  String get dataRightsRequestStatusInReview => 'Under review';
+
+  @override
+  String get dataRightsRequestStatusCompleted => 'Completed';
+
+  @override
+  String get dataRightsRequestStatusRejected => 'Rejected';
+
+  @override
+  String get supportContactTitle => 'Contact us';
+
+  @override
+  String get supportContactDescription =>
+      'A question or an issue? Our team is here to help.';
+
+  @override
+  String get supportContactEmailLabel => 'Email';
+
+  @override
+  String get supportContactPolicyLink => 'View support policy';
+
+  @override
+  String get policyUpdateBannerMessage =>
+      'A legal document has been updated. Please review it.';
+
+  @override
+  String get policyUpdateBannerCta => 'Review';
 }

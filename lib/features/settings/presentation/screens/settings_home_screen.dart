@@ -151,6 +151,22 @@ class SettingsHomeScreen extends StatelessWidget {
             label: l10n.settingsAboutLabel,
             onTap: () => context.push(RouteNames.ownerAbout),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _SettingsTile(
+            icon: Icons.gavel_outlined,
+            label: l10n.legalCenterTitle,
+            onTap: () => context.push(RouteNames.legalCenter),
+          ),
+          _SettingsTile(
+            icon: Icons.privacy_tip_outlined,
+            label: l10n.consentManagementTitle,
+            onTap: () => context.push(RouteNames.settingsConsent),
+          ),
+          _SettingsTile(
+            icon: Icons.folder_shared_outlined,
+            label: l10n.dataRightsTitle,
+            onTap: () => context.push(RouteNames.settingsDataRights),
+          ),
         ],
       ),
     );

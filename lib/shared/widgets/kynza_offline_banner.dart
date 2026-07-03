@@ -7,9 +7,13 @@ import '../../core/constants/app_durations.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../core/providers/app_providers.dart';
+import '../../features/legal/application/providers/legal_providers.dart';
 
 /// Non-blocking banner (R03 offline-first). Shows "Hors connexion" while
 /// disconnected, then a brief "Synchronisé" confirmation on reconnect.
+/// Also the app-wide trigger point for replaying the legal-acceptance
+/// offline queue (see LegalAcceptanceQueueService) — this is the one place
+/// that already observes the offline→online transition.
 class KynzaOfflineBanner extends ConsumerStatefulWidget {
   const KynzaOfflineBanner({super.key});
 
@@ -35,6 +39,10 @@ class _KynzaOfflineBannerState extends ConsumerState<KynzaOfflineBanner> {
       _syncedTimer = Timer(const Duration(seconds: 2), () {
         if (mounted) setState(() => _showSynced = false);
       });
+      ref
+          .read(legalAcceptanceNotifierProvider.notifier)
+          .flushOfflineQueue()
+          .catchError((_) {});
     }
     _previouslyConnected = isConnected;
   }

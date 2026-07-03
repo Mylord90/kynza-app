@@ -6589,6 +6589,366 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Votre demande est envoyée. Attendez le message sur votre téléphone.'**
   String get paymentRadarWaitMessage;
+
+  /// No description provided for @legalCenterTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre légal'**
+  String get legalCenterTitle;
+
+  /// No description provided for @legalCenterLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les documents légaux.'**
+  String get legalCenterLoadError;
+
+  /// No description provided for @legalCenterEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun document disponible'**
+  String get legalCenterEmptyTitle;
+
+  /// No description provided for @legalCenterEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenez plus tard, nos documents légaux sont en cours de publication.'**
+  String get legalCenterEmptySubtitle;
+
+  /// No description provided for @legalDocTypePrivacyPolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité'**
+  String get legalDocTypePrivacyPolicy;
+
+  /// No description provided for @legalDocTypeTermsOfService.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conditions d\'utilisation'**
+  String get legalDocTypeTermsOfService;
+
+  /// No description provided for @legalDocTypeCookiePolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de cookies'**
+  String get legalDocTypeCookiePolicy;
+
+  /// No description provided for @legalDocTypeAcceptableUsePolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique d\'utilisation acceptable'**
+  String get legalDocTypeAcceptableUsePolicy;
+
+  /// No description provided for @legalDocTypeRefundPolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de remboursement'**
+  String get legalDocTypeRefundPolicy;
+
+  /// No description provided for @legalDocTypeCommunityGuidelines.
+  ///
+  /// In fr, this message translates to:
+  /// **'Règles de la communauté'**
+  String get legalDocTypeCommunityGuidelines;
+
+  /// No description provided for @legalDocTypeDataDeletionPolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de suppression des données'**
+  String get legalDocTypeDataDeletionPolicy;
+
+  /// No description provided for @legalDocTypeSupportPolicy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique d\'assistance'**
+  String get legalDocTypeSupportPolicy;
+
+  /// No description provided for @legalDocTypeLegalNotices.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mentions légales'**
+  String get legalDocTypeLegalNotices;
+
+  /// No description provided for @policyViewerLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger ce document.'**
+  String get policyViewerLoadError;
+
+  /// No description provided for @policyViewerHistoryLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir l\'historique des versions'**
+  String get policyViewerHistoryLink;
+
+  /// No description provided for @policyViewerAcceptButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte'**
+  String get policyViewerAcceptButton;
+
+  /// No description provided for @policyViewerAcceptedLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà accepté'**
+  String get policyViewerAcceptedLabel;
+
+  /// No description provided for @policyViewerAcceptedOfflineLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptation enregistrée hors ligne — sera synchronisée'**
+  String get policyViewerAcceptedOfflineLabel;
+
+  /// No description provided for @policyVersionHistoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique des versions'**
+  String get policyVersionHistoryTitle;
+
+  /// No description provided for @policyVersionHistoryLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger l\'historique.'**
+  String get policyVersionHistoryLoadError;
+
+  /// No description provided for @policyVersionHistoryEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune version publiée'**
+  String get policyVersionHistoryEmptyTitle;
+
+  /// No description provided for @policyVersionHistoryEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce document n\'a pas encore de version publiée.'**
+  String get policyVersionHistoryEmptySubtitle;
+
+  /// No description provided for @policyVersionHistoryCurrentBadge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Version actuelle'**
+  String get policyVersionHistoryCurrentBadge;
+
+  /// No description provided for @acceptanceHistoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes acceptations'**
+  String get acceptanceHistoryTitle;
+
+  /// No description provided for @acceptanceHistoryLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger votre historique d\'acceptation.'**
+  String get acceptanceHistoryLoadError;
+
+  /// No description provided for @acceptanceHistoryEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune acceptation enregistrée'**
+  String get acceptanceHistoryEmptyTitle;
+
+  /// No description provided for @acceptanceHistoryEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les documents que vous acceptez apparaîtront ici.'**
+  String get acceptanceHistoryEmptySubtitle;
+
+  /// No description provided for @consentManagementTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gestion du consentement'**
+  String get consentManagementTitle;
+
+  /// No description provided for @consentManagementLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos préférences de consentement.'**
+  String get consentManagementLoadError;
+
+  /// No description provided for @consentTypeMarketingEmailsLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mails marketing'**
+  String get consentTypeMarketingEmailsLabel;
+
+  /// No description provided for @consentTypeMarketingEmailsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez nos offres et actualités par e-mail.'**
+  String get consentTypeMarketingEmailsSubtitle;
+
+  /// No description provided for @consentTypeAnalyticsLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Analyse d\'utilisation'**
+  String get consentTypeAnalyticsLabel;
+
+  /// No description provided for @consentTypeAnalyticsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous aider à améliorer KYNZA en partageant des données d\'usage anonymisées.'**
+  String get consentTypeAnalyticsSubtitle;
+
+  /// No description provided for @consentTypePushNotificationsLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notifications push'**
+  String get consentTypePushNotificationsLabel;
+
+  /// No description provided for @consentTypePushNotificationsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez des rappels et alertes sur votre appareil.'**
+  String get consentTypePushNotificationsSubtitle;
+
+  /// No description provided for @consentTypeDataProcessingLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Traitement des données personnelles'**
+  String get consentTypeDataProcessingLabel;
+
+  /// No description provided for @consentTypeDataProcessingSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autoriser le traitement de vos données pour le fonctionnement du service.'**
+  String get consentTypeDataProcessingSubtitle;
+
+  /// No description provided for @dataRightsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes données'**
+  String get dataRightsTitle;
+
+  /// No description provided for @dataRightsExportSectionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exporter mes données'**
+  String get dataRightsExportSectionTitle;
+
+  /// No description provided for @dataRightsExportDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recevez une copie de vos données personnelles KYNZA.'**
+  String get dataRightsExportDescription;
+
+  /// No description provided for @dataRightsExportButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander un export'**
+  String get dataRightsExportButton;
+
+  /// No description provided for @dataRightsDeletionSectionTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get dataRightsDeletionSectionTitle;
+
+  /// No description provided for @dataRightsDeletionDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandez la suppression définitive de votre compte et de vos données.'**
+  String get dataRightsDeletionDescription;
+
+  /// No description provided for @dataRightsDeletionButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demander la suppression'**
+  String get dataRightsDeletionButton;
+
+  /// No description provided for @dataRightsDeletionConfirmTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la demande'**
+  String get dataRightsDeletionConfirmTitle;
+
+  /// No description provided for @dataRightsDeletionConfirmMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette action déclenche une demande de suppression de votre compte, traitée par notre équipe. Voulez-vous continuer ?'**
+  String get dataRightsDeletionConfirmMessage;
+
+  /// No description provided for @dataRightsRequestSubmitted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre demande a été envoyée.'**
+  String get dataRightsRequestSubmitted;
+
+  /// No description provided for @dataRightsRequestsLoadError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger vos demandes.'**
+  String get dataRightsRequestsLoadError;
+
+  /// No description provided for @dataRightsRequestsEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande en cours'**
+  String get dataRightsRequestsEmptyTitle;
+
+  /// No description provided for @dataRightsRequestsEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos demandes de suppression de données apparaîtront ici.'**
+  String get dataRightsRequestsEmptySubtitle;
+
+  /// No description provided for @dataRightsRequestStatusPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get dataRightsRequestStatusPending;
+
+  /// No description provided for @dataRightsRequestStatusInReview.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours d\'examen'**
+  String get dataRightsRequestStatusInReview;
+
+  /// No description provided for @dataRightsRequestStatusCompleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminée'**
+  String get dataRightsRequestStatusCompleted;
+
+  /// No description provided for @dataRightsRequestStatusRejected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusée'**
+  String get dataRightsRequestStatusRejected;
+
+  /// No description provided for @supportContactTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous contacter'**
+  String get supportContactTitle;
+
+  /// No description provided for @supportContactDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une question ou un problème ? Notre équipe vous répond.'**
+  String get supportContactDescription;
+
+  /// No description provided for @supportContactEmailLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'E-mail'**
+  String get supportContactEmailLabel;
+
+  /// No description provided for @supportContactPolicyLink.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consulter la politique d\'assistance'**
+  String get supportContactPolicyLink;
+
+  /// No description provided for @policyUpdateBannerMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un document légal a été mis à jour. Veuillez le consulter.'**
+  String get policyUpdateBannerMessage;
+
+  /// No description provided for @policyUpdateBannerCta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consulter'**
+  String get policyUpdateBannerCta;
 }
 
 class _AppLocalizationsDelegate

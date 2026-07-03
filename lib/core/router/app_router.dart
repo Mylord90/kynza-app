@@ -33,6 +33,13 @@ import '../../features/permissions/presentation/screens/permission_groups_screen
 import '../../features/settings/presentation/screens/about_screen.dart';
 import '../../features/settings/presentation/screens/language_settings_screen.dart';
 import '../../features/settings/presentation/screens/settings_home_screen.dart';
+import '../../features/legal/presentation/screens/acceptance_history_screen.dart';
+import '../../features/legal/presentation/screens/consent_management_screen.dart';
+import '../../features/legal/presentation/screens/data_rights_screen.dart';
+import '../../features/legal/presentation/screens/legal_center_screen.dart';
+import '../../features/legal/presentation/screens/policy_version_history_screen.dart';
+import '../../features/legal/presentation/screens/policy_viewer_screen.dart';
+import '../../features/legal/presentation/screens/support_contact_screen.dart';
 import '../../features/automation/presentation/screens/automation_list_screen.dart';
 import '../../features/data_platform/backup/presentation/screens/backup_screen.dart';
 import '../../features/data_platform/templates/presentation/screens/template_list_screen.dart';
@@ -547,6 +554,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _fadeRoute(
         RouteNames.ownerLanguage,
         (context, state) => const LanguageSettingsScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.legalCenter,
+        (context, state) => const LegalCenterScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.legalDocument,
+        (context, state) =>
+            PolicyViewerScreen(slug: state.pathParameters['slug']!),
+      ),
+      _fadeRoute(
+        RouteNames.legalDocumentHistory,
+        (context, state) =>
+            PolicyVersionHistoryScreen(slug: state.pathParameters['slug']!),
+      ),
+      _fadeRoute(
+        RouteNames.legalAcceptanceHistory,
+        (context, state) => const AcceptanceHistoryScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.legalSupportContact,
+        (context, state) => const SupportContactScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.settingsConsent,
+        (context, state) => const ConsentManagementScreen(),
+      ),
+      _fadeRoute(
+        RouteNames.settingsDataRights,
+        (context, state) => const DataRightsScreen(),
       ),
       _fadeRoute(
         RouteNames.ownerTeam,

@@ -25,3 +25,19 @@ enum SyncStatus { synced, syncing, pending, failed }
 enum LoyaltyAction { earned, redeemed, expired }
 
 enum DiscountType { percent, fixedBif }
+
+enum LegalDocumentType {
+  privacyPolicy,
+  termsOfService,
+  cookiePolicy,
+  acceptableUsePolicy,
+  refundPolicy,
+  communityGuidelines,
+  dataDeletionPolicy,
+  supportPolicy,
+  legalNotices,
+}
+
+enum LegalConsentType { marketingEmails, analytics, pushNotifications, dataProcessing }
+
+enum DataDeletionStatus { pending, inReview, completed, rejected }

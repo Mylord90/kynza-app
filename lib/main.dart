@@ -13,6 +13,7 @@ import 'core/permissions/permission_cache.dart';
 import 'core/providers/app_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/crash_reporting_service.dart';
+import 'core/services/legal_acceptance_queue_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/session_service.dart';
 import 'core/services/timezone_service.dart';
@@ -36,6 +37,7 @@ Future<void> _bootstrap() async {
   await Hive.initFlutter();
   await Hive.openBox(SessionService.boxName);
   await Hive.openBox(PermissionCache.boxName);
+  await Hive.openBox(LegalAcceptanceQueueService.boxName);
   await initializeDateFormatting('fr_FR');
 
   await Firebase.initializeApp();

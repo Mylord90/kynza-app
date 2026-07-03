@@ -284,6 +284,41 @@ class ClientProfileScreen extends ConsumerWidget {
             ],
           ),
         ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // SECTION 6c — Centre légal
+        KynzaCard(
+          onTap: () => context.push(RouteNames.legalCenter),
+          child: Row(
+            children: [
+              const Icon(Icons.gavel_outlined, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(l10n.legalCenterTitle, style: AppTypography.h3),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // SECTION 6d — Mes données (consentement + droits)
+        KynzaCard(
+          onTap: () => context.push(RouteNames.settingsDataRights),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.folder_shared_outlined,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(l10n.dataRightsTitle, style: AppTypography.h3),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ],
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
 
         // SECTION 7 — Partager KYNZA

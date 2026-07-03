@@ -7,6 +7,7 @@ import '../providers/app_providers.dart';
 import '../providers/auth_providers.dart';
 import '../router/app_router.dart';
 import '../../features/auth/domain/states/auth_ui_state.dart';
+import '../../features/legal/presentation/widgets/policy_update_notification_banner.dart';
 import '../../shared/widgets/kynza_notification_banner.dart';
 import '../../shared/widgets/kynza_skeleton.dart';
 
@@ -50,7 +51,22 @@ class AuthBootGate extends ConsumerWidget {
     return auth.when(
       loading: () => const _SplashLoader(),
       error: (_, __) => child,
-      data: (_) => child,
+      data: (state) => state is AuthAuthenticated
+          ? Stack(
+              children: [
+                child,
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: PolicyUpdateNotificationBanner(),
+                  ),
+                ),
+              ],
+            )
+          : child,
     );
   }
 }

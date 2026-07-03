@@ -3571,4 +3571,206 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get paymentRadarWaitMessage =>
       'Votre demande est envoyée. Attendez le message sur votre téléphone.';
+
+  @override
+  String get legalCenterTitle => 'Centre légal';
+
+  @override
+  String get legalCenterLoadError =>
+      'Impossible de charger les documents légaux.';
+
+  @override
+  String get legalCenterEmptyTitle => 'Aucun document disponible';
+
+  @override
+  String get legalCenterEmptySubtitle =>
+      'Revenez plus tard, nos documents légaux sont en cours de publication.';
+
+  @override
+  String get legalDocTypePrivacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get legalDocTypeTermsOfService => 'Conditions d\'utilisation';
+
+  @override
+  String get legalDocTypeCookiePolicy => 'Politique de cookies';
+
+  @override
+  String get legalDocTypeAcceptableUsePolicy =>
+      'Politique d\'utilisation acceptable';
+
+  @override
+  String get legalDocTypeRefundPolicy => 'Politique de remboursement';
+
+  @override
+  String get legalDocTypeCommunityGuidelines => 'Règles de la communauté';
+
+  @override
+  String get legalDocTypeDataDeletionPolicy =>
+      'Politique de suppression des données';
+
+  @override
+  String get legalDocTypeSupportPolicy => 'Politique d\'assistance';
+
+  @override
+  String get legalDocTypeLegalNotices => 'Mentions légales';
+
+  @override
+  String get policyViewerLoadError => 'Impossible de charger ce document.';
+
+  @override
+  String get policyViewerHistoryLink => 'Voir l\'historique des versions';
+
+  @override
+  String get policyViewerAcceptButton => 'J\'accepte';
+
+  @override
+  String get policyViewerAcceptedLabel => 'Déjà accepté';
+
+  @override
+  String get policyViewerAcceptedOfflineLabel =>
+      'Acceptation enregistrée hors ligne — sera synchronisée';
+
+  @override
+  String get policyVersionHistoryTitle => 'Historique des versions';
+
+  @override
+  String get policyVersionHistoryLoadError =>
+      'Impossible de charger l\'historique.';
+
+  @override
+  String get policyVersionHistoryEmptyTitle => 'Aucune version publiée';
+
+  @override
+  String get policyVersionHistoryEmptySubtitle =>
+      'Ce document n\'a pas encore de version publiée.';
+
+  @override
+  String get policyVersionHistoryCurrentBadge => 'Version actuelle';
+
+  @override
+  String get acceptanceHistoryTitle => 'Mes acceptations';
+
+  @override
+  String get acceptanceHistoryLoadError =>
+      'Impossible de charger votre historique d\'acceptation.';
+
+  @override
+  String get acceptanceHistoryEmptyTitle => 'Aucune acceptation enregistrée';
+
+  @override
+  String get acceptanceHistoryEmptySubtitle =>
+      'Les documents que vous acceptez apparaîtront ici.';
+
+  @override
+  String get consentManagementTitle => 'Gestion du consentement';
+
+  @override
+  String get consentManagementLoadError =>
+      'Impossible de charger vos préférences de consentement.';
+
+  @override
+  String get consentTypeMarketingEmailsLabel => 'E-mails marketing';
+
+  @override
+  String get consentTypeMarketingEmailsSubtitle =>
+      'Recevez nos offres et actualités par e-mail.';
+
+  @override
+  String get consentTypeAnalyticsLabel => 'Analyse d\'utilisation';
+
+  @override
+  String get consentTypeAnalyticsSubtitle =>
+      'Nous aider à améliorer KYNZA en partageant des données d\'usage anonymisées.';
+
+  @override
+  String get consentTypePushNotificationsLabel => 'Notifications push';
+
+  @override
+  String get consentTypePushNotificationsSubtitle =>
+      'Recevez des rappels et alertes sur votre appareil.';
+
+  @override
+  String get consentTypeDataProcessingLabel =>
+      'Traitement des données personnelles';
+
+  @override
+  String get consentTypeDataProcessingSubtitle =>
+      'Autoriser le traitement de vos données pour le fonctionnement du service.';
+
+  @override
+  String get dataRightsTitle => 'Mes données';
+
+  @override
+  String get dataRightsExportSectionTitle => 'Exporter mes données';
+
+  @override
+  String get dataRightsExportDescription =>
+      'Recevez une copie de vos données personnelles KYNZA.';
+
+  @override
+  String get dataRightsExportButton => 'Demander un export';
+
+  @override
+  String get dataRightsDeletionSectionTitle => 'Supprimer mon compte';
+
+  @override
+  String get dataRightsDeletionDescription =>
+      'Demandez la suppression définitive de votre compte et de vos données.';
+
+  @override
+  String get dataRightsDeletionButton => 'Demander la suppression';
+
+  @override
+  String get dataRightsDeletionConfirmTitle => 'Confirmer la demande';
+
+  @override
+  String get dataRightsDeletionConfirmMessage =>
+      'Cette action déclenche une demande de suppression de votre compte, traitée par notre équipe. Voulez-vous continuer ?';
+
+  @override
+  String get dataRightsRequestSubmitted => 'Votre demande a été envoyée.';
+
+  @override
+  String get dataRightsRequestsLoadError =>
+      'Impossible de charger vos demandes.';
+
+  @override
+  String get dataRightsRequestsEmptyTitle => 'Aucune demande en cours';
+
+  @override
+  String get dataRightsRequestsEmptySubtitle =>
+      'Vos demandes de suppression de données apparaîtront ici.';
+
+  @override
+  String get dataRightsRequestStatusPending => 'En attente';
+
+  @override
+  String get dataRightsRequestStatusInReview => 'En cours d\'examen';
+
+  @override
+  String get dataRightsRequestStatusCompleted => 'Terminée';
+
+  @override
+  String get dataRightsRequestStatusRejected => 'Refusée';
+
+  @override
+  String get supportContactTitle => 'Nous contacter';
+
+  @override
+  String get supportContactDescription =>
+      'Une question ou un problème ? Notre équipe vous répond.';
+
+  @override
+  String get supportContactEmailLabel => 'E-mail';
+
+  @override
+  String get supportContactPolicyLink => 'Consulter la politique d\'assistance';
+
+  @override
+  String get policyUpdateBannerMessage =>
+      'Un document légal a été mis à jour. Veuillez le consulter.';
+
+  @override
+  String get policyUpdateBannerCta => 'Consulter';
 }
