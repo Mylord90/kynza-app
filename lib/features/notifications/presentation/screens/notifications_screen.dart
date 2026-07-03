@@ -165,7 +165,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final notificationsAsync = ref.watch(notificationsProvider(_limit));
-    final profile = ref.watch(currentUserProfileProvider).valueOrNull;
+    // .select() — only the id is ever used on this screen (the button's
+    // enabled state + the markAllRead call), so a profile field unrelated
+    // to id (avatar, name, etc.) changing elsewhere no longer rebuilds
+    // this screen (Phase 8 perf pass).
+    final userId = ref.watch(
+      currentUserProfileProvider.select((async) => async.valueOrNull?.id),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -173,11 +179,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         title: Text(context.l10n.notificationsListTitle),
         actions: [
           TextButton(
-            onPressed: profile == null
+            onPressed: userId == null
                 ? null
                 : () => ref
                       .read(notificationNotifierProvider.notifier)
-                      .markAllRead(profile.id)
+                      .markAllRead(userId)
                       .catchError(CrashReportingService.recordError),
             child: Text(
               context.l10n.notificationsMarkAllRead,

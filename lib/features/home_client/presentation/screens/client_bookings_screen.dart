@@ -65,10 +65,15 @@ class _ClientBookingsScreenState extends ConsumerState<ClientBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profile = ref.watch(currentUserProfileProvider).valueOrNull;
-    if (profile == null) return const SizedBox.shrink();
+    // .select() — only the id is used here (as the family-provider key),
+    // so a profile field unrelated to id changing elsewhere no longer
+    // rebuilds this screen (Phase 8 perf pass).
+    final userId = ref.watch(
+      currentUserProfileProvider.select((async) => async.valueOrNull?.id),
+    );
+    if (userId == null) return const SizedBox.shrink();
 
-    final bookingsAsync = ref.watch(clientBookingsProvider(profile.id));
+    final bookingsAsync = ref.watch(clientBookingsProvider(userId));
 
     return Column(
       children: [
@@ -101,7 +106,7 @@ class _ClientBookingsScreenState extends ConsumerState<ClientBookingsScreen> {
             ),
             error: (_, __) => KynzaErrorState(
               message: context.l10n.errorLoadFailed,
-              onRetry: () => ref.invalidate(clientBookingsProvider(profile.id)),
+              onRetry: () => ref.invalidate(clientBookingsProvider(userId)),
             ),
             data: (bookings) {
               final now = DateTime.now();
