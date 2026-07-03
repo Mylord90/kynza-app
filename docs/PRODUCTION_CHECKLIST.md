@@ -390,3 +390,37 @@ just newly documented. Full detail: `docs/PRODUCTION_READINESS.md`.
 - [x] **Versioning scheme** — re-confirmed unchanged and correct (`pubspec.yaml` `1.0.0+1`
   matching `app_version.dart`, per the Part 14 entry above) — no action needed, cross-referenced
   in `docs/PRODUCTION_READINESS.md` rather than re-documented.
+
+## Update — 2026-07-04 (Backend Enterprise Completion, Phase 1 audit — CP1)
+
+New gaps found during the Phase 1 ground-truth audit (`docs/backend-completion/
+PHASE_1_FINAL_AUDIT.md`), explicitly out of that pass's Phase 2-11 scope and logged here instead:
+
+- [ ] **Repository layer bypass** — 14 `presentation/` files call `SupabaseService` directly
+  instead of going through their feature's repository (`staff_detail_screen.dart`,
+  `home_owner_screen.dart`, `home_staff_screen.dart`, `client_profile_screen.dart`,
+  `loyalty_scan_screen.dart`, `marketing_dashboard_screen.dart`, `payment_screen.dart`,
+  `referral_claim_screen.dart`, `owner_reviews_screen.dart`, `salon_reviews_tab.dart`,
+  `reset_password_screen.dart`, `accept_invitation_screen.dart`, `my_performance_screen.dart`,
+  +1 more). Pre-existing, not a regression from this pass. Needs a dedicated refactor phase.
+- [ ] **Repository/Datasource pattern not actually implemented** — only `lib/features/auth/data`
+  has a `datasources/` split; all 23 other sampled/scanned features go straight from
+  `RepositoryImpl` to `SupabaseService.client`. The documented pattern
+  ("Repository + Datasource") is aspirational, not real, project-wide. Architectural debt, not
+  in scope of the Backend Enterprise Completion pass.
+- [ ] **Offline outbox: notification mutations undocumented** — `MutationOutboxService`/
+  `OfflineSyncCoordinator` cover `reviewCreate`/`profileUpdate`/`dataDeletionRequest` only.
+  Bookings are deliberately excluded with a documented reason (`docs/OFFLINE_STRATEGY.md §3`);
+  notifications are excluded with **no equivalent justification comment**. Low-risk (no
+  client-mutable notification-preference flow currently exists) but should get the same
+  documentation treatment, or real coverage if such a flow is ever built.
+- [ ] **CI pipeline existence vs. actual execution still unverified** — `.github/workflows/
+  ci.yml` exists and a real GitHub remote is configured (`origin
+  https://github.com/Mylord90/kynza-app.git`), but the `gh` CLI is unavailable in this dev
+  environment, so no run history could be confirmed from here. Needs a check from a machine with
+  `gh` authenticated, or the GitHub Actions tab directly — purely an external-verification gap,
+  nothing to build.
+- [ ] **iOS `Info.plist` still missing usage descriptions / URL scheme** — no
+  `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, or `CFBundleURLTypes` present.
+  Re-confirmed unchanged since the prior hardening pass. Still out of scope (iOS submission is
+  an explicitly separate, later workstream), re-logged here so it isn't lost between passes.
