@@ -10,12 +10,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/env.dart';
 import 'core/constants/kynza_constants.dart';
 import 'core/permissions/permission_cache.dart';
+import 'core/security/certificate_pinning_service.dart';
 import 'core/providers/app_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/crash_reporting_service.dart';
+import 'core/services/hive_encryption_key_service.dart';
 import 'core/services/legal_acceptance_queue_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/performance_monitoring_service.dart';
+import 'core/services/secure_local_storage.dart';
 import 'core/services/session_service.dart';
 import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
@@ -36,7 +39,20 @@ Future<void> _bootstrap() async {
   TimeZoneService.init();
 
   await Hive.initFlutter();
-  await Hive.openBox(SessionService.boxName);
+  final prefsCipher = await HiveEncryptionKeyService.getCipher();
+  try {
+    await Hive.openBox(SessionService.boxName, encryptionCipher: prefsCipher);
+  } catch (_) {
+    // An existing install's box was written before encryption was added
+    // (plaintext) and can't be decrypted with the new cipher. This box only
+    // ever holds a UI-preference cache (onboarding flag, language,
+    // pending invitation/referral tokens, recent searches) — never the
+    // source of truth, which lives in Supabase — so resetting it on the
+    // one device that hits this is an acceptable, non-destructive-to-data
+    // degrade, not a silent swallow of something important.
+    await Hive.deleteBoxFromDisk(SessionService.boxName);
+    await Hive.openBox(SessionService.boxName, encryptionCipher: prefsCipher);
+  }
   await Hive.openBox(PermissionCache.boxName);
   await Hive.openBox(LegalAcceptanceQueueService.boxName);
   await Hive.openBox(LegalAcceptanceQueueService.deadLetterBoxName);
@@ -47,12 +63,19 @@ Future<void> _bootstrap() async {
   await PerformanceMonitoringService.startColdStartTrace();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
+  assert(
+    Env.supabaseUrl.startsWith('https://'),
+    'SUPABASE_URL must be HTTPS — got: ${Env.supabaseUrl}',
+  );
+
   await Supabase.initialize(
     url: Env.supabaseUrl,
     publishableKey: Env.supabaseAnonKey,
+    httpClient: CertificatePinningService.createClient(),
     authOptions: const FlutterAuthClientOptions(
       authFlowType: AuthFlowType.pkce,
       detectSessionInUri: true,
+      localStorage: SecureLocalStorage(),
     ),
   );
 

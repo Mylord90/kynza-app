@@ -3,6 +3,7 @@
 // is the only trust boundary, so it MUST be verified before any mutation.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { verifyLeapaSignature } from "../_shared/hmac.ts";
+import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
 
 const LEAPA_WEBHOOK_SECRET = Deno.env.get("LEAPA_WEBHOOK_SECRET") ?? "";
@@ -18,11 +19,21 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "invalid_signature" }, 401);
   }
 
+  const supabase = createServiceRoleClient();
+
+  // No JWT/caller identity exists on this externally-reachable webhook, so
+  // this is a single global bucket rather than per-caller — checked only
+  // after signature verification, so an attacker without the HMAC secret
+  // can't burn Leapa's own legitimate rate budget by spamming invalid
+  // requests. 120/60s comfortably covers real webhook + retry traffic
+  // while still bounding a flapping/misbehaving sender.
+  if (!(await checkRateLimit(supabase, "leapa-webhook:global", 120, 60))) {
+    return jsonResponse({ error: "rate_limit_exceeded" }, 429);
+  }
+
   const payload = JSON.parse(rawBody);
   const { idempotency_key, status, leapa_reference, leapa_transaction_id } = payload;
   if (!idempotency_key || !status) return jsonResponse({ error: "malformed_payload" }, 400);
-
-  const supabase = createServiceRoleClient();
 
   const { data: existing } = await supabase
     .from("transactions")

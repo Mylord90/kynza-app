@@ -189,13 +189,20 @@ invocation time as an environment variable.
 
 | Secret | Storage | Access pattern |
 |---|---|---|
-| `LEAPA_API_KEY` | Supabase Vault | Edge Function env var at runtime |
-| `LEAPA_SECRET` | Supabase Vault | Edge Function env var at runtime |
-| `LEAPA_WEBHOOK_SECRET` | Supabase Vault | Edge Function env var at runtime |
-| `FCM_KEY` | Supabase Vault | Edge Function env var at runtime |
-| `WA_TOKEN` (WhatsApp) | Supabase Vault | Edge Function env var at runtime |
+| `LEAPA_API_KEY` | Supabase Vault | Edge Function env var at runtime (`_shared/leapa.ts`) |
+| `LEAPA_BASE_URL` | Supabase Vault (not secret-sensitive, env-configurable) | Edge Function env var at runtime (`_shared/leapa.ts`) |
+| `LEAPA_WEBHOOK_SECRET` | Supabase Vault | Edge Function env var at runtime (`leapa-webhook/index.ts`) |
+| `FCM_SERVICE_ACCOUNT_JSON` | Supabase Vault | Edge Function env var at runtime (`_shared/fcm.ts`) |
+| `FCM_PROJECT_ID` | Supabase Vault | Edge Function env var at runtime (`_shared/fcm.ts`) |
+| `WHATSAPP_TOKEN` | Supabase Vault | Edge Function env var at runtime (`_shared/whatsapp.ts`) |
+| `WHATSAPP_PHONE_NUMBER_ID` | Supabase Vault | Edge Function env var at runtime (`_shared/whatsapp.ts`) |
 | Supabase `service_role` key | Supabase Dashboard / CI env | Never in Flutter, never committed |
 | Supabase `anon` key | `lib/core/services/supabase_service.dart` | Public; safe (RLS enforces all access) |
+
+> Corrected 2026-07-03 (Phase 5 of the Enterprise Hardening pass) — this table previously named
+> `LEAPA_SECRET`, `FCM_KEY`, and `WA_TOKEN`, none of which match the actual `Deno.env.get(...)`
+> calls in the Edge Function source (verified directly, not assumed). See
+> `docs/security/SECURITY_AUDIT_V2.md` for the full secrets audit and rotation procedure.
 
 The `anon` key is intentionally public — it identifies the project but grants
 no access without a valid JWT. RLS + `has_role()` are the actual security layer.
@@ -265,7 +272,7 @@ These rules are encoded in AGENT.md and enforced in every phase:
 - JAMAIS `DELETE SQL` → toujours soft delete (`deleted_at = now()`)
 - JAMAIS `service_role` key dans le code Flutter
 - JAMAIS `auth.jwt()` dans les policies RLS → toujours `has_role()`
-- JAMAIS hardcoder `LEAPA_API_KEY`, `FCM_KEY`, `WA_TOKEN` dans le code
+- JAMAIS hardcoder `LEAPA_API_KEY`, `FCM_SERVICE_ACCOUNT_JSON`, `WHATSAPP_TOKEN` dans le code
 - TOUJOURS `RLS ENABLE` sur chaque nouvelle table
 - TOUJOURS `has_role()` comme seul mécanisme RLS
 - TOUJOURS `salon_id` extrait du JWT (via `public.users`) côté serveur

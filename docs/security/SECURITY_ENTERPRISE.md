@@ -5,6 +5,18 @@
 > is verified against real code/config — no item is marked ✅ without a matching file/dependency
 > found, per the hard rule against overstating security posture.
 
+> **Addendum 2026-07-03 (Phase 5, Enterprise Hardening pass) — see
+> `docs/security/SECURITY_AUDIT_V2.md` for the authoritative, freshly re-verified status.**
+> M1/M9's `flutter_secure_storage` claim below was **not actually true when written** — the
+> dependency existed in `pubspec.yaml` but was never wired into `Supabase.initialize`; the
+> session was really stored via `supabase_flutter`'s default (unencrypted SharedPreferences).
+> This is now fixed for real (`lib/core/services/secure_local_storage.dart`). M8's manifest gap
+> was fixed in Phase 1 (`docs/audit/ANDROID_RELEASE_HARDENING_REPORT.md`). M5's cert-pinning gap
+> is now scaffolded (inert by default — see the audit doc). M9's Hive-encryption gap is partially
+> closed (`kynza_prefs` now encrypted; `permission_cache` deliberately left plaintext — no PII).
+> This document's table below is left as-is (historical snapshot), not edited in place, to avoid
+> silently erasing what it originally got wrong.
+
 ## 1. Objectifs
 
 An honest, checkable security posture snapshot — every ✅/⚠️/⏳ is backed by a specific grep or

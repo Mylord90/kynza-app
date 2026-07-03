@@ -10,6 +10,15 @@ import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supaba
 
 const BUJUMBURA_OFFSET_MS = 2 * 3600_000; // Africa/Bujumbura, UTC+2, no DST
 
+// practitionerId is interpolated raw into a PostgREST `.or()` filter string
+// below (checkAdvancedAvailability) rather than passed as a bound `.eq()`
+// value — PostgREST's `.or()` mini-language treats commas/dots as filter
+// syntax, so an unvalidated value could inject extra filter clauses into a
+// query run under the service-role client (RLS bypassed). Validating the
+// UUID shape here closes that off — a real risk found during Phase 5 of
+// the Enterprise Hardening pass, not a hypothetical.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Bujumbura-local calendar date ("YYYY-MM-DD") and day_of_week (0=Mon..6=Sun,
 // matching every day_of_week column in this schema) for an absolute instant —
 // never the server's own UTC date, which can be off by one near midnight.
@@ -92,6 +101,9 @@ Deno.serve(async (req) => {
 
     if (!salonId || !serviceId || !practitionerId || !startTime) {
       return jsonResponse({ error: "missing_fields" }, 400);
+    }
+    if (!UUID_RE.test(practitionerId)) {
+      return jsonResponse({ error: "invalid_practitioner_id" }, 400);
     }
 
     const { data: salon } = await supabase
