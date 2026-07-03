@@ -1,8 +1,10 @@
-%% KYNZA — Entity-Relationship Diagram, all 55 tables (verified against
-%% all 58 files in supabase/migrations/, 2026-07-03). Grouped by domain via
-%% comments (Mermaid erDiagram has no visual subgraph support). Attributes
-%% are abbreviated to PK/FK/notable business columns — full column lists
-%% live in docs/DATABASE_ARCHITECTURE.md.
+%% KYNZA — Entity-Relationship Diagram, all 55 live tables (verified against
+%% the 59 applied migrations out of 62 total in supabase/migrations/,
+%% 2026-07-03; notification_templates added back during Phase 2 of the
+%% Enterprise Hardening pass — was previously missing from this file).
+%% Grouped by domain via comments (Mermaid erDiagram has no visual subgraph
+%% support). Attributes are abbreviated to PK/FK/notable business columns —
+%% full column lists live in docs/DATABASE_ARCHITECTURE.md.
 erDiagram
     %% ===== IDENTITY / RBAC =====
     salons ||--o{ users : "salon_id"
@@ -231,6 +233,7 @@ erDiagram
     salons ||--o{ notification_logs : "salon_id (nullable, unindexed -- gap)"
     bookings ||--o{ notification_logs : "related_booking_id"
     users ||--|| notification_preferences : "user_id (1:1)"
+    notification_templates ||--o{ notification_logs : "event_type (logical only, NOT a declared FK)"
 
     notification_logs {
         uuid id PK
@@ -238,6 +241,14 @@ erDiagram
         uuid salon_id FK "nullable, no index -- gap"
         text channel "push|whatsapp|in_app"
         bool is_read
+    }
+    notification_templates {
+        uuid id PK
+        text event_type UK
+        text title_fr
+        text body_fr
+        text channels_arr "text[]"
+        bool is_active
     }
 
     %% ===== OPS / PLATFORM =====

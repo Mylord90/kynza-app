@@ -1,9 +1,12 @@
 # KYNZA — Database Architecture
 
-> Full reference for all 55 tables in the live Supabase schema, extracted directly from all 58
-> files in `supabase/migrations/` (verified 2026-07-03, not reconstructed from memory). Extends
-> `docs/ARCHITECTURE.md` §4 (RLS/soft-delete/auto-seed patterns) and `docs/API_REFERENCE.md`
-> (RPC catalog) — those patterns are not repeated here, only cited.
+> Full reference for all 55 tables in the live Supabase schema, extracted directly from the 59
+> migration files actually applied to the remote project out of 62 total in
+> `supabase/migrations/` (verified 2026-07-03 via `supabase migration list --linked`, cross-checked
+> again independently in Phase 2 of the Enterprise Hardening pass — see
+> `docs/audit/SCHEMA_RECONCILIATION_REPORT.md`). Extends `docs/ARCHITECTURE.md` §4 (RLS/
+> soft-delete/auto-seed patterns) and `docs/API_REFERENCE.md` (RPC catalog) — those patterns are
+> not repeated here, only cited.
 
 ## 1. Objectifs
 
@@ -226,7 +229,9 @@ policy-by-omission, `staff_commissions` own-only).
 
 ## 10. Critères d'acceptation
 
-- [x] All 55 tables appear in the ERD with correct FKs.
+- [x] All 55 tables appear in the ERD with correct FKs (`notification_templates` was found
+      missing from `erd.mermaid` during Phase 2's independent re-verification and added back —
+      see `docs/audit/SCHEMA_RECONCILIATION_REPORT.md`).
 - [x] Every table has documented RLS status — 55/55 have RLS enabled, verified (not assumed).
 - [x] Index recommendations reference real gaps found in the actual migrations, not generic advice.
 - [x] Discrepancy with the prior "~47 tables" figure explicitly reconciled (§2), not silently corrected.
