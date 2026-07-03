@@ -136,32 +136,47 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
                       final services = results
                           .where((r) => r.type == SearchResultType.service)
                           .toList();
+                      // Flattened into one windowed list rather than an
+                      // eagerly-built Column-of-widgets (Phase 8 perf pass
+                      // — a growing result set no longer materializes every
+                      // tile up front). `_SearchListRow` distinguishes a
+                      // section header from a result tile at build time.
+                      final rows = <_SearchListRow>[
+                        if (salons.isNotEmpty) ...[
+                          _SearchListRow.header(
+                            context.l10n.searchSalonsSectionLabel,
+                          ),
+                          for (final r in salons) _SearchListRow.tile(r),
+                        ],
+                        if (services.isNotEmpty) ...[
+                          _SearchListRow.header(
+                            context.l10n.searchServicesSectionLabel,
+                          ),
+                          for (final r in services) _SearchListRow.tile(r),
+                        ],
+                      ];
                       return RefreshIndicator(
                         color: AppColors.primary,
                         backgroundColor: AppColors.surface,
                         onRefresh: () async =>
                             ref.invalidate(searchResultsProvider),
-                        child: ListView(
+                        child: ListView.builder(
                           padding: const EdgeInsets.all(AppSpacing.lg),
-                          children: [
-                            if (salons.isNotEmpty) ...[
-                              Text(
-                                context.l10n.searchSalonsSectionLabel,
-                                style: AppTypography.h3,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              for (final r in salons) _ResultTile(item: r),
-                              const SizedBox(height: AppSpacing.lg),
-                            ],
-                            if (services.isNotEmpty) ...[
-                              Text(
-                                context.l10n.searchServicesSectionLabel,
-                                style: AppTypography.h3,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              for (final r in services) _ResultTile(item: r),
-                            ],
-                          ],
+                          itemCount: rows.length,
+                          itemBuilder: (context, index) {
+                            final row = rows[index];
+                            return row.item != null
+                                ? _ResultTile(item: row.item!)
+                                : Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      row.header!,
+                                      style: AppTypography.h3,
+                                    ),
+                                  );
+                          },
                         ),
                       );
                     },
@@ -174,6 +189,17 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
 }
 
 void _noop() {}
+
+/// A row in the flattened results list is either a section header or a
+/// single result tile — never both — so `ListView.builder` can render
+/// either shape at a given index without eagerly building a `Column`.
+class _SearchListRow {
+  const _SearchListRow.header(this.header) : item = null;
+  const _SearchListRow.tile(this.item) : header = null;
+
+  final String? header;
+  final SearchResultItem? item;
+}
 
 class _SuggestionsBody extends ConsumerWidget {
   const _SuggestionsBody({

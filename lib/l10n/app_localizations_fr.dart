@@ -1680,6 +1680,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String dashboardChurnMoreHidden(int count) {
+    return '+ $count autres';
+  }
+
+  @override
   String get dashboardOwnerOnlyTitle => 'Réservé au propriétaire';
 
   @override

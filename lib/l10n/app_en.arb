@@ -572,6 +572,10 @@
   "@dashboardChurnAbsentDays": {
     "placeholders": { "days": { "type": "int" } }
   },
+  "dashboardChurnMoreHidden": "+ {count} more",
+  "@dashboardChurnMoreHidden": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "dashboardOwnerOnlyTitle": "Owner only",
   "dashboardOwnerOnlySubtitle": "Team performance is only visible to the owner.",
   "dashboardTeamRevenueChartTitle": "Revenue by staff",

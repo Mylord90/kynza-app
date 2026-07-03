@@ -3170,6 +3170,12 @@ abstract class AppLocalizations {
   /// **'Absent depuis {days} jours'**
   String dashboardChurnAbsentDays(int days);
 
+  /// No description provided for @dashboardChurnMoreHidden.
+  ///
+  /// In fr, this message translates to:
+  /// **'+ {count} autres'**
+  String dashboardChurnMoreHidden(int count);
+
   /// No description provided for @dashboardOwnerOnlyTitle.
   ///
   /// In fr, this message translates to:

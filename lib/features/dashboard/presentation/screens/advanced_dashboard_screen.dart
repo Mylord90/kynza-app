@@ -564,9 +564,22 @@ class _ChurnRiskSection extends StatelessWidget {
     _ => AppColors.textSecondary,
   };
 
+  // This section renders inside the tab's outer (non-.builder) ListView —
+  // a nested ListView.builder here would need shrinkWrap: true, which
+  // forces Flutter to lay out every child anyway, so it wouldn't actually
+  // bound the render cost. A direct display cap does (Phase 8 perf pass):
+  // `getChurnRisks` fetches every at-risk client for the salon unbounded
+  // (a data-layer gap documented in docs/audit/ACCESSIBILITY_PERFORMANCE_PASS.md,
+  // not fixed here since capping it server-side needs verifying no other
+  // caller relies on the full list) — this cap protects the widget tree
+  // regardless of how large that list grows.
+  static const _maxRendered = 25;
+
   @override
   Widget build(BuildContext context) {
     if (risks.isEmpty) return const SizedBox.shrink();
+    final shown = risks.take(_maxRendered).toList();
+    final hiddenCount = risks.length - shown.length;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
@@ -580,7 +593,7 @@ class _ChurnRiskSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          for (final risk in risks)
+          for (final risk in shown)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: KynzaCard(
@@ -608,6 +621,7 @@ class _ChurnRiskSection extends StatelessWidget {
                         color: AppColors.primary,
                         size: 18,
                       ),
+                      tooltip: context.l10n.commonShare,
                       onPressed: () => ShareService.shareWinBackMessage(
                         salonName,
                         risk.clientName,
@@ -615,6 +629,13 @@ class _ChurnRiskSection extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          if (hiddenCount > 0)
+            Text(
+              context.l10n.dashboardChurnMoreHidden(hiddenCount),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textMuted,
               ),
             ),
         ],

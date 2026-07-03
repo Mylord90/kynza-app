@@ -622,6 +622,10 @@
   "@dashboardChurnAbsentDays": {
     "placeholders": { "days": { "type": "int" } }
   },
+  "dashboardChurnMoreHidden": "+ {count} autres",
+  "@dashboardChurnMoreHidden": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "dashboardOwnerOnlyTitle": "Réservé au propriétaire",
   "dashboardOwnerOnlySubtitle": "Les performances de l'équipe ne sont visibles que par le propriétaire.",
   "dashboardTeamRevenueChartTitle": "CA par staff",
