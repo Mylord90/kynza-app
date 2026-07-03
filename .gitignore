@@ -54,3 +54,10 @@ ios/Runner/GoogleService-Info.plist
 docs/testing/TEST_ACCOUNTS.md
 android/.kotlin/
 .claude/settings.local.json
+
+# Release signing — never commit the real upload keystore or its
+# passwords (Phase 10, Enterprise Hardening pass). key.properties.template
+# (no real secrets) is intentionally NOT ignored.
+android/key.properties
+*.jks
+*.keystore

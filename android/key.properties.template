@@ -1,0 +1,9 @@
+## Copy this file to android/key.properties (same directory) and fill in
+## real values. android/key.properties is git-ignored — never commit it.
+## See docs/android/RELEASE_SIGNING_PROCEDURE.md for how to generate the
+## keystore itself and what each value below means.
+
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+storeFile=upload-keystore.jks
