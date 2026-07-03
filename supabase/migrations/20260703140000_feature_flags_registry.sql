@@ -39,5 +39,6 @@ INSERT INTO public.feature_flags (key, name, description, is_enabled, rollout_pe
   ('feature_owner', 'Rôle Owner', 'Déjà en production.', true, 100),
   ('feature_manager', 'Rôle Manager', 'Route guards et accès partagé en production, MAIS le home shell Manager est un stub UI (5 onglets, même empty-state statique) — voir WORKFLOWS.md §3.3.', true, 100),
   ('feature_support', 'Rôle Client Support', 'NON implémenté — aucun rôle CLIENT_SUPPORT dans UserRole enum, RLS, ou permission_groups.base_role. Voir WORKFLOWS.md §3.5.', false, 0),
-  ('leapa_enabled', 'Leapa (Mobile Money) go-live', 'AUCUN flag de ce nom trouvé dans le code — Leapa est déjà inconditionnellement actif via les secrets Vault (LEAPA_API_KEY etc.), pas gated par un flag. Ajouté ici pour permettre un futur kill-switch propre sans redéploiement.', true, 100)
+  ('leapa_enabled', 'Leapa (Mobile Money) go-live', 'AUCUN flag de ce nom trouvé dans le code — Leapa est déjà inconditionnellement actif via les secrets Vault (LEAPA_API_KEY etc.), pas gated par un flag. Ajouté ici pour permettre un futur kill-switch propre sans redéploiement.', true, 100),
+  ('feature_app_check', 'App Check / Play Integrity', 'NON activé — scaffold Phase 10 uniquement (double-gate Env.appCheckEnabled + ce flag, les deux inertes par défaut). Aucune dépendance firebase_app_check dans pubspec.yaml ; les Edge Functions create-booking/proxipay-confirm ne font que logger la présence du header, jamais bloquer. Voir docs/security/APP_CHECK_ARCHITECTURE.md.', false, 0)
 ON CONFLICT (key) DO NOTHING;

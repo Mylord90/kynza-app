@@ -81,7 +81,7 @@ entirely your responsibility). Before doing anything else:
 To prove the conditional Gradle logic actually picks up a real keystore (not just parses without
 crashing), a **throwaway, non-production** test keystore was generated and used to build a real
 signed release APK during this phase, then deleted — see
-`docs/audit/PRODUCTION_READINESS_REPORT.md` for the exact commands run and their output. This
+`docs/PRODUCTION_READINESS.md` for the exact commands run and their output. This
 proves the mechanism works; it does not create or touch the real production upload key, which
 only Mylord should ever generate (§2 above).
 

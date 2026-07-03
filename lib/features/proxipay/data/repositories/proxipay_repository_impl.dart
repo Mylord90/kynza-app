@@ -1,5 +1,6 @@
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/proxipay/proxipay_session_model.dart';
+import '../../../../core/security/app_check_service.dart';
 import '../../../../core/services/performance_monitoring_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/proxipay_repository.dart';
@@ -47,6 +48,7 @@ class ProxiPayRepositoryImpl implements ProxiPayRepository {
           final res = await SupabaseService.client.functions.invoke(
             'proxipay-confirm',
             body: {'sessionId': sessionId, 'method': method, 'phone': phone},
+            headers: await AppCheckService.headers(),
           );
           if (res.status != 200) {
             final data = res.data is Map ? res.data as Map : null;

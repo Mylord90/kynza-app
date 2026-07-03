@@ -4,6 +4,7 @@
 // guard rather than an explicit SELECT FOR UPDATE, since a single INSERT
 // already serializes correctly against that constraint in Postgres; this
 // avoids holding a row lock across a slower multi-step transaction.
+import { logAppCheckStatus } from "../_shared/app_check.ts";
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -90,6 +91,7 @@ Deno.serve(async (req) => {
   if (preflight) return preflight;
 
   try {
+    logAppCheckStatus(req, "create-booking");
     const user = await getAuthenticatedUser(req);
     const supabase = createServiceRoleClient();
     if (!(await checkRateLimit(supabase, `create-booking:${user.id}`, 100, 60))) {

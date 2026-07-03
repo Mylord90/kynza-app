@@ -5,6 +5,7 @@
 // proxipay_sessions or seen by the staff device. Reuses the exact
 // idempotency-key/transactions flow create-payment already uses, so
 // settlement still arrives through the existing leapa-webhook.
+import { logAppCheckStatus } from "../_shared/app_check.ts";
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { buildIdempotencyKey } from "../_shared/hmac.ts";
 import { initiateLeapaPayment } from "../_shared/leapa.ts";
@@ -16,6 +17,7 @@ Deno.serve(async (req) => {
   if (preflight) return preflight;
 
   try {
+    logAppCheckStatus(req, "proxipay-confirm");
     const user = await getAuthenticatedUser(req);
     const supabase = createServiceRoleClient();
     if (!(await checkRateLimit(supabase, `proxipay-confirm:${user.id}`, 20, 60))) {

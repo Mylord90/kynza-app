@@ -1,6 +1,7 @@
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/booking_model.dart';
+import '../../../../core/security/app_check_service.dart';
 import '../../../../core/services/performance_monitoring_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/booking_repository.dart';
@@ -21,6 +22,7 @@ class BookingRepositoryImpl implements BookingRepository {
             'startTime': draft.startTime.toIso8601String(),
             'notes': draft.notes,
           },
+          headers: await AppCheckService.headers(),
         );
         if (res.status != 200) {
           final message = (res.data is Map)

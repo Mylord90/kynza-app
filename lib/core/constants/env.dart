@@ -29,4 +29,15 @@ abstract class Env {
     'GOOGLE_MAPS_API_KEY',
     defaultValue: '',
   );
+
+  // App Check / Play Integrity (Phase 10 scaffold — inert until explicitly
+  // set to true AND a real Firebase App Check provider has been activated
+  // in the Play/Firebase consoles; see docs/security/APP_CHECK_ARCHITECTURE.md).
+  // False by default on purpose — same double-gate shape as Google Maps
+  // above (an env-level switch AND a feature-flag evaluation, both must
+  // hold).
+  static const appCheckEnabled = bool.fromEnvironment(
+    'APP_CHECK_ENABLED',
+    defaultValue: false,
+  );
 }
