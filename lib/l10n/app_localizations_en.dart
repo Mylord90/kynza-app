@@ -48,6 +48,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonNext => 'Next';
 
   @override
+  String get commonPrevious => 'Previous';
+
+  @override
   String get commonDone => 'Done';
 
   @override
@@ -385,6 +388,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeOwnerScanLoyaltyTooltip => 'Scan loyalty';
+
+  @override
+  String get homeOwnerConfidentialModeTooltip => 'Hide/show amounts';
+
+  @override
+  String get homeOwnerShareTooltip => 'Share my salon';
 
   @override
   String get homeOwnerNoSalonTitle => 'Create your salon';

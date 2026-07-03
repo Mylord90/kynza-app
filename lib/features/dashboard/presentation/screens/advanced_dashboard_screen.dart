@@ -674,12 +674,14 @@ class _TeamAnalyticsTab extends ConsumerWidget {
             Text(_monthLabel(context, selectedMonth), style: AppTypography.h3),
             IconButton(
               icon: const Icon(Icons.chevron_left),
+              tooltip: context.l10n.commonPrevious,
               onPressed: () =>
                   ref.read(selectedPerformanceMonthProvider.notifier).state =
                       DateTime(selectedMonth.year, selectedMonth.month - 1),
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right),
+              tooltip: context.l10n.commonNext,
               onPressed: () =>
                   ref.read(selectedPerformanceMonthProvider.notifier).state =
                       DateTime(selectedMonth.year, selectedMonth.month + 1),

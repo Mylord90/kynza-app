@@ -157,8 +157,10 @@ class _FlagTile extends ConsumerWidget {
                   icon: const Icon(Icons.close, size: 18),
                   color: AppColors.textMuted,
                   tooltip: context.l10n.evolutionFeatureFlagsResetTooltip,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  // No padding/constraints override — the default 48x48
+                  // minimum tap target applies (was previously stripped to
+                  // ~18x18px, a WCAG 2.5.5 Target Size failure found and
+                  // fixed in Phase 8 of the Enterprise Hardening pass).
                   onPressed: () => notifier.removeOverride(
                     salonId: salonId,
                     flagKey: flag.key,

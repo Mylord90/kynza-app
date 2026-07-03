@@ -65,6 +65,7 @@ class _SalonDetailScreenState extends ConsumerState<SalonDetailScreen>
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.share_outlined),
+                        tooltip: context.l10n.commonShare,
                         onPressed: () => ShareService.shareSalon(salon),
                       ),
                     ],

@@ -4,6 +4,7 @@ import '../../core/constants/app_durations.dart';
 import '../../core/constants/app_radius.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/extensions/build_context_l10n_extension.dart';
 
 /// Slides down from the top, 64dp tall, auto-dismisses after 4s. Shown via
 /// an [OverlayEntry] so it floats above the current screen regardless of
@@ -123,6 +124,7 @@ class _BannerContentState extends State<_BannerContent>
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
+                        tooltip: context.l10n.commonClose,
                         onPressed: widget.onDismissed,
                       ),
                     ],

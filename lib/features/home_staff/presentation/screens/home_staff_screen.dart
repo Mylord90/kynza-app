@@ -242,6 +242,7 @@ class _AgendaTabState extends ConsumerState<_AgendaTab> {
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
+                tooltip: context.l10n.commonPrevious,
                 onPressed: () => setState(
                   () => _selectedDate = _selectedDate.subtract(
                     const Duration(days: 1),
@@ -254,6 +255,7 @@ class _AgendaTabState extends ConsumerState<_AgendaTab> {
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
+                tooltip: context.l10n.commonNext,
                 onPressed: () => setState(
                   () => _selectedDate = _selectedDate.add(
                     const Duration(days: 1),

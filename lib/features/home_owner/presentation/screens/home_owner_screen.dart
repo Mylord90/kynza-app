@@ -51,12 +51,14 @@ class _HomeOwnerScreenState extends ConsumerState<HomeOwnerScreen> {
                     ? Icons.visibility_off
                     : Icons.visibility,
               ),
+              tooltip: context.l10n.homeOwnerConfidentialModeTooltip,
               onPressed: () =>
                   ref.read(confidentialModeProvider.notifier).toggle(),
             ),
           if (_tabIndex == 3)
             IconButton(
               icon: const Icon(Icons.share_outlined),
+              tooltip: context.l10n.homeOwnerShareTooltip,
               onPressed: () => context.go(RouteNames.ownerShare),
             ),
           IconButton(
@@ -198,6 +200,7 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.chevron_left),
+                  tooltip: context.l10n.commonPrevious,
                   onPressed: () => setState(
                     () => _selectedDate = _selectedDate.subtract(
                       const Duration(days: 1),
@@ -210,6 +213,7 @@ class _CalendarTabState extends ConsumerState<_CalendarTab> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
+                  tooltip: context.l10n.commonNext,
                   onPressed: () => setState(
                     () => _selectedDate = _selectedDate.add(
                       const Duration(days: 1),

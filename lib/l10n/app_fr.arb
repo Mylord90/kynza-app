@@ -16,6 +16,7 @@
   "commonLoading": "Chargement…",
   "commonContinue": "Continuer",
   "commonNext": "Suivant",
+  "commonPrevious": "Précédent",
   "commonDone": "Terminé",
   "commonSearch": "Rechercher",
   "commonEdit": "Modifier",
@@ -153,6 +154,8 @@
 
   "homeOwnerDashboardTitle": "Dashboard KYNZA",
   "homeOwnerScanLoyaltyTooltip": "Scanner fidélité",
+  "homeOwnerConfidentialModeTooltip": "Masquer/afficher les montants",
+  "homeOwnerShareTooltip": "Partager mon salon",
   "homeOwnerNoSalonTitle": "Créez votre salon",
   "homeOwnerNoSalonSubtitle": "Configurez votre salon pour commencer à recevoir des réservations.",
   "homeOwnerNoSalonCta": "Créer mon salon →",

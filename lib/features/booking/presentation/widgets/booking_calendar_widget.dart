@@ -69,6 +69,7 @@ class _BookingCalendarWidgetState extends State<BookingCalendarWidget> {
           children: [
             IconButton(
               icon: const Icon(Icons.chevron_left),
+              tooltip: context.l10n.commonPrevious,
               onPressed: () => setState(
                 () => _visibleMonth = DateTime(
                   _visibleMonth.year,
@@ -82,6 +83,7 @@ class _BookingCalendarWidgetState extends State<BookingCalendarWidget> {
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right),
+              tooltip: context.l10n.commonNext,
               onPressed: () => setState(
                 () => _visibleMonth = DateTime(
                   _visibleMonth.year,

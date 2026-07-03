@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Suivant'**
   String get commonNext;
 
+  /// No description provided for @commonPrevious.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précédent'**
+  String get commonPrevious;
+
   /// No description provided for @commonDone.
   ///
   /// In fr, this message translates to:
@@ -835,6 +841,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Scanner fidélité'**
   String get homeOwnerScanLoyaltyTooltip;
+
+  /// No description provided for @homeOwnerConfidentialModeTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer/afficher les montants'**
+  String get homeOwnerConfidentialModeTooltip;
+
+  /// No description provided for @homeOwnerShareTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager mon salon'**
+  String get homeOwnerShareTooltip;
 
   /// No description provided for @homeOwnerNoSalonTitle.
   ///

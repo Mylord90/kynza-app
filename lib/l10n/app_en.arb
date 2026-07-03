@@ -14,6 +14,7 @@
   "commonLoading": "Loading…",
   "commonContinue": "Continue",
   "commonNext": "Next",
+  "commonPrevious": "Previous",
   "commonDone": "Done",
   "commonSearch": "Search",
   "commonEdit": "Edit",
@@ -139,6 +140,8 @@
 
   "homeOwnerDashboardTitle": "KYNZA Dashboard",
   "homeOwnerScanLoyaltyTooltip": "Scan loyalty",
+  "homeOwnerConfidentialModeTooltip": "Hide/show amounts",
+  "homeOwnerShareTooltip": "Share my salon",
   "homeOwnerNoSalonTitle": "Create your salon",
   "homeOwnerNoSalonSubtitle": "Set up your salon to start receiving bookings.",
   "homeOwnerNoSalonCta": "Create my salon →",

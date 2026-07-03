@@ -80,6 +80,7 @@ class _AdvancedSearchScreenState extends ConsumerState<AdvancedSearchScreen> {
               Icons.filter_list,
               color: filters.isEmpty ? null : AppColors.primary,
             ),
+            tooltip: context.l10n.searchFiltersTitle,
             onPressed: _openFilters,
           ),
         ],

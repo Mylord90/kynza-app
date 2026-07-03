@@ -48,6 +48,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonNext => 'Suivant';
 
   @override
+  String get commonPrevious => 'Précédent';
+
+  @override
   String get commonDone => 'Terminé';
 
   @override
@@ -388,6 +391,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeOwnerScanLoyaltyTooltip => 'Scanner fidélité';
+
+  @override
+  String get homeOwnerConfidentialModeTooltip =>
+      'Masquer/afficher les montants';
+
+  @override
+  String get homeOwnerShareTooltip => 'Partager mon salon';
 
   @override
   String get homeOwnerNoSalonTitle => 'Créez votre salon';

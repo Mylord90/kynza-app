@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/router/route_names.dart';
 import '../../application/providers/notification_providers.dart';
 
@@ -13,6 +14,7 @@ class UnreadCountBadge extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final count = ref.watch(unreadCountProvider).valueOrNull ?? 0;
     return IconButton(
+      tooltip: context.l10n.navNotifications,
       icon: Stack(
         clipBehavior: Clip.none,
         children: [

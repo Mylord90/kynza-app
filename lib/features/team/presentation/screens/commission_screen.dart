@@ -46,12 +46,14 @@ class CommissionScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
+            tooltip: context.l10n.commonPrevious,
             onPressed: () =>
                 ref.read(selectedCommissionMonthProvider.notifier).state =
                     DateTime(month.year, month.month - 1),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
+            tooltip: context.l10n.commonNext,
             onPressed: () =>
                 ref.read(selectedCommissionMonthProvider.notifier).state =
                     DateTime(month.year, month.month + 1),

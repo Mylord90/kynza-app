@@ -186,6 +186,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
+            tooltip: context.l10n.notificationsSettingsTitle,
             onPressed: () => context.push(RouteNames.notificationSettings),
           ),
         ],
