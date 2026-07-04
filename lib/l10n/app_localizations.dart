@@ -4028,6 +4028,24 @@ abstract class AppLocalizations {
   /// **'Les articles d\'aide apparaîtront ici une fois publiés.'**
   String get helpCenterEmptySubtitle;
 
+  /// No description provided for @evolutionAuditCenterTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre d\'audit'**
+  String get evolutionAuditCenterTitle;
+
+  /// No description provided for @evolutionAuditCenterHealthCenterNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les audits erreurs, performance et synchronisation réutilisent les pipelines du Centre de supervision (tableaux Crash/Edge Function/File/Sync) plutôt que d\'être dupliqués ici.'**
+  String get evolutionAuditCenterHealthCenterNote;
+
+  /// No description provided for @settingsAuditCenterLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre d\'audit'**
+  String get settingsAuditCenterLabel;
+
   /// No description provided for @evolutionMaintenanceDefaultTitle.
   ///
   /// In fr, this message translates to:

@@ -129,6 +129,9 @@ abstract class RouteNames {
   static const ownerCmsAdmin = '/owner/cms-admin';
   static const helpCenter = '/help-center';
 
+  // Backend Enterprise Completion — Phase 10: Audit Business
+  static const ownerAuditCenter = '/owner/audit-center';
+
   // ProxiPay V1 — QR-based in-person payment
   static const ownerProxiPay = '/owner/proxipay/:bookingId';
   static const clientProxiPayScan = '/client/proxipay/scan';

@@ -2114,6 +2114,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Help articles will appear here once published.';
 
   @override
+  String get evolutionAuditCenterTitle => 'Audit Center';
+
+  @override
+  String get evolutionAuditCenterHealthCenterNote =>
+      'Error, performance, and sync audits reuse the Health Center pipelines (Crash/Edge Function/Queue/Sync Dashboards) rather than being duplicated here.';
+
+  @override
+  String get settingsAuditCenterLabel => 'Audit Center';
+
+  @override
   String get evolutionMaintenanceDefaultTitle => 'Maintenance in progress';
 
   @override
