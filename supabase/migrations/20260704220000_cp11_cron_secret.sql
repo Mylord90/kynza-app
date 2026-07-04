@@ -19,11 +19,11 @@
 -- would silently stop firing. This is exactly the kind of precondition Rule 8 exists to catch
 -- before a migration reaches production.
 
-SELECT cron.unschedule('schedule-reminders-hourly')
-WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'schedule-reminders-hourly');
+SELECT cron.unschedule('kynza-booking-reminders')
+WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'kynza-booking-reminders');
 
 SELECT cron.schedule(
-  'schedule-reminders-hourly',
+  'kynza-booking-reminders',
   '0 * * * *',
   $$
     SELECT net.http_post(
@@ -39,11 +39,11 @@ SELECT cron.schedule(
   $$
 );
 
-SELECT cron.unschedule('run-scheduled-actions-5min')
-WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'run-scheduled-actions-5min');
+SELECT cron.unschedule('kynza-run-scheduled-actions')
+WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'kynza-run-scheduled-actions');
 
 SELECT cron.schedule(
-  'run-scheduled-actions-5min',
+  'kynza-run-scheduled-actions',
   '*/5 * * * *',
   $$
     SELECT net.http_post(
@@ -59,11 +59,11 @@ SELECT cron.schedule(
   $$
 );
 
--- NOTE: the existing job names in production were not confirmed this pass (CP6's pg_cron query
--- returned jobid/schedule/command but this draft assumes conventional names based on the schedule
--- shape — 'schedule-reminders-hourly' for the "0 * * * *" job calling schedule-reminders, and
--- 'run-scheduled-actions-5min' for the "*/5 * * * *" job calling run-scheduled-actions). Confirm
--- actual jobnames via `SELECT jobid, jobname, schedule FROM cron.job;` before applying — the
--- `WHERE EXISTS` guards make an unschedule-of-a-nonexistent-name a silent no-op rather than an
--- error, but a name mismatch would leave the OLD (unsecured) job running unmodified alongside a
--- new one, doubling the reminder frequency. Verify names match exactly first.
+-- UPDATE (Remediation v1, Phase 2): the CP11 draft above assumed conventional job names
+-- ('schedule-reminders-hourly'/'run-scheduled-actions-5min') that were never actually confirmed
+-- against a real `cron.job` query. Both kynza-dr-scratch and production (read-only check) were
+-- queried directly this phase: the real names are `kynza-booking-reminders` (0 * * * *) and
+-- `kynza-run-scheduled-actions` (*/5 * * * *), identical on both projects. Corrected above —
+-- this was a real bug in the original draft that would have left the old, unsecured jobs running
+-- unmodified alongside new ones, doubling reminder/action-runner frequency, exactly the risk the
+-- original draft's own note warned about.

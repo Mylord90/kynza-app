@@ -93,9 +93,13 @@ in which case Phase 2 applies it directly, or it touches Supabase, in which case
 - **Rollback plan**: `DROP VIEW v_staff_directory_public; CREATE POLICY staff_profiles_public_select
   ...` (recreate the original policy verbatim — captured in the migration's own down-comment) if
   the re-pointed screen breaks in an unforeseen way; revert the 2 Flutter files via `git revert`.
-- **Status**: **fix drafted, awaiting Mylord's explicit approval** — Phase 2 of this pass re-verifies
-  this fix (exploit-before/after) on `kynza-dr-scratch` per the remediation prompt's Phase 2
-  requirement, but does **not** apply it anywhere.
+- **Status**: **fix drafted + live-tested this pass, awaiting Mylord's explicit approval**. Phase 2
+  applied the fix to `kynza-dr-scratch` and re-ran the exact exploit — confirmed blocked. Phase 2
+  also found and corrected a real bug in the draft itself (`security_invoker = true` on the
+  replacement view silently returned zero rows to `anon`, which would have permanently emptied the
+  client booking flow's practitioner picker in production). See
+  [`PHASE_2_SECURITY_FIXES.md`](PHASE_2_SECURITY_FIXES.md) §1 for full before/after evidence. Not
+  applied anywhere in production.
 
 ---
 
@@ -136,7 +140,10 @@ in which case Phase 2 applies it directly, or it touches Supabase, in which case
   expect failure, (3) run existing staff-profile update tests, (4) confirm legitimate
   `updateStaff()` calls (role/display name/bio changes) still succeed.
 - **Rollback plan**: Revert `WITH CHECK` clause to the pre-fix version (captured in migration).
-- **Status**: **fix drafted, awaiting Mylord's explicit approval**.
+- **Status**: **fix drafted + live-tested this pass, awaiting Mylord's explicit approval**. Phase 2
+  applied to `kynza-dr-scratch` and re-ran the exact exploit PATCH — confirmed blocked (`42501` RLS
+  violation). See [`PHASE_2_SECURITY_FIXES.md`](PHASE_2_SECURITY_FIXES.md) §2. Not applied anywhere
+  in production.
 
 ### P1-2 — 14 backend feature migrations never deployed to production
 
@@ -307,7 +314,12 @@ tabulated compactly with source + status (still individually traceable, per exit
   anon EXECUTE grant (P3-item, bundled here since it's the same file).
 - **Validation/Test/Rollback**: apply to dr-scratch, re-run the exact unauthenticated repro (expect
   403/error now), `DROP FUNCTION`/recreate without check as rollback.
-- **Status**: fix drafted, awaiting approval.
+- **Status**: **fix drafted + live-tested this pass, awaiting approval**. Applied to dr-scratch,
+  exact unauthenticated repro re-run — now `400 forbidden`. See
+  [`PHASE_2_SECURITY_FIXES.md`](PHASE_2_SECURITY_FIXES.md) §3. Bundled in the same migration:
+  `get_staff_week_rank`'s anon grant (P3-15) — Phase 2 found the original `REVOKE ... FROM anon`
+  was a no-op (real grant came from `PUBLIC`) and corrected it to `REVOKE ... FROM PUBLIC`,
+  re-verified live. Not applied anywhere in production.
 
 ### P2-2 — `calculate-commission`: cross-tenant financial disclosure
 
@@ -325,7 +337,12 @@ tabulated compactly with source + status (still individually traceable, per exit
   (the only legitimate caller) always calls it for the caller's own salon.
 - **Validation/Test/Rollback**: deploy patch to dr-scratch, attempt the same cross-tenant read
   (expect 403), confirm legitimate same-salon calls still work; `git revert` + redeploy as rollback.
-- **Status**: fix drafted (code patch, not yet deployed anywhere), awaiting approval.
+- **Status**: **fix drafted + live-tested this pass, awaiting approval**. Reconstructed the
+  pre-fix version from git history, deployed to dr-scratch, exploited it for real (learned a real
+  cross-tenant booking's exact commission), cleaned up, then deployed the actual fixed code and
+  re-ran the same exploit — `403 forbidden`; confirmed a legitimate same-salon call still succeeds.
+  See [`PHASE_2_SECURITY_FIXES.md`](PHASE_2_SECURITY_FIXES.md) §5a. Deployed to dr-scratch only,
+  not production.
 
 ### P2-3 — `run-scheduled-actions` / `schedule-reminders`: `verify_jwt` alone isn't real authorization
 
@@ -351,9 +368,22 @@ tabulated compactly with source + status (still individually traceable, per exit
 - **Validation/Test/Rollback**: apply to dr-scratch first, confirm cron jobs still fire (their
   Vault-sourced header now includes the secret) AND that an external call without the header now
   gets rejected; `git revert` function code + re-run `cron.schedule` with the old body as rollback.
-- **Status**: fix drafted, awaiting approval. **Medium risk item** — flagged explicitly for Mylord
-  to review the precondition carefully before approving, since a botched apply silently breaks
-  reminders (a user-facing regression, not just a security tightening).
+- **Status**: **fix drafted + live-tested this pass, awaiting approval**. Reconstructed pre-fix
+  versions of both functions from git history, deployed to dr-scratch, confirmed both were
+  callable with just the public anon key (no cron secret), then deployed the actual fixed code +
+  set both real preconditions (`CRON_SECRET` function secret + matching Vault entry) and
+  re-confirmed both now reject without the secret and succeed with it. **Real bug found**: the
+  drafted migration's assumed `pg_cron` job names (`schedule-reminders-hourly`/
+  `run-scheduled-actions-5min`) didn't match the real ones on either dr-scratch or production
+  (`kynza-booking-reminders`/`kynza-run-scheduled-actions`, confirmed via direct read-only query
+  against both) — corrected in the migration. Applied the corrected migration to dr-scratch and
+  executed the actual `cron.job` command text end-to-end (as `pg_cron` itself would) — both jobs
+  resolved their Vault secrets and got a real `200` back. See
+  [`PHASE_2_SECURITY_FIXES.md`](PHASE_2_SECURITY_FIXES.md) §5b. **Medium risk item** — flagged
+  explicitly for Mylord to review the precondition carefully before approving in production, since
+  a botched apply silently breaks reminders (a user-facing regression, not just a security
+  tightening); production already has the `project_url`/`service_role_key` Vault secrets this
+  depends on (confirmed read-only), only `CRON_SECRET` would need to be added there.
 
 ### P2-4 — 2 `SECURITY DEFINER` views bypass caller permissions (`v_popular_searches`, `v_mv_daily_revenue`)
 

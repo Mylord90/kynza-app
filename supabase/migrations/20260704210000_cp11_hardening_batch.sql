@@ -85,4 +85,16 @@ $function$;
 -- grant to anon is dead weight that invites exactly the kind of "why does this SECURITY DEFINER
 -- function accept anon calls" question CP2 had to spend time answering. Tightening the grant
 -- costs nothing and removes the question for the next reviewer.
-REVOKE EXECUTE ON FUNCTION public.get_staff_week_rank(uuid) FROM anon;
+--
+-- UPDATE (Remediation v1, Phase 2) — the original `REVOKE ... FROM anon` above was tested live on
+-- kynza-dr-scratch and found to be a no-op: `has_function_privilege('anon', 'get_staff_week_rank
+-- (uuid)', 'execute')` still returned true after applying it. Root cause: `pg_proc.proacl` showed
+-- `{=X/postgres,...}` — the bare `=X` entry is PostgreSQL's implicit grant to the PUBLIC
+-- pseudo-role (present by default on every function unless explicitly revoked at creation), and
+-- every role, including `anon`, inherits PUBLIC's privileges regardless of any role-specific
+-- REVOKE. Revoking from `anon` specifically only removes an anon-specific grant that never
+-- existed here; the real access was coming from PUBLIC. Fixed by revoking from PUBLIC instead —
+-- re-verified live after this change: `has_function_privilege('anon', ...)` now correctly returns
+-- false, while `authenticated`/`service_role`'s separate explicit grants (already present in
+-- `proacl`) are untouched, so legitimate authenticated callers are unaffected.
+REVOKE EXECUTE ON FUNCTION public.get_staff_week_rank(uuid) FROM PUBLIC;

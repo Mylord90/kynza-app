@@ -43,8 +43,25 @@
 -- booking flow needs it to exclude not-yet-accepted staff from the practitioner picker
 -- (StaffProfileModelX.isPending), and a bare timestamp of "did this person accept yet" carries
 -- none of invitation_token's bearer-credential risk.
+--
+-- UPDATE (Remediation v1, Phase 2) — real bug found by actually testing this migration on
+-- kynza-dr-scratch rather than trusting the draft: `security_invoker = true` makes the view
+-- apply the QUERYING role's RLS on the underlying `staff_profiles` table, not just the view's own
+-- WHERE clause. Since this migration drops the only policy that ever let `anon`/unauthenticated
+-- callers see staff_profiles rows at all, an invoker-security view returns ZERO rows for exactly
+-- the audience it exists to serve — confirmed live: anon got `[]` from this view immediately after
+-- applying, while an authenticated staff member only ever saw their own row (via
+-- `staff_own_profile_select`), never a salon-mate's. That would have silently emptied the client
+-- booking flow's practitioner picker in production — a full outage of a legitimate feature, not a
+-- security improvement. Fixed by removing `security_invoker` (views default to definer-style,
+-- running as the view owner) so the view intentionally grants controlled, narrow access beyond
+-- what base-table RLS allows anon/authenticated — safe specifically because the view's own column
+-- list already excludes every sensitive field (`invitation_token`/`phone`/`invited_by`) and its
+-- WHERE clause already scopes to `is_active`/non-deleted rows only. This is the same
+-- security-definer-view pattern flagged generically by the Postgres advisor elsewhere in this
+-- codebase (see Master Issues Matrix P2-4) — here it is the deliberate, correct tool, not an
+-- oversight, and is called out explicitly rather than left as an unexplained advisor exception.
 CREATE OR REPLACE VIEW public.v_staff_directory_public
-WITH (security_invoker = true)
 AS
 SELECT id, salon_id, role, display_name, avatar_url, bio, specialties, is_active,
        invitation_accepted_at
