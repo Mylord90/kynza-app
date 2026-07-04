@@ -473,6 +473,20 @@ instead of `role === 'owner'` as a follow-up (not done in this checkpoint, out o
   now exists and CMS's own RLS already uses it; the 2 Remote Config Edge Functions should be
   updated to match in a follow-up pass.
 
+## Update — 2026-07-04 (Enterprise Final Certification Pass, Phase 5/CP6 — Security Offensive)
+
+- [ ] **🔴 P0, CONFIRMED LIVE IN PRODUCTION: `staff_profiles_public_select` RLS policy leaks
+  `invitation_token` (and `phone`) to fully unauthenticated requests.** Real, live exploit
+  confirmed on `kynza-dr-scratch` (schema-identical mirror); the same vulnerable policy confirmed
+  present in production (`hhdkjfpgaklhrhfoxlhj`) via safe, read-only `pg_policy` metadata
+  inspection (no real production data was read to confirm this). `invitation_token` is the sole
+  credential `accept-invitation` uses to bind a caller's account to a staff role at any salon —
+  this is a real account-takeover/impersonation vector, not a theoretical one. Draft remediation:
+  `supabase/migrations/20260704190000_cp6_fix_staff_invitation_token_exposure.sql` (column-limited
+  view + drop the public policy) — **not applied**; requires confirming which Flutter screen
+  currently depends on the public policy for a legitimate staff-browse feature before deployment.
+  Full detail: `docs/certification/PHASE_6_SECURITY_OFFENSIVE.md`.
+
 ## Update — 2026-07-04 (Backend Enterprise Completion — Phase 11/CP7, pass closed)
 
 The full 7-checkpoint Backend Enterprise Completion pass is closed as of this update — tag
