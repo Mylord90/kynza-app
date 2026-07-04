@@ -1,0 +1,38 @@
+flowchart TB
+    subgraph Inherited["Section 1 — 5 mandatory inherited items"]
+        I1["1. FCM real send / App Check /\nCI provisioning / non-ProxiPay idempotency /\nroot-jailbreak / coverage / APK size /\nPlay dev account / staged rollout"]
+        I2["2. Coverage 22.75%"]
+        I3["3. Remote Config validation\nnever executed live"]
+        I4["4. 13 unreviewed migration drafts"]
+        I5["5. SYSTEM_ADMIN RLS vs UI-only gating"]
+    end
+
+    subgraph Verdicts["CP1 verdicts (this phase)"]
+        V1["Partially closed —\nsee per-sub-item table"]
+        V2["Confirmed unchanged,\nrouted to CP9/Phase 10"]
+        V3["Still open,\nrouted to CP3/Phase 9"]
+        V4["Enumerated + disposition\nrecommended, none applied"]
+        V5["Real RLS confirmed (7 policies),\nbut only in unapplied drafts"]
+    end
+
+    I1 --> V1
+    I2 --> V2
+    I3 --> V3
+    I4 --> V4
+    I5 --> V5
+
+    V1 --> Matrix["Enterprise Gap Matrix\n(Conforme / À améliorer / Obsolète / Inutilisé / À supprimer)"]
+    V2 --> Matrix
+    V3 --> Matrix
+    V4 --> Matrix
+    V5 --> Matrix
+
+    Matrix --> CP2["CP2 Database Optimization"]
+    Matrix --> CP3["CP3 Edge Function Certification"]
+    Matrix --> CP4["CP4 Performance + Observability"]
+    Matrix --> CP5["CP5 Scalability"]
+    Matrix --> CP6["CP6 Security Offensive"]
+    Matrix --> CP7["CP7 Disaster Recovery"]
+    Matrix --> CP8["CP8 Code Quality Cleanup"]
+    Matrix --> CP9["CP9 Coverage Push"]
+    Matrix --> CP10["CP10 Final Certification Scorecard"]
