@@ -487,6 +487,42 @@ instead of `role === 'owner'` as a follow-up (not done in this checkpoint, out o
   currently depends on the public policy for a legitimate staff-browse feature before deployment.
   Full detail: `docs/certification/PHASE_6_SECURITY_OFFENSIVE.md`.
 
+## Update — 2026-07-04 (Final Enterprise Verification pass v2, Gate 0 + CP1-CP12)
+
+- [ ] **The P0 above is still unpatched.** Gate 0 of the v2 pass resolved the precondition this
+  entry's own migration was blocked on (traced the exact screen —
+  `practitioner_selection_screen.dart` — and repointed it at a new column-limited provider) and
+  added invitation-token invalidation for unclaimed invitations to the same migration. The
+  migration itself is still a draft, not applied. Full detail:
+  `docs/certification-v2/GATE_0_P0_REMEDIATION.md`.
+- [ ] **🟠 New, live-confirmed: `staff_profiles.salon_id` is mass-assignable** — a staff account can
+  self-reassign into another salon's staff directory via a direct REST `PATCH` (doesn't grant
+  cross-tenant data access, since `has_role()` gates on the separately-protected `users.salon_id`,
+  but corrupts another tenant's practitioner listing/booking assignment). Draft fix:
+  `supabase/migrations/20260704200000_cp2_fix_staff_profiles_salon_id_mass_assignment.sql` — not
+  applied. Detail: `docs/certification-v2/CP2_DEEP_SECURITY.md`.
+- [ ] **🔴 14 backend feature migrations have never been deployed to production** — CMS, remote
+  config, feature flags (enterprise layer), legal center, catalog/service-templates, A/B testing,
+  business observability, audit business, all 7 Health Center dashboard RPCs, and 2 rounds of
+  performance indexes exist only in this repo and on `kynza-dr-scratch`, never in the real
+  database. All 16 unapplied migrations (14 above + the 2 security fixes) are classified
+  SAFE/REVIEW with a recommended apply order in `docs/certification-v2/MIGRATION_REVIEW.md` — 0
+  BLOCKERs found, nothing applied by this pass.
+- [ ] **🔴 Zero backups have ever protected production** — no `pg_cron` schedule calls
+  `create-backup`; `storage.objects` for the `kynza-backups` bucket is empty. Detail:
+  `docs/certification-v2/CP6_DEVSECOPS_INFRA.md`.
+- [ ] **No real Android release keystore provisioned** — release builds fall back to debug
+  signing; not Play-Store-submittable today. Detail: `docs/certification-v2/CP9_STORE_GO_NO_GO.md`.
+- [ ] **CI/CD confirmed still never executed** (0 GitHub Actions runs, checked via the real public
+  API). Detail: `docs/certification-v2/CP6_DEVSECOPS_INFRA.md`.
+- [ ] **iOS is the untouched Flutter scaffold** — no Apple Developer team, no Firebase
+  configuration, no App Store Connect record. App Store: No-Go. Detail:
+  `docs/certification-v2/CP9_STORE_GO_NO_GO.md`.
+
+Full report and re-scored scorecard (62.3 → 41.2/100, an intended result of deeper adversarial
+testing): `docs/certification-v2/FINAL_ENTERPRISE_REPORT.md`,
+`docs/certification-v2/SCORECARD_V2.md`.
+
 ## Update — 2026-07-04 (Enterprise Final Certification Pass, Phase 11/CP10 — pass closed)
 
 The full 10-checkpoint Enterprise Final Certification Pass is closed as of this update — tag

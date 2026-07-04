@@ -229,3 +229,31 @@ roles. Gates every admin-only dashboard/audit RPC introduced in this pass
 | `EDGE_FUNCTIONS_REFERENCE.md` | Corrected stale "18 functions" narrative (→20) and `leapa-webhook`'s wrong rate-limit cell |
 | `PERFORMANCE_TARGETS.md` | §11 — real Edge Function latency data added |
 | `DOCUMENTATION_INDEX.md` | This section |
+
+## Final Enterprise Verification & Go/No-Go audit v2 (Gate 0 + 12 checkpoints, 2026-07-04)
+
+> Adversarial re-verification of the pass above (`enterprise-certified-v1`) — treats every prior
+> "✅ Fait" claim as a hypothesis to break, not a fact to cite. Gate 0 resolved the prior pass's own
+> P0 precondition blocker (traced the exact Flutter screen depending on the vulnerable policy) but
+> the fix remains **unapplied**, pending Mylord's approval. Found the prior pass's Monitoring (38)
+> and Production Readiness (33) scores were, if anything, generous: 14 backend feature migrations
+> were discovered to have never been deployed to production at all, and production has never had a
+> single backup taken. Overall score dropped from 62.3 to **41.2/100** — an intended result of
+> deeper adversarial testing, not a claim the codebase regressed this week. Full report:
+> [`certification-v2/FINAL_ENTERPRISE_REPORT.md`](certification-v2/FINAL_ENTERPRISE_REPORT.md),
+> scorecard: [`certification-v2/SCORECARD_V2.md`](certification-v2/SCORECARD_V2.md).
+> Tag: `enterprise-verified-v2`.
+
+- **Gate 0 — P0 Remediation**: [`certification-v2/GATE_0_P0_REMEDIATION.md`](certification-v2/GATE_0_P0_REMEDIATION.md) — resolves the Flutter-side precondition CP6 left unfinished; migration still **not applied**
+- **CP1 — Architecture & Backend Re-verify**: [`certification-v2/CP1_ARCHITECTURE_REVERIFY.md`](certification-v2/CP1_ARCHITECTURE_REVERIFY.md) — tool-run cycle scan finds 3 real `core`↔`feature` circular dependencies
+- **CP2 — Deep Security**: [`certification-v2/CP2_DEEP_SECURITY.md`](certification-v2/CP2_DEEP_SECURITY.md) — 2 live-exploited mass-assignment bugs, all 23 `SECURITY DEFINER` functions individually audited
+- **CP3 — RLS Adversarial Matrix**: [`certification-v2/CP3_RLS_ADVERSARIAL_MATRIX.md`](certification-v2/CP3_RLS_ADVERSARIAL_MATRIX.md) — real cross-tenant read/write attempts, 9 tables + bookings
+- **CP4 — Edge Function Re-cert**: [`certification-v2/CP4_EDGE_FUNCTION_REVERIFY.md`](certification-v2/CP4_EDGE_FUNCTION_REVERIFY.md) — 2 prior "🟡 flagged" gaps confirmed exploitable
+- **CP5 — Observability/Monitoring Gap**: [`certification-v2/CP5_OBSERVABILITY_MONITORING_GAP.md`](certification-v2/CP5_OBSERVABILITY_MONITORING_GAP.md) — **discovers 14 backend migrations never deployed to production**
+- **CP6 — DevSecOps & Infrastructure**: [`certification-v2/CP6_DEVSECOPS_INFRA.md`](certification-v2/CP6_DEVSECOPS_INFRA.md) — clean git-history secrets scan; 0 backups have ever protected production
+- **CP7 — Code Quality Fast Re-verify**: [`certification-v2/CP7_CODE_QUALITY_FAST_REVERIFY.md`](certification-v2/CP7_CODE_QUALITY_FAST_REVERIFY.md)
+- **CP8 — Production Readiness**: [`certification-v2/CP8_PRODUCTION_READINESS.md`](certification-v2/CP8_PRODUCTION_READINESS.md) — the ranked punch list for Mylord's decision-making
+- **CP9 — Store Go/No-Go**: [`certification-v2/CP9_STORE_GO_NO_GO.md`](certification-v2/CP9_STORE_GO_NO_GO.md) — both Play Store and App Store No-Go
+- **CP10 — Migration Review**: [`certification-v2/MIGRATION_REVIEW.md`](certification-v2/MIGRATION_REVIEW.md) — all 16 unapplied migrations classified SAFE/REVIEW, 0 BLOCKER
+- **CP11 — Auto-fix & Virtual PRs**: [`certification-v2/CP11_AUTOFIX_AND_VIRTUAL_PRS.md`](certification-v2/CP11_AUTOFIX_AND_VIRTUAL_PRS.md) — 2 migrations + 2 Edge Function patches drafted, none deployed
+- **CP12 — Final Report & Scorecard**: [`certification-v2/FINAL_ENTERPRISE_REPORT.md`](certification-v2/FINAL_ENTERPRISE_REPORT.md), [`certification-v2/SCORECARD_V2.md`](certification-v2/SCORECARD_V2.md)
