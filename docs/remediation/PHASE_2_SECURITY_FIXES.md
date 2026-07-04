@@ -244,7 +244,12 @@ left in place.)
 - 2 synthetic test bookings + their `staff_commissions`/`activity_logs` rows (created and deleted
   this phase for the `calculate-commission` test).
 - 2 staff members' `commission_rate` reset to `0` (their pre-test state).
-- QA Salon A staff account's temporary password reset to a fresh random value (never recorded).
+- QA Salon A staff account's temporary password reset to a fresh random value (never recorded),
+  then — **correction made during Phase 4** after discovering the existing `test/live/` suite's
+  `LiveTestEnv.signIn()` expects a fixed shared QA password (`Kynza-QA-Test-2026!` by default) —
+  reset again to that documented shared value, verified by a real sign-in call, so this pass
+  doesn't silently break the pre-existing live test suite's ability to authenticate as that
+  fixture.
 - The reverted `salon_id` PATCH (back to its original value).
 
 ## Left in place on `kynza-dr-scratch` (intentional improvements, not pollution)

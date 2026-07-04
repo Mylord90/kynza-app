@@ -163,6 +163,8 @@ class LiveTestEnv {
         return http.get(uri, headers: headers);
       case 'POST':
         return http.post(uri, headers: headers, body: jsonEncode(body));
+      case 'PATCH':
+        return http.patch(uri, headers: headers, body: jsonEncode(body));
       default:
         throw ArgumentError('unsupported method $method');
     }
