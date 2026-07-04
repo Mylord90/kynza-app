@@ -46,7 +46,7 @@ class _ExceptionFormWidgetState extends State<ExceptionFormWidget> {
       lastDate: now.add(const Duration(days: 365)),
       initialDateRange: _range,
     );
-    if (picked != null) setState(() => _range = picked);
+    if (picked != null && mounted) setState(() => _range = picked);
   }
 
   Future<void> _pickTime({required bool isOpen}) async {
@@ -54,7 +54,7 @@ class _ExceptionFormWidgetState extends State<ExceptionFormWidget> {
       context: context,
       initialTime: isOpen ? _opensAt : _closesAt,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() => isOpen ? _opensAt = picked : _closesAt = picked);
   }
 

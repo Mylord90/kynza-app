@@ -44,7 +44,7 @@ class _BreakEditorWidgetState extends State<BreakEditorWidget> {
       context: context,
       initialTime: isStart ? _start : _end,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() => isStart ? _start = picked : _end = picked);
   }
 
