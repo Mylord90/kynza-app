@@ -196,3 +196,36 @@ roles. Gates every admin-only dashboard/audit RPC introduced in this pass
 | `EDGE_FUNCTIONS_REFERENCE.md` | 2 new functions documented (`update-remote-config`, `rollback-remote-config`) |
 | `FEATURE_FLAGS.md` | §11 update — category/role/user overrides, Realtime propagation, audit trail |
 | `DOCUMENTATION_INDEX.md` | This section |
+
+## Enterprise Final Certification pass (Phases 1–11, 2026-07-04)
+
+> A separate, later, 10-checkpoint pass — certifies Architecture, Backend, Security,
+> Infrastructure, Code Quality, Observability, and Production Readiness to a real, evidence-backed
+> number, adding zero business features. First KYNZA pass with real live read-write access to a
+> staging Supabase project (`kynza-dr-scratch`), closing the "no live testing possible" gap every
+> prior pass disclosed. Found 1 confirmed critical, live, unpatched security vulnerability
+> (production `staff_profiles_public_select` leaking `invitation_token` to unauthenticated
+> requests) — see `certification/PHASE_6_SECURITY_OFFENSIVE.md`. Full verdict:
+> [`certification/PHASE_11_FINAL_CERTIFICATION.md`](certification/PHASE_11_FINAL_CERTIFICATION.md),
+> scorecard: [`certification/CERTIFICATION_SCORECARD.md`](certification/CERTIFICATION_SCORECARD.md).
+> Tag: `enterprise-certified-v1`.
+
+- **CP1 / Phase 1 — Enterprise Gap Analysis**: [`certification/PHASE_1_ENTERPRISE_GAP_ANALYSIS.md`](certification/PHASE_1_ENTERPRISE_GAP_ANALYSIS.md), [`diagrams/certification-gap-matrix.mermaid`](diagrams/certification-gap-matrix.mermaid)
+- **CP2 / Phase 8 — Database Optimization**: [`certification/PHASE_2_DATABASE_OPTIMIZATION.md`](certification/PHASE_2_DATABASE_OPTIMIZATION.md); `../supabase/migrations/20260704180000_cp2_fk_indexes.sql` — drafted, **not applied**
+- **CP3 / Phase 9 — Edge Function Certification**: [`certification/PHASE_3_EDGE_FUNCTION_CERTIFICATION.md`](certification/PHASE_3_EDGE_FUNCTION_CERTIFICATION.md) — Remote Config's full lifecycle live-tested for the first time; `EDGE_FUNCTIONS_REFERENCE.md` corrected (2 real drift bugs fixed)
+- **CP4 / Phase 3+6 — Performance + Observability Certification**: [`certification/PHASE_4_PERFORMANCE_OBSERVABILITY.md`](certification/PHASE_4_PERFORMANCE_OBSERVABILITY.md); `PERFORMANCE_TARGETS.md` §11 updated with real Edge Function latency data
+- **CP5 / Phase 4 — Scalability**: [`certification/PHASE_5_SCALABILITY.md`](certification/PHASE_5_SCALABILITY.md), [`certification/scripts/cp5_synthetic_load_1000_salons.sql`](certification/scripts/cp5_synthetic_load_1000_salons.sql) — reusable, never run against production
+- **CP6 / Phase 5 — Security Offensive**: [`certification/PHASE_6_SECURITY_OFFENSIVE.md`](certification/PHASE_6_SECURITY_OFFENSIVE.md) — **🔴 1 confirmed critical P0 found, live in production, unpatched**; `../supabase/migrations/20260704190000_cp6_fix_staff_invitation_token_exposure.sql` — drafted, **not applied**
+- **CP7 / Phase 2 — Disaster Recovery**: [`certification/PHASE_7_DISASTER_RECOVERY.md`](certification/PHASE_7_DISASTER_RECOVERY.md) — 5 real fault-injection cycles, all reverted
+- **CP8 / Phase 7 — Code Quality Audit & Cleanup**: [`certification/PHASE_8_CODE_QUALITY_CLEANUP.md`](certification/PHASE_8_CODE_QUALITY_CLEANUP.md) — 2 real bugs fixed, 5 dead files removed (191 lines)
+- **CP9 / Phase 10 — Enterprise Testing (coverage push)**: [`certification/PHASE_9_ENTERPRISE_TESTING_COVERAGE.md`](certification/PHASE_9_ENTERPRISE_TESTING_COVERAGE.md) — coverage 22.75%→23.29%, 353→381 tests
+- **CP10 / Phase 11 — Final Production Certification**: [`certification/PHASE_11_FINAL_CERTIFICATION.md`](certification/PHASE_11_FINAL_CERTIFICATION.md), [`certification/CERTIFICATION_SCORECARD.md`](certification/CERTIFICATION_SCORECARD.md)
+
+### Pre-existing documents further extended by this pass
+
+| File | What changed |
+|---|---|
+| `PRODUCTION_CHECKLIST.md` | New P0 entry (CP6) — cross-tenant `invitation_token` exposure |
+| `EDGE_FUNCTIONS_REFERENCE.md` | Corrected stale "18 functions" narrative (→20) and `leapa-webhook`'s wrong rate-limit cell |
+| `PERFORMANCE_TARGETS.md` | §11 — real Edge Function latency data added |
+| `DOCUMENTATION_INDEX.md` | This section |

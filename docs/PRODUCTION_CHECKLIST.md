@@ -487,6 +487,25 @@ instead of `role === 'owner'` as a follow-up (not done in this checkpoint, out o
   currently depends on the public policy for a legitimate staff-browse feature before deployment.
   Full detail: `docs/certification/PHASE_6_SECURITY_OFFENSIVE.md`.
 
+## Update — 2026-07-04 (Enterprise Final Certification Pass, Phase 11/CP10 — pass closed)
+
+The full 10-checkpoint Enterprise Final Certification Pass is closed as of this update — tag
+`enterprise-certified-v1`. Full detail: `docs/certification/PHASE_11_FINAL_CERTIFICATION.md` and
+`docs/certification/CERTIFICATION_SCORECARD.md` (18-domain scorecard, unweighted average 62.3/100,
+none rounded up).
+
+**Highest-priority open item, ranked above every score**: the CP6 P0 (cross-tenant
+`invitation_token` exposure, logged above) remains unpatched in production. Everything else in this
+closing note is secondary to resolving that first.
+
+Honestly, what remains after this pass, exactly as scoped by the original prompt: **UI Premium, UX
+Premium, final legal content (Privacy Policy/Terms — still MISSING entirely, a hard Play/App Store
+blocker), marketing assets, Google Maps go-live, Leapa go-live, Play Store/App Store submission**
+— unchanged from the roadmap the Backend Enterprise Completion pass already stated, this pass
+added zero new business scope by design. Domains scoring furthest from 100 in the final scorecard:
+Production Readiness (33), Monitoring (38), Performance (42) — each with its exact chiffré gap in
+`CERTIFICATION_SCORECARD.md`, not glossed over.
+
 ## Update — 2026-07-04 (Backend Enterprise Completion — Phase 11/CP7, pass closed)
 
 The full 7-checkpoint Backend Enterprise Completion pass is closed as of this update — tag
