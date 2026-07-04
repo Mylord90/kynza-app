@@ -31,6 +31,13 @@ Deno.serve(async (req) => {
     if (!booking || booking.status !== "completed") {
       return jsonResponse({ error: "booking_not_completed" }, 400);
     }
+    // CP2 finding (docs/certification-v2/CP2_DEEP_SECURITY.md): this function had no ownership
+    // check at all, letting any authenticated user learn another salon's booking amount and
+    // commission by supplying an arbitrary booking_id. caller.salon_id comes from the users
+    // table (immutable via client API, see protect_user_columns), so this can't be spoofed.
+    if (caller.salon_id !== booking.salon_id) {
+      return jsonResponse({ error: "forbidden" }, 403);
+    }
     if (!booking.practitioner_id) {
       return jsonResponse({ success: true, skipped: "no_practitioner" }, 200);
     }

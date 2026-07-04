@@ -15,6 +15,15 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
+  // CP4 finding (docs/certification-v2/CP4_EDGE_FUNCTION_REVERIFY.md): platform-level verify_jwt
+  // is satisfied by the public anon key shipped in the app, so it was never actually restricting
+  // this "cron-only" function to the real scheduler. Requires a dedicated secret the pg_cron job
+  // sends (supabase/migrations/20260704220000_cp11_cron_secret.sql) — never reaches the client.
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  if (!cronSecret || req.headers.get("X-Cron-Secret") !== cronSecret) {
+    return jsonResponse({ error: "forbidden" }, 403);
+  }
+
   try {
     const admin = createServiceRoleClient();
 
