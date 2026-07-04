@@ -2,8 +2,10 @@
 
 > Extends `docs/API_REFERENCE.md` (which lists functions briefly) and `docs/ARCHITECTURE.md` §5
 > (common pattern + short catalog) with a complete per-function reference. Source of truth:
-> `supabase/functions/*/index.ts`, verified 2026-07-03. All 18 real callable functions are
-> documented — no invented functions, no omissions.
+> `supabase/functions/*/index.ts`, verified 2026-07-03, recount confirmed 2026-07-04 (Enterprise
+> Certification Pass, CP3): 20 real callable functions as of `update-remote-config`/
+> `rollback-remote-config`/`run-scheduled-actions` landing in the Backend Enterprise Completion
+> pass. All 20 are documented — no invented functions, no omissions.
 
 ## 1. Objectifs
 
@@ -27,7 +29,7 @@ in `supabase/functions/_shared/`:
 | `leapa.ts` | Leapa API client wrapper (`initiateLeapaPayment`, etc.) |
 | `audit.ts` | `activity_logs` insert helper |
 
-**Two calling conventions, verified across all 18 functions:**
+**Two calling conventions, verified across all 20 functions:**
 1. **Client-invoked**: Flutter calls `supabase.functions.invoke('<name>', body: {...})`. These functions call `getAuthenticatedUser(req)` first — never trust `role`/`salon_id` from the request body.
 2. **Server-invoked**: called only by other Edge Functions with the service-role client (`send-notification`, `execute-workflow`) or by pg_cron (`schedule-reminders`, `run-scheduled-actions`). These have **no JWT check at all** — their trust boundary is that only trusted server-side callers can reach them.
 
@@ -39,7 +41,7 @@ Generic error shape: `{ error: "<code>", message?: string }`. 401 for `unauthent
 |---|---|---|---|---|
 | `create-booking` | Flutter client | JWT, any authenticated user | Via DB `UNIQUE(practitioner_id, start_time)` → `409 slot_taken` | Yes |
 | `create-payment` | Flutter client | JWT + `booking.client_id === user.id` | `idempotency_key` UNIQUE, 1-min window | Yes |
-| `leapa-webhook` | Leapa (external HTTP) | **HMAC-SHA256** signature only, no JWT | Explicit `already_processed` short-circuit | N/A (webhook) |
+| `leapa-webhook` | Leapa (external HTTP) | **HMAC-SHA256** signature only, no JWT | Explicit `already_processed` short-circuit | 120/60s, global bucket (`leapa-webhook:global`) |
 | `mark-no-show` | Flutter client (staff) | JWT + owner/manager/assigned practitioner | **None** — re-callable, no unique guard | Yes |
 | `send-notification` | Other Edge Functions only | **None** (trusted server-to-server) | None — every call inserts new logs | None |
 | `schedule-reminders` | pg_cron, hourly (`0 * * * *`) | Service-role bearer (cron), no in-function check | Explicit dedupe via `notification_logs` existence check | N/A |
@@ -242,7 +244,7 @@ entirely, consistent with the intent.
 ## 7. Performance
 
 - Timeout budget: not explicitly configured per-function in code (Supabase Edge Functions default
-  timeout applies — no custom `AbortController`/timeout logic found in any of the 18 functions).
+  timeout applies — no custom `AbortController`/timeout logic found in any of the 20 functions).
   This is a gap worth flagging, not a documented guarantee — treat as **unspecified**, not
   "reasonable."
 - Retry policy: only `execute-workflow`/`run-scheduled-actions` have explicit retry (max 3,
@@ -274,7 +276,7 @@ regress silently).
 
 ## 10. Critères d'acceptation
 
-- [x] All 18 real functions documented — `check-subscription` explicitly confirmed absent, not invented.
+- [x] All 20 real functions documented — `check-subscription` explicitly confirmed absent, not invented.
 - [x] `run-scheduled-actions` (not in the original named list) included.
 - [x] Every function's auth model stated as what the code actually checks, not assumed.
 - [x] ProxiPay secret-exposure and RLS-omission claims verified against actual file contents, not asserted.
