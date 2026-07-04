@@ -472,3 +472,15 @@ instead of `role === 'owner'` as a follow-up (not done in this checkpoint, out o
   tightened to `SYSTEM_ADMIN`** (carried over from the CP3 entry above) — `has_system_admin()`
   now exists and CMS's own RLS already uses it; the 2 Remote Config Edge Functions should be
   updated to match in a follow-up pass.
+
+## Update — 2026-07-04 (Backend Enterprise Completion — Phase 11/CP7, pass closed)
+
+The full 7-checkpoint Backend Enterprise Completion pass is closed as of this update — tag
+`backend-complete-v1`. Full detail: `docs/backend-completion/BACKEND_COMPLETION_FINAL_SUMMARY.md`
+and `docs/backend-completion/PHASE_11_BACKEND_COMPLETION_REPORT.md`. Every item logged across the
+CP1-CP6 update sections above remains open exactly as described — this update does not close any
+of them, it only marks that the pass itself, as scoped, is complete. After this tag, remaining
+KYNZA workstreams are: UI Premium, final legal content, marketing assets, Leapa go-live, Google
+Maps go-live, Play Store/App Store submission, plus every Track B item explicitly deferred to
+post-launch (Business Observability dashboards, live A/B experiments, financial/commission audit
+reports).

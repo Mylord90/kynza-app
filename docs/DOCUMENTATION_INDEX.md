@@ -153,4 +153,46 @@ the decision made before this pass began.
 | `PRODUCTION_CHECKLIST.md` | A further "Phase 10" dated section appended (signing/R8/App-Check/CI-CD resolutions) |
 | `SECURITY.md` | Corrected via Phase 5 findings (JWT storage was not actually Keychain-encrypted before this pass) |
 | `OFFLINE_STRATEGY.md` | Rewritten to reflect the real Phase 6 outbox/DLQ architecture, superseding its Documentation-Expansion-pass content |
+
+## Backend Enterprise Completion pass (Phases 1–11, 2026-07-04)
+
+> A separate, later, 7-checkpoint pass — closes every remaining backend-infrastructure gap
+> flagged at the end of the Enterprise Hardening pass above. Full narrative:
+> [`backend-completion/BACKEND_COMPLETION_FINAL_SUMMARY.md`](backend-completion/BACKEND_COMPLETION_FINAL_SUMMARY.md).
+> Tag: `backend-complete-v1`.
+
+- **CP1 / Phase 1 — Final Audit**: [`backend-completion/PHASE_1_FINAL_AUDIT.md`](backend-completion/PHASE_1_FINAL_AUDIT.md), [`backend-completion/CHECKPOINT_1_REPORT.md`](backend-completion/CHECKPOINT_1_REPORT.md)
+- **CP2 / Phase 3 — Feature Flags Engine**: [`backend-completion/PHASE_3_FEATURE_FLAGS_ENGINE.md`](backend-completion/PHASE_3_FEATURE_FLAGS_ENGINE.md);
+  `../supabase/migrations/20260704100000_feature_flags_enterprise.sql` — drafted, **not applied**
+- **CP2 / Phase 4 — Remote Configuration**: [`backend-completion/PHASE_4_REMOTE_CONFIG.md`](backend-completion/PHASE_4_REMOTE_CONFIG.md), [`backend-completion/CHECKPOINT_2_REPORT.md`](backend-completion/CHECKPOINT_2_REPORT.md);
+  `../supabase/migrations/20260704110000_remote_config_engine.sql` — drafted, **not applied**;
+  `../supabase/functions/update-remote-config/`, `../supabase/functions/rollback-remote-config/`
+- **CP3 / Phase 2 — Observability Enterprise (Track A)**: [`backend-completion/PHASE_2_OBSERVABILITY.md`](backend-completion/PHASE_2_OBSERVABILITY.md);
+  `../supabase/migrations/20260704120000_observability_system_admin.sql` — drafted, **not applied**
+- **CP3 / Phase 5 — Health Center**: [`backend-completion/PHASE_5_HEALTH_CENTER.md`](backend-completion/PHASE_5_HEALTH_CENTER.md), [`backend-completion/CHECKPOINT_3_REPORT.md`](backend-completion/CHECKPOINT_3_REPORT.md)
+- **CP4 / Phase 8 — Configuration Engine Coverage**: [`backend-completion/PHASE_8_CONFIGURATION_COVERAGE.md`](backend-completion/PHASE_8_CONFIGURATION_COVERAGE.md);
+  `../supabase/migrations/20260704130000_configuration_engine_coverage.sql` — drafted, **not applied**
+- **CP4 / Phase 9 — CMS Enterprise**: [`backend-completion/PHASE_9_CMS_ENTERPRISE.md`](backend-completion/PHASE_9_CMS_ENTERPRISE.md), [`backend-completion/CHECKPOINT_4_REPORT.md`](backend-completion/CHECKPOINT_4_REPORT.md);
+  `../supabase/migrations/20260704140000_cms_enterprise.sql` — drafted, **not applied**
+- **CP5 / Phase 6 — Business Observability (Track B, schema only)**: [`backend-completion/PHASE_6_BUSINESS_OBSERVABILITY_SCHEMA.md`](backend-completion/PHASE_6_BUSINESS_OBSERVABILITY_SCHEMA.md);
+  `../supabase/migrations/20260704150000_business_observability_schema.sql` — drafted, **not applied**
+- **CP5 / Phase 7 — A/B Testing Engine (Track B, engine only)**: [`backend-completion/PHASE_7_AB_TESTING_ENGINE.md`](backend-completion/PHASE_7_AB_TESTING_ENGINE.md), [`backend-completion/CHECKPOINT_5_REPORT.md`](backend-completion/CHECKPOINT_5_REPORT.md);
+  `../supabase/migrations/20260704160000_ab_testing_engine.sql` — drafted, **not applied**
+- **CP6 / Phase 10 — Audit Business**: [`backend-completion/PHASE_10_AUDIT_ENGINE.md`](backend-completion/PHASE_10_AUDIT_ENGINE.md), [`backend-completion/CHECKPOINT_6_REPORT.md`](backend-completion/CHECKPOINT_6_REPORT.md);
+  `../supabase/migrations/20260704170000_audit_business.sql` — drafted, **not applied**
+- **CP7 / Phase 11 — Backend Completion Checklist (final gate)**: [`backend-completion/PHASE_11_BACKEND_COMPLETION_REPORT.md`](backend-completion/PHASE_11_BACKEND_COMPLETION_REPORT.md), [`backend-completion/CHECKPOINT_7_REPORT.md`](backend-completion/CHECKPOINT_7_REPORT.md), [`backend-completion/BACKEND_COMPLETION_FINAL_SUMMARY.md`](backend-completion/BACKEND_COMPLETION_FINAL_SUMMARY.md)
+
+### New `SYSTEM_ADMIN` scope (introduced Phase 1/CP1, used throughout)
+
+`public.users.is_system_admin` — additive, layered on top of existing owner/manager/staff/client
+roles. Gates every admin-only dashboard/audit RPC introduced in this pass
+(`has_system_admin(auth.uid())`). See `PHASE_1_FINAL_AUDIT.md` §3 item 9 for why it was needed.
+
+### Pre-existing documents further extended by this pass
+
+| File | What changed |
+|---|---|
+| `PRODUCTION_CHECKLIST.md` | 4 further dated sections appended (CP1, CP2/CP3, CP4, one per checkpoint with new gaps) |
+| `EDGE_FUNCTIONS_REFERENCE.md` | 2 new functions documented (`update-remote-config`, `rollback-remote-config`) |
+| `FEATURE_FLAGS.md` | §11 update — category/role/user overrides, Realtime propagation, audit trail |
 | `DOCUMENTATION_INDEX.md` | This section |
