@@ -61,3 +61,8 @@ android/.kotlin/
 android/key.properties
 *.jks
 *.keystore
+
+# Production data backups (Phase 0, remediation-v1) — contain real customer
+# PII, must never enter git history. Only docs/remediation/ manifests
+# (row counts, no data values) are tracked.
+/backups/
