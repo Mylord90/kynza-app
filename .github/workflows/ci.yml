@@ -37,6 +37,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # KYNZA-PROJET/Remediation v1, Phase 4: *.g.dart/*.freezed.dart are
+      # git-ignored (119 files, 0 tracked) but required for analyze/test to
+      # even compile — this run's own first-ever execution failed on
+      # "Analyze" without this step, confirming the pipeline had never
+      # actually been exercised before.
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Analyze
         run: flutter analyze
 
@@ -68,6 +76,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
 
       # No android/key.properties secret is wired here yet — the release
       # build type falls back to debug signing in that case (see
