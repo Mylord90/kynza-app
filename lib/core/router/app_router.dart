@@ -45,6 +45,8 @@ import '../../features/data_platform/backup/presentation/screens/backup_screen.d
 import '../../features/data_platform/templates/presentation/screens/template_list_screen.dart';
 import '../../core/models/app_version_check_model.dart';
 import '../../core/models/maintenance_window_model.dart';
+import '../../features/evolution/cms/presentation/screens/cms_admin_screen.dart';
+import '../../features/evolution/cms/presentation/screens/help_center_screen.dart';
 import '../../features/evolution/feature_flags/presentation/screens/feature_flag_screen.dart';
 import '../../features/evolution/health_center/presentation/screens/health_center_screen.dart';
 import '../../features/evolution/remote_config/presentation/screens/remote_config_screen.dart';
@@ -551,6 +553,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _fadeRoute(
         RouteNames.ownerHealthCenter,
         (context, state) => const _SystemAdminGuard(child: HealthCenterScreen()),
+      ),
+      _fadeRoute(
+        RouteNames.ownerCmsAdmin,
+        (context, state) => const _SystemAdminGuard(child: CmsAdminScreen()),
+      ),
+      _fadeRoute(
+        RouteNames.helpCenter,
+        (context, state) => const HelpCenterScreen(),
       ),
       _fadeRoute(
         RouteNames.maintenance,

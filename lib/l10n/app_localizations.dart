@@ -3596,6 +3596,18 @@ abstract class AppLocalizations {
   /// **'Centre de supervision'**
   String get settingsHealthCenterLabel;
 
+  /// No description provided for @settingsCmsAdminLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gestion de contenu'**
+  String get settingsCmsAdminLabel;
+
+  /// No description provided for @settingsHelpCenterLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre d\'aide'**
+  String get settingsHelpCenterLabel;
+
   /// No description provided for @settingsAboutLabel.
   ///
   /// In fr, this message translates to:
@@ -3931,6 +3943,90 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Cette surface est réservée aux administrateurs système de KYNZA.'**
   String get evolutionHealthCenterForbiddenSubtitle;
+
+  /// No description provided for @evolutionCmsAdminTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gestion de contenu'**
+  String get evolutionCmsAdminTitle;
+
+  /// No description provided for @evolutionCmsAdminEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun contenu'**
+  String get evolutionCmsAdminEmptyTitle;
+
+  /// No description provided for @evolutionCmsAdminEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez ici du contenu d\'aide, FAQ ou annonces.'**
+  String get evolutionCmsAdminEmptySubtitle;
+
+  /// No description provided for @evolutionCmsCreateButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau contenu'**
+  String get evolutionCmsCreateButton;
+
+  /// No description provided for @evolutionCmsTypeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Type'**
+  String get evolutionCmsTypeHint;
+
+  /// No description provided for @evolutionCmsSlugHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Slug'**
+  String get evolutionCmsSlugHint;
+
+  /// No description provided for @evolutionCmsLocaleHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Langue (fr/en)'**
+  String get evolutionCmsLocaleHint;
+
+  /// No description provided for @evolutionCmsTitleHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Titre'**
+  String get evolutionCmsTitleHint;
+
+  /// No description provided for @evolutionCmsBodyHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu (Markdown)'**
+  String get evolutionCmsBodyHint;
+
+  /// No description provided for @evolutionCmsPublishButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier'**
+  String get evolutionCmsPublishButton;
+
+  /// No description provided for @evolutionCmsUnpublishButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dépublier'**
+  String get evolutionCmsUnpublishButton;
+
+  /// No description provided for @helpCenterTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centre d\'aide'**
+  String get helpCenterTitle;
+
+  /// No description provided for @helpCenterEmptyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun article d\'aide'**
+  String get helpCenterEmptyTitle;
+
+  /// No description provided for @helpCenterEmptySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les articles d\'aide apparaîtront ici une fois publiés.'**
+  String get helpCenterEmptySubtitle;
 
   /// No description provided for @evolutionMaintenanceDefaultTitle.
   ///

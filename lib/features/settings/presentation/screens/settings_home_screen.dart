@@ -150,6 +150,16 @@ class SettingsHomeScreen extends StatelessWidget {
             label: l10n.settingsHealthCenterLabel,
             onTap: () => context.push(RouteNames.ownerHealthCenter),
           ),
+          _SettingsTile(
+            icon: Icons.article_outlined,
+            label: l10n.settingsCmsAdminLabel,
+            onTap: () => context.push(RouteNames.ownerCmsAdmin),
+          ),
+          _SettingsTile(
+            icon: Icons.help_outline,
+            label: l10n.settingsHelpCenterLabel,
+            onTap: () => context.push(RouteNames.helpCenter),
+          ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.language_outlined,

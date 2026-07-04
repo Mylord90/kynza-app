@@ -1912,6 +1912,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsHealthCenterLabel => 'Centre de supervision';
 
   @override
+  String get settingsCmsAdminLabel => 'Gestion de contenu';
+
+  @override
+  String get settingsHelpCenterLabel => 'Centre d\'aide';
+
+  @override
   String get settingsAboutLabel => 'À propos de KYNZA';
 
   @override
@@ -2099,6 +2105,50 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get evolutionHealthCenterForbiddenSubtitle =>
       'Cette surface est réservée aux administrateurs système de KYNZA.';
+
+  @override
+  String get evolutionCmsAdminTitle => 'Gestion de contenu';
+
+  @override
+  String get evolutionCmsAdminEmptyTitle => 'Aucun contenu';
+
+  @override
+  String get evolutionCmsAdminEmptySubtitle =>
+      'Créez ici du contenu d\'aide, FAQ ou annonces.';
+
+  @override
+  String get evolutionCmsCreateButton => 'Nouveau contenu';
+
+  @override
+  String get evolutionCmsTypeHint => 'Type';
+
+  @override
+  String get evolutionCmsSlugHint => 'Slug';
+
+  @override
+  String get evolutionCmsLocaleHint => 'Langue (fr/en)';
+
+  @override
+  String get evolutionCmsTitleHint => 'Titre';
+
+  @override
+  String get evolutionCmsBodyHint => 'Contenu (Markdown)';
+
+  @override
+  String get evolutionCmsPublishButton => 'Publier';
+
+  @override
+  String get evolutionCmsUnpublishButton => 'Dépublier';
+
+  @override
+  String get helpCenterTitle => 'Centre d\'aide';
+
+  @override
+  String get helpCenterEmptyTitle => 'Aucun article d\'aide';
+
+  @override
+  String get helpCenterEmptySubtitle =>
+      'Les articles d\'aide apparaîtront ici une fois publiés.';
 
   @override
   String get evolutionMaintenanceDefaultTitle => 'Maintenance en cours';

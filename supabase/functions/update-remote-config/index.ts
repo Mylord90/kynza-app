@@ -35,8 +35,17 @@ function typeMatches(value: unknown, valueType: ValueType): boolean {
 
 // Per-category refinements beyond the base type check — a malformed value
 // must never reach clients even if it happens to match the base JSON type.
+// Phase 8 (Backend Enterprise Completion) extends this with the new
+// categories it seeds, rather than introducing a second validation path.
+const KNOWN_PAYMENT_METHODS = ["mobile_money", "proxipay", "cash"];
+
 function categoryRefinementError(category: string, key: string, value: unknown): string | null {
-  if (category === "prices" || category === "quotas" || category === "rate_limits") {
+  if (
+    category === "prices" ||
+    category === "quotas" ||
+    category === "quota_thresholds" ||
+    category === "rate_limits"
+  ) {
     if (typeof value === "number" && value < 0) {
       return `${key}: must be >= 0 for category '${category}'`;
     }
@@ -44,6 +53,16 @@ function categoryRefinementError(category: string, key: string, value: unknown):
   if (category === "theming" && typeof value === "string") {
     if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
       return `${key}: theming string values must be a #RRGGBB hex color`;
+    }
+  }
+  if (category === "working_hours_defaults" && typeof value === "string") {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) {
+      return `${key}: working_hours_defaults strings must be HH:MM (24h)`;
+    }
+  }
+  if (category === "payment_method_availability" && Array.isArray(value)) {
+    if (value.length === 0 || !value.every((v) => KNOWN_PAYMENT_METHODS.includes(v))) {
+      return `${key}: must be a non-empty array of known payment methods (${KNOWN_PAYMENT_METHODS.join(", ")})`;
     }
   }
   return null;

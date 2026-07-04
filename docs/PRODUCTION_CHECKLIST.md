@@ -460,3 +460,15 @@ instead of `role === 'owner'` as a follow-up (not done in this checkpoint, out o
 - [ ] **Realtime Dashboard and Network Dashboard are per-device, not fleet-wide** — Supabase's
   platform-level Realtime health isn't exposed to a Flutter client at all; both dashboards
   honestly show only the current device's own connection state.
+
+## Update — 2026-07-04 (Backend Enterprise Completion, Phase 8/9 — CP4)
+
+- [ ] **`OnboardingContentScreen`/`BeautyTipsScreen` not built** — the CMS brief names 4
+  client-side consumer screens; only `HelpCenterScreen`/`AnnouncementBanner` were built this
+  phase. Both remaining screens are a small, mechanical follow-up (same `cmsPublishedProvider`,
+  parameterized by `type: 'onboarding_step'`/`'beauty_tip'` instead of `'help_article'`/
+  `'announcement'`) — no new engine work needed, purely UI construction.
+- [ ] **`update-remote-config`/`rollback-remote-config`'s `role === 'owner'` gate still not
+  tightened to `SYSTEM_ADMIN`** (carried over from the CP3 entry above) — `has_system_admin()`
+  now exists and CMS's own RLS already uses it; the 2 Remote Config Edge Functions should be
+  updated to match in a follow-up pass.
