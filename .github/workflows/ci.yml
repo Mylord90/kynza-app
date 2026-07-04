@@ -55,7 +55,15 @@ jobs:
         # that aren't provisioned here yet. Explicit for clarity even
         # though dart_test.yaml's own skip config already excludes them by
         # default.
-        run: flutter test --exclude-tags live
+        #
+        # --exclude-tags golden: test/golden/* baselines were captured on
+        # this project's dev machine (Windows) and are font-rendering-
+        # dependent — CI's own first real run (Remediation v1, Phase 4)
+        # failed here on ubuntu-latest for exactly that reason. Not skipped
+        # by dart_test.yaml (they still run by default for local
+        # `flutter test` on the machine they were generated on) — excluded
+        # only in this OS-mismatched CI environment.
+        run: flutter test --exclude-tags live --exclude-tags golden
 
   build-release:
     name: Build Release APK
