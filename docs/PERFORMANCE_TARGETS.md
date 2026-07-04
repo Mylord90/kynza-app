@@ -96,6 +96,38 @@ all, a prerequisite for any automated performance gate).
   (which was already confirmed nonexistent in Phase A).
 - [x] No "current baseline" value is invented — every unmeasured metric says so explicitly.
 
-## 10. Livrables
+## 11. Update — 2026-07-04 (Enterprise Certification Pass, CP4/Phase 3)
 
-- `docs/PERFORMANCE_TARGETS.md` (this file)
+Real backend latency measurements against **production** (`hhdkjfpgaklhrhfoxlhj`), gathered via
+timed `curl` calls (safe, non-mutating — each call is rejected by auth/validation before touching
+any table). Client-side device metrics (cold/hot start, FPS, memory, battery) remain **not
+measured**, unchanged from every prior pass's own honest admission — this environment still has no
+Android/iOS device or emulator (`flutter devices` → Windows desktop + Chrome/Edge only).
+
+| Call | Cold (1st request to a previously-idle function) | Warm (immediate follow-up) |
+|---|---|---|
+| `create-booking` (unauthenticated → 401) | **2.12s** | **0.61–0.72s** |
+| `check-permissions` (unauthenticated → 401) | 1.41s | not re-tested |
+| `validate-qr` (unauthenticated → 401) | 1.52s | not re-tested |
+| `claim-referral` (unauthenticated → 401) | 1.48s | not re-tested |
+| `send-notification` (malformed body → 400, no auth round-trip) | 0.51s | not re-tested |
+
+**Real finding**: Deno-isolate cold start plus the `getAuthenticatedUser()` round-trip (a call to
+Supabase Auth + a `users` table lookup) costs **~1.4–2.1s** on a cold function, dropping to
+**~0.6–0.7s** once warm — for every function that checks auth (17 of 20, per CP3). This is
+measured server-side-to-server-side latency (this environment to `eu-central-1`), not
+client-device-to-server, so it's a **lower bound**, not the real end-user number — a Burundi-market
+device on 3G would see meaningfully more. Still directly relevant to the **"payment confirmation
+round-trip < 3s"** target: if `proxipay-confirm` (which also calls `getAuthenticatedUser()`) is cold
+when a user confirms payment, this data shows the auth-check alone can consume 45–70% of that 3s
+budget before any ProxiPay-specific work even starts — a real, quantified argument for keeping
+`proxipay-confirm` warm (e.g. a scheduled keep-alive ping) that didn't exist as a data point before
+this checkpoint.
+
+**Not extended to full load/concurrency testing here** — that's CP5/Phase 4's explicit mandate
+(synthetic salons/bookings at scale); this checkpoint intentionally stayed within Phase 3's own
+single-call, real-measurement scope.
+
+## 12. Livrables
+
+- `docs/PERFORMANCE_TARGETS.md` (this file, updated §11)
