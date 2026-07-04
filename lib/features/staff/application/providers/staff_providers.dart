@@ -39,6 +39,24 @@ final salonStaffProvider =
           );
     });
 
+/// Column-limited staff directory for client-facing/pre-affiliation screens
+/// (e.g. the booking flow's practitioner picker) — reads
+/// `v_staff_directory_public` instead of the `staff_profiles` base table, so
+/// a client or anonymous caller never receives `invitation_token`/`phone`/
+/// `invited_by` on the wire. Owner/manager/staff-self screens must keep
+/// using [salonStaffProvider]: they get their access from role-scoped RLS
+/// policies (`owner_manage_staff`/`manager_view_staff`/
+/// `staff_own_profile_select`), not from the public policy this view
+/// replaces, so they legitimately need the full base-table columns (e.g. to
+/// share an invite link). See docs/certification-v2/GATE_0_P0_REMEDIATION.md.
+final publicSalonStaffProvider =
+    FutureProvider.family<List<StaffProfileModel>, String>((ref, salonId) async {
+      final rows = await SupabaseService.from('v_staff_directory_public')
+          .select()
+          .eq('salon_id', salonId);
+      return rows.map(StaffProfileModel.fromSupabase).toList();
+    });
+
 final staffNotifierProvider = AsyncNotifierProvider<StaffNotifier, void>(
   StaffNotifier.new,
 );

@@ -23,18 +23,31 @@
 -- untouched, so they still see invitation_token where legitimately needed, e.g. to share an
 -- invite link).
 --
--- ⚠ DEPLOYMENT PRECONDITION, NOT YET VERIFIED: whichever Flutter call site currently relies on
--- `staff_profiles_public_select` for the public/booking-flow staff browse (this checkpoint did not
--- conclusively trace which screen that is within its time budget) MUST be re-pointed at
--- `v_staff_directory_public` before this migration is applied, or that screen will start returning
--- empty staff lists for not-yet-affiliated client users. Confirm via a repo-wide search for
--- `.from('staff_profiles')` call sites reachable from an unauthenticated/client-role context before
--- applying.
+-- ⚠ DEPLOYMENT PRECONDITION — RESOLVED in GATE 0 of the Final Enterprise Verification pass
+-- (docs/certification-v2/GATE_0_P0_REMEDIATION.md). Repo-wide trace of every reader of
+-- `salonStaffProvider` (lib/features/staff/application/providers/staff_providers.dart) found
+-- exactly ONE consumer reachable by an unauthenticated/client-role caller:
+-- lib/features/booking/presentation/screens/practitioner_selection_screen.dart (the client's own
+-- "choose a practitioner" step in the booking flow, driven by `bookingFlowProvider`). Every other
+-- consumer (staff_list_screen, staff_invite_screen, staff_picker_screen, commission_screen,
+-- advanced_dashboard_screen, permission_group_detail_screen, walkin_booking_sheet, both
+-- `_Owner*Loader` router widgets) is an owner/manager/staff-authenticated screen that already gets
+-- its access from `owner_manage_staff`/`manager_view_staff`/`staff_own_profile_select` — none of
+-- them depend on the public policy this migration drops. A companion Flutter change (see that same
+-- doc) re-points `practitioner_selection_screen.dart` at a new `publicSalonStaffProvider`, which
+-- queries `v_staff_directory_public` below instead of the base table. Land that Flutter change
+-- (already committed to this branch) before this migration is applied — the two must ship together
+-- or the practitioner-selection screen will 403/empty for client users between deploys.
 
+-- invitation_accepted_at is included (unlike invitation_token/phone/invited_by): the client
+-- booking flow needs it to exclude not-yet-accepted staff from the practitioner picker
+-- (StaffProfileModelX.isPending), and a bare timestamp of "did this person accept yet" carries
+-- none of invitation_token's bearer-credential risk.
 CREATE OR REPLACE VIEW public.v_staff_directory_public
 WITH (security_invoker = true)
 AS
-SELECT id, salon_id, role, display_name, avatar_url, bio, specialties, is_active
+SELECT id, salon_id, role, display_name, avatar_url, bio, specialties, is_active,
+       invitation_accepted_at
 FROM public.staff_profiles
 WHERE deleted_at IS NULL AND is_active = true;
 
@@ -46,3 +59,19 @@ DROP POLICY IF EXISTS "staff_profiles_public_select" ON public.staff_profiles;
 -- exclusively through the column-limited view above. `owner_manage_staff`, `manager_view_staff`,
 -- and `staff_own_profile_select`/`staff_own_profile_update` are untouched and continue to grant
 -- full-column access to the roles that legitimately need `invitation_token`/`phone`/`invited_by`.
+
+-- TOKEN INVALIDATION — every invitation_token issued before this fix was, for as long as the
+-- public policy existed, readable by anyone unauthenticated. Treat all of them as potentially
+-- compromised (per Gate 0 instructions), not just the ones we have log evidence against. This is
+-- idempotent and safe to run regardless of environment state: as of this draft, production
+-- (hhdkjfpgaklhrhfoxlhj) has zero rows with invitation_accepted_at IS NULL (verified via
+-- `supabase db query --linked`, 2026-07-04), so this is a no-op there today — but the statement
+-- must still ship in case that changes before this migration is actually applied, and to cover
+-- staging/kynza-dr-scratch, which does carry pending synthetic invitations from CP5/CP6.
+-- Already-accepted rows are NOT touched: accept-invitation already rejects any token where
+-- invitation_accepted_at IS NOT NULL, so a leaked-but-consumed token is not independently
+-- replayable — regenerating it would only churn data with no security benefit.
+UPDATE public.staff_profiles
+SET invitation_token = gen_random_uuid()
+WHERE invitation_accepted_at IS NULL
+  AND deleted_at IS NULL;

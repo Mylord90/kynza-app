@@ -28,7 +28,7 @@ class PractitionerSelectionScreen extends ConsumerWidget {
             )
           : Consumer(
               builder: (context, ref, _) {
-                final staffAsync = ref.watch(salonStaffProvider(salon.id));
+                final staffAsync = ref.watch(publicSalonStaffProvider(salon.id));
                 return staffAsync.when(
                   loading: () => ListView.builder(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -40,7 +40,8 @@ class PractitionerSelectionScreen extends ConsumerWidget {
                   ),
                   error: (_, __) => KynzaErrorState(
                     message: context.l10n.bookingPractitionerLoadError,
-                    onRetry: () => ref.invalidate(salonStaffProvider(salon.id)),
+                    onRetry: () =>
+                        ref.invalidate(publicSalonStaffProvider(salon.id)),
                   ),
                   data: (staff) {
                     final active = staff
