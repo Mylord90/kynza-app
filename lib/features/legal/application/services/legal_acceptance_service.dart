@@ -1,4 +1,5 @@
 import '../../../../core/services/atomic_claim_service.dart';
+import '../../../../core/services/circuit_breaker.dart';
 import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/legal_acceptance_queue_service.dart';
 import '../../domain/repositories/legal_document_repository.dart';
@@ -20,6 +21,12 @@ class LegalAcceptanceService {
   final UserConsentRepository consentRepository;
   final LegalAcceptanceQueueService queue;
 
+  /// CP2 (docs/enterprise-resilience/CIRCUIT_BREAKER_REPORT.md): the online
+  /// branch goes through `DependencyCircuitBreakers.supabase` — if Supabase
+  /// itself is down/erroring while the network interface is still up, this
+  /// falls back to the same offline queue as the `!isOnline` branch instead
+  /// of surfacing a bare error and losing the acceptance (the gap CP1 found
+  /// and proved with a test).
   Future<void> acceptVersion({
     required String userId,
     required String documentVersionId,
@@ -27,20 +34,24 @@ class LegalAcceptanceService {
     String? appVersion,
     String? platform,
   }) async {
-    if (!isOnline) {
-      await queue.enqueue(
-        userId: userId,
-        documentVersionId: documentVersionId,
-        appVersion: appVersion,
-        platform: platform,
-      );
-      return;
-    }
-    await consentRepository.acceptDocumentVersion(
+    Future<void> enqueue() => queue.enqueue(
       userId: userId,
       documentVersionId: documentVersionId,
       appVersion: appVersion,
       platform: platform,
+    );
+    if (!isOnline) {
+      await enqueue();
+      return;
+    }
+    await DependencyCircuitBreakers.supabase.run<void>(
+      () => consentRepository.acceptDocumentVersion(
+        userId: userId,
+        documentVersionId: documentVersionId,
+        appVersion: appVersion,
+        platform: platform,
+      ),
+      enqueue,
     );
   }
 

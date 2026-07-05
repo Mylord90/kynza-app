@@ -7,24 +7,27 @@ import 'package:kynza/core/models/review/review_model.dart';
 import 'package:kynza/core/models/review/salon_rating_model.dart';
 import 'package:kynza/core/providers/app_providers.dart';
 import 'package:kynza/core/providers/offline_sync_providers.dart';
+import 'package:kynza/core/services/circuit_breaker.dart';
 import 'package:kynza/core/services/mutation_outbox_service.dart';
 import 'package:kynza/features/reviews/application/providers/review_providers.dart';
 import 'package:kynza/features/reviews/domain/repositories/review_repository.dart';
 
-/// CP1 (Enterprise Resilience & Reliability Certification) — proves a real
-/// gap distinct from the prior campaign's network-loss/reconnect tests:
-/// every offline-queueable write (`ReviewNotifier.createReview`,
-/// `ClientProfileNotifier`, `LegalAcceptanceNotifier`, and the data-deletion
-/// equivalent — all four share this exact shape, see
-/// docs/enterprise-resilience/RESILIENCE_REPORT.md §1) decides "queue vs
+/// CP1 (Enterprise Resilience & Reliability Certification) originally
+/// proved a real gap here, distinct from the prior campaign's network-loss/
+/// reconnect tests: every offline-queueable write (`ReviewNotifier
+/// .createReview`, `ClientProfileNotifier`, `LegalAcceptanceNotifier`, and
+/// the data-deletion equivalent — all four share this exact shape, see
+/// docs/enterprise-resilience/RESILIENCE_REPORT.md §1) decided "queue vs
 /// write directly" using ONLY `connectivityProvider` (OS-level network
-/// interface state from `connectivity_plus`). None of them check whether
-/// Supabase itself is actually reachable. So "network up, Supabase down/
-/// erroring" — a real, common failure mode, not a hypothetical — is
-/// indistinguishable from "network up, Supabase fine" until the write is
-/// already attempted and throws, and by then it's too late to queue it:
-/// the exception surfaces directly to the UI as an error and the mutation
-/// is never retried automatically.
+/// interface state from `connectivity_plus`), never whether Supabase itself
+/// was actually reachable — so "network up, Supabase down/erroring" was
+/// indistinguishable from "network up, Supabase fine" until the write was
+/// already attempted and threw, by which point it was too late to queue it.
+///
+/// CP2 closed this gap (docs/enterprise-resilience/CIRCUIT_BREAKER_REPORT.md):
+/// the online branch now goes through `DependencyCircuitBreakers.supabase`,
+/// whose fallback is the same offline queue — this test now proves the
+/// fixed behavior (queued, no exception) rather than the original gap.
 class _ThrowingReviewRepository implements ReviewRepository {
   const _ThrowingReviewRepository();
 
@@ -58,9 +61,11 @@ void main() {
     Hive.init(tempDir.path);
     await Hive.openBox(MutationOutboxService.boxName);
     await Hive.openBox(MutationOutboxService.deadLetterBoxName);
+    DependencyCircuitBreakers.supabase.reset();
   });
 
   tearDown(() async {
+    DependencyCircuitBreakers.supabase.reset();
     await Hive.deleteBoxFromDisk(MutationOutboxService.boxName);
     await Hive.deleteBoxFromDisk(MutationOutboxService.deadLetterBoxName);
     await tempDir.delete(recursive: true);
@@ -68,9 +73,8 @@ void main() {
 
   test(
     'network interface reports online but Supabase itself is unreachable: '
-    'the write is attempted directly (never queued), throws, and is lost '
-    'from the retry/outbox mechanism entirely — the app has no way to '
-    'distinguish "dependency down" from "dependency fine" ahead of time',
+    'the write falls back to the offline outbox instead of throwing and '
+    'losing the mutation — CP2 closing the gap CP1 found',
     () async {
       final container = ProviderContainer(
         overrides: [
@@ -97,24 +101,20 @@ void main() {
         isAnonymous: false,
       );
 
-      await expectLater(
-        container.read(reviewNotifierProvider.notifier).createReview(review),
-        throwsA(isA<Exception>()),
-      );
+      // No longer throws: DependencyCircuitBreakers.supabase.run's fallback
+      // absorbs the repository's exception and queues the mutation.
+      await container.read(reviewNotifierProvider.notifier).createReview(review);
 
-      // The defining gap: this mutation is now gone. It was never queued
-      // (the online branch was taken, since the network interface really
-      // was up), and the exception was surfaced as a bare error rather
-      // than falling back to the offline outbox — no automatic retry will
-      // ever happen once Supabase recovers.
       final outbox = container.read(mutationOutboxServiceProvider);
       expect(
         outbox.pending(),
-        isEmpty,
+        hasLength(1),
         reason:
-            'CONFIRMED GAP: a Supabase-down-while-online write is silently '
-            'lost rather than queued for retry — see RESILIENCE_REPORT.md',
+            'FIXED: a Supabase-down-while-online write now falls back to '
+            'the offline outbox instead of being silently lost — see '
+            'CIRCUIT_BREAKER_REPORT.md',
       );
+      expect(outbox.pending().single['payload']['bookingId'], 'b-1');
     },
   );
 }

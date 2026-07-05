@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/providers/offline_sync_providers.dart';
+import '../../../../core/services/circuit_breaker.dart';
 import '../../../../core/services/offline_sync_coordinator.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -39,25 +40,32 @@ class ClientProfileNotifier extends AsyncNotifier<void> {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
     state = const AsyncLoading();
+    Future<void> enqueue() => ref.read(mutationOutboxServiceProvider).enqueue(
+      type: OutboxMutationType.profileUpdate,
+      payload: {
+        'userId': userId,
+        'fullName': fullName,
+        'phone': phone,
+        'email': email,
+      },
+      dedupeKey: userId,
+    );
     try {
       final isOnline = ref.read(connectivityProvider).value ?? false;
       if (!isOnline) {
-        await ref.read(mutationOutboxServiceProvider).enqueue(
-          type: OutboxMutationType.profileUpdate,
-          payload: {
-            'userId': userId,
-            'fullName': fullName,
-            'phone': phone,
-            'email': email,
-          },
-          dedupeKey: userId,
-        );
+        await enqueue();
       } else {
-        await ref.read(clientProfileRepositoryProvider).updateProfile(
-          userId: userId,
-          fullName: fullName,
-          phone: phone,
-          email: email,
+        // CP2: falls back to the same offline queue on a Supabase failure
+        // instead of losing the edit — see review_providers.dart's
+        // createReview for the full rationale (CP1/CP2 reports).
+        await DependencyCircuitBreakers.supabase.run<void>(
+          () => ref.read(clientProfileRepositoryProvider).updateProfile(
+            userId: userId,
+            fullName: fullName,
+            phone: phone,
+            email: email,
+          ),
+          enqueue,
         );
       }
       state = const AsyncData(null);

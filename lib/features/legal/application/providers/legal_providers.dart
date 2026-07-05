@@ -7,6 +7,7 @@ import '../../../../core/models/legal/legal_document_version_model.dart';
 import '../../../../core/models/legal/user_legal_acceptance_model.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/offline_sync_providers.dart';
+import '../../../../core/services/circuit_breaker.dart';
 import '../../../../core/services/legal_acceptance_queue_service.dart';
 import '../../../../core/services/offline_sync_coordinator.dart';
 import '../../../../core/services/supabase_service.dart';
@@ -286,17 +287,24 @@ class DataDeletionNotifier extends AsyncNotifier<void> {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
     state = const AsyncLoading();
+    Future<void> enqueue() => ref.read(mutationOutboxServiceProvider).enqueue(
+      type: OutboxMutationType.dataDeletionRequest,
+      payload: {'userId': userId, 'notes': notes},
+    );
     try {
       final isOnline = ref.read(connectivityProvider).value ?? false;
       if (!isOnline) {
-        await ref.read(mutationOutboxServiceProvider).enqueue(
-          type: OutboxMutationType.dataDeletionRequest,
-          payload: {'userId': userId, 'notes': notes},
-        );
+        await enqueue();
       } else {
-        await ref
-            .read(dataDeletionRepositoryProvider)
-            .createRequest(userId: userId, notes: notes);
+        // CP2: falls back to the same offline queue on a Supabase failure
+        // instead of losing the request — see review_providers.dart's
+        // createReview for the full rationale (CP1/CP2 reports).
+        await DependencyCircuitBreakers.supabase.run<void>(
+          () => ref
+              .read(dataDeletionRepositoryProvider)
+              .createRequest(userId: userId, notes: notes),
+          enqueue,
+        );
       }
       state = const AsyncData(null);
     } catch (e, st) {

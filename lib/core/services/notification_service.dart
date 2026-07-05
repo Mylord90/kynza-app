@@ -1,5 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_router/go_router.dart';
+import 'circuit_breaker.dart';
+import 'crash_reporting_service.dart';
 import 'supabase_service.dart';
 
 /// FCM registration + foreground/background message routing.
@@ -8,11 +10,27 @@ import 'supabase_service.dart';
 class NotificationService {
   final _messaging = FirebaseMessaging.instance;
 
+  /// CP2 (docs/enterprise-resilience/CIRCUIT_BREAKER_REPORT.md): the only
+  /// caller (`auth_boot_gate.dart`) invokes this fire-and-forget — not
+  /// awaited, no try/catch at the call site — so an uncaught exception
+  /// here would only ever be caught by `main.dart`'s top-level
+  /// `runZonedGuarded` zone handler: it wouldn't crash the app, but it also
+  /// wouldn't reach any of the app's 5 UI states (CP1 finding). Caught here
+  /// instead so a down/erroring FCM degrades to "push just isn't available
+  /// this session" — never queued client-side (push has no offline
+  /// meaning), but at least explicitly handled rather than relying solely
+  /// on the global handler.
   Future<void> initialize() async {
-    await _messaging.requestPermission(alert: true, badge: true, sound: true);
-
-    final token = await _messaging.getToken();
-    if (token != null) await saveFcmToken(token);
+    try {
+      await _messaging.requestPermission(alert: true, badge: true, sound: true);
+      final token = await DependencyCircuitBreakers.fcm.run<String?>(
+        () => _messaging.getToken(),
+        () async => null,
+      );
+      if (token != null) await saveFcmToken(token);
+    } catch (e, st) {
+      CrashReportingService.recordError(e, st);
+    }
     _messaging.onTokenRefresh.listen(saveFcmToken);
 
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
@@ -22,9 +40,16 @@ class NotificationService {
   Future<void> saveFcmToken(String token) async {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
-    await SupabaseService.from(
-      'users',
-    ).update({'fcm_token': token}).eq('id', userId);
+    await DependencyCircuitBreakers.supabase.run<void>(
+      () => SupabaseService.from(
+        'users',
+      ).update({'fcm_token': token}).eq('id', userId),
+      () async {
+        // Best-effort: Supabase down/erroring right now just means this
+        // token save doesn't happen — the next onTokenRefresh or the next
+        // app launch's initialize() retries naturally. Nothing to queue.
+      },
+    );
   }
 
   /// Overridden per-app via [onForegroundMessage] to surface

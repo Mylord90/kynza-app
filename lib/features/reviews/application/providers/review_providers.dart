@@ -3,6 +3,7 @@ import '../../../../core/models/review/review_model.dart';
 import '../../../../core/models/review/salon_rating_model.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/providers/offline_sync_providers.dart';
+import '../../../../core/services/circuit_breaker.dart';
 import '../../../../core/services/offline_sync_coordinator.dart';
 import '../../data/repositories/review_repository_impl.dart';
 import '../../domain/repositories/review_repository.dart';
@@ -42,24 +43,35 @@ class ReviewNotifier extends AsyncNotifier<void> {
   /// on retry always fails cleanly, and the coordinator checks
   /// `canReview()` before replaying to avoid even attempting a doomed
   /// duplicate insert.
+  ///
+  /// CP2 (docs/enterprise-resilience/CIRCUIT_BREAKER_REPORT.md): the online
+  /// branch goes through `DependencyCircuitBreakers.supabase` — if Supabase
+  /// itself is down/erroring (network interface still up, so `isOnline` is
+  /// true), the write falls back to the exact same outbox queue as the
+  /// offline branch instead of surfacing a bare error and losing the
+  /// mutation (the gap CP1 found and proved with a test).
   Future<void> createReview(ReviewModel review) async {
     state = const AsyncLoading();
+    Future<void> enqueue() => ref.read(mutationOutboxServiceProvider).enqueue(
+      type: OutboxMutationType.reviewCreate,
+      payload: {
+        'salonId': review.salonId,
+        'clientId': review.clientId,
+        'bookingId': review.bookingId,
+        'rating': review.rating,
+        'comment': review.comment,
+        'isAnonymous': review.isAnonymous,
+      },
+    );
     try {
       final isOnline = ref.read(connectivityProvider).value ?? false;
       if (!isOnline) {
-        await ref.read(mutationOutboxServiceProvider).enqueue(
-          type: OutboxMutationType.reviewCreate,
-          payload: {
-            'salonId': review.salonId,
-            'clientId': review.clientId,
-            'bookingId': review.bookingId,
-            'rating': review.rating,
-            'comment': review.comment,
-            'isAnonymous': review.isAnonymous,
-          },
-        );
+        await enqueue();
       } else {
-        await ref.read(reviewRepositoryProvider).createReview(review);
+        await DependencyCircuitBreakers.supabase.run<void>(
+          () => ref.read(reviewRepositoryProvider).createReview(review),
+          enqueue,
+        );
       }
       state = const AsyncData(null);
     } catch (e, st) {
