@@ -108,6 +108,19 @@ jobs:
       #       keyAlias=${{ secrets.KEY_ALIAS }}
       #       storeFile=upload-keystore.jks
       #       EOF
+      # KYNZA-PROJET/Remediation v1, Phase 4: android/gradle.properties
+      # requests -Xmx8G for the Gradle daemon, sized for this project's dev
+      # machine. CI's third real run failed on this exact step with no
+      # visible Gradle/Java error (just "Process completed with exit code
+      # 1") -- the signature of an OOM-killed process rather than a build
+      # failure, on a runner with less headroom once the Kotlin/R8/D8
+      # daemons are running concurrently. Overridden here, in the CI
+      # checkout only (not the committed file, which the dev machine still
+      # benefits from) -- confirmed locally that a full clean rebuild
+      # (flutter clean + build apk --release) still succeeds at -Xmx4G.
+      - name: Reduce Gradle heap for CI runner
+        run: sed -i 's/-Xmx8G/-Xmx4G/' android/gradle.properties
+
       - name: Build release APK
         run: flutter build apk --release
 
