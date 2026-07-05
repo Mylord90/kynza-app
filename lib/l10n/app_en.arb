@@ -742,6 +742,7 @@
   "evolutionAuditCenterTitle": "Audit Center",
   "evolutionAuditCenterHealthCenterNote": "Error, performance, and sync audits reuse the Health Center pipelines (Crash/Edge Function/Queue/Sync Dashboards) rather than being duplicated here.",
   "settingsAuditCenterLabel": "Audit Center",
+  "settingsMaintenanceAdminLabel": "Maintenance windows",
   "evolutionMaintenanceDefaultTitle": "Maintenance in progress",
   "evolutionMaintenanceDefaultMessage": "The app is temporarily unavailable. We'll be back very soon.",
   "evolutionMaintenanceEndsAt": "Expected to end around {time}",

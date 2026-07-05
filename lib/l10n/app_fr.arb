@@ -801,6 +801,7 @@
   "evolutionAuditCenterTitle": "Centre d'audit",
   "evolutionAuditCenterHealthCenterNote": "Les audits erreurs, performance et synchronisation réutilisent les pipelines du Centre de supervision (tableaux Crash/Edge Function/File/Sync) plutôt que d'être dupliqués ici.",
   "settingsAuditCenterLabel": "Centre d'audit",
+  "settingsMaintenanceAdminLabel": "Fenêtres de maintenance",
   "evolutionMaintenanceDefaultTitle": "Maintenance en cours",
   "evolutionMaintenanceDefaultMessage": "L'application est temporairement indisponible. Nous reviendrons très bientôt.",
   "evolutionMaintenanceEndsAt": "Fin prévue vers {time}",

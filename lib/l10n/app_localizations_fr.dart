@@ -2161,6 +2161,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsAuditCenterLabel => 'Centre d\'audit';
 
   @override
+  String get settingsMaintenanceAdminLabel => 'Fenêtres de maintenance';
+
+  @override
   String get evolutionMaintenanceDefaultTitle => 'Maintenance en cours';
 
   @override

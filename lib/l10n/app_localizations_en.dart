@@ -2124,6 +2124,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAuditCenterLabel => 'Audit Center';
 
   @override
+  String get settingsMaintenanceAdminLabel => 'Maintenance windows';
+
+  @override
   String get evolutionMaintenanceDefaultTitle => 'Maintenance in progress';
 
   @override

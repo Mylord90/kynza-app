@@ -54,6 +54,7 @@ import '../../features/evolution/health_center/presentation/screens/health_cente
 import '../../features/evolution/remote_config/presentation/screens/remote_config_screen.dart';
 import '../localization/extensions/build_context_l10n_extension.dart';
 import '../../features/evolution/maintenance/application/providers/maintenance_providers.dart';
+import '../../features/evolution/maintenance/presentation/screens/maintenance_admin_screen.dart';
 import '../../features/evolution/maintenance/presentation/screens/maintenance_screen.dart';
 import '../../features/evolution/version_manager/application/providers/version_providers.dart';
 import '../../features/evolution/version_manager/presentation/screens/force_update_screen.dart';
@@ -566,6 +567,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _fadeRoute(
         RouteNames.ownerAuditCenter,
         (context, state) => const _SystemAdminGuard(child: AuditCenterScreen()),
+      ),
+      _fadeRoute(
+        RouteNames.ownerMaintenanceAdmin,
+        (context, state) =>
+            const _SystemAdminGuard(child: MaintenanceAdminScreen()),
       ),
       _fadeRoute(
         RouteNames.maintenance,

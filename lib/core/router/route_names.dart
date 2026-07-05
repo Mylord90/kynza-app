@@ -132,6 +132,9 @@ abstract class RouteNames {
   // Backend Enterprise Completion — Phase 10: Audit Business
   static const ownerAuditCenter = '/owner/audit-center';
 
+  // Enterprise Final 100 CP3: Maintenance window admin (P3-11)
+  static const ownerMaintenanceAdmin = '/owner/maintenance-admin';
+
   // ProxiPay V1 — QR-based in-person payment
   static const ownerProxiPay = '/owner/proxipay/:bookingId';
   static const clientProxiPayScan = '/client/proxipay/scan';

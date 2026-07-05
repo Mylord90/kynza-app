@@ -4046,6 +4046,12 @@ abstract class AppLocalizations {
   /// **'Centre d\'audit'**
   String get settingsAuditCenterLabel;
 
+  /// No description provided for @settingsMaintenanceAdminLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fenêtres de maintenance'**
+  String get settingsMaintenanceAdminLabel;
+
   /// No description provided for @evolutionMaintenanceDefaultTitle.
   ///
   /// In fr, this message translates to:

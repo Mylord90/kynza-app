@@ -165,6 +165,11 @@ class SettingsHomeScreen extends StatelessWidget {
             label: l10n.settingsAuditCenterLabel,
             onTap: () => context.push(RouteNames.ownerAuditCenter),
           ),
+          _SettingsTile(
+            icon: Icons.build_outlined,
+            label: l10n.settingsMaintenanceAdminLabel,
+            onTap: () => context.push(RouteNames.ownerMaintenanceAdmin),
+          ),
           const SizedBox(height: AppSpacing.md),
           _SettingsTile(
             icon: Icons.language_outlined,
