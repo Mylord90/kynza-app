@@ -4,8 +4,11 @@
 // _awardLoyaltyStamp in booking_providers.dart) — computes the staff
 // member's commission for this booking from their staff_profiles rate.
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { logError, logInfo, newRequestId } from "../_shared/log.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
+
+const FN = "calculate-commission";
 
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
@@ -14,8 +17,11 @@ Deno.serve(async (req) => {
   const tooLarge = checkBodySize(req);
   if (tooLarge) return tooLarge;
 
+  const requestId = newRequestId();
+
   try {
     const caller = await getAuthenticatedUser(req);
+    logInfo(requestId, FN, "invoked", { callerId: caller.id });
     const admin = createServiceRoleClient();
     if (!(await checkRateLimit(admin, `calculate-commission:${caller.id}`, 100, 60))) {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
@@ -84,9 +90,11 @@ Deno.serve(async (req) => {
       new_values: { bookingId: booking.id, staffId: booking.practitioner_id, amountBif },
     });
 
+    logInfo(requestId, FN, "completed", { amountBif });
     return jsonResponse({ success: true, amountBif }, 200);
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown_error";
+    logError(requestId, FN, message);
     if (message === "unauthenticated") return jsonResponse({ error: message }, 401);
     return jsonResponse({ error: "calculate_commission_failed", message }, 500);
   }

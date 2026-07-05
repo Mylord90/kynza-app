@@ -13,8 +13,10 @@
 // this function reads and stores full customer PII, so it must never be
 // callable with just the public anon key.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { logError, logInfo, newRequestId } from "../_shared/log.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
 
+const FN = "create-platform-backup";
 const PAGE_SIZE = 1000;
 const STORAGE_BUCKET = "kynza-backups";
 // A single Edge Function invocation has a bounded compute budget — paging
@@ -39,6 +41,9 @@ Deno.serve(async (req) => {
   if (!cronSecret || req.headers.get("X-Cron-Secret") !== cronSecret) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
+
+  const requestId = newRequestId();
+  logInfo(requestId, FN, "invoked");
 
   const admin = createServiceRoleClient();
   const startedAt = new Date();
@@ -160,6 +165,11 @@ Deno.serve(async (req) => {
       })
       .eq("id", jobId);
 
+    logInfo(requestId, FN, "completed", {
+      jobId,
+      tablesExported: Object.keys(manifest).length,
+      rowsExported: totalRows,
+    });
     return jsonResponse({
       job_id: jobId,
       status: "completed",
@@ -170,6 +180,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    logError(requestId, FN, message, { jobId });
     await admin
       .from("platform_backup_jobs")
       .update({

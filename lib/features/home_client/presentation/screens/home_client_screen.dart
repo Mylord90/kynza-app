@@ -15,6 +15,7 @@ import '../../../booking/presentation/screens/salon_detail_screen.dart';
 import '../../../booking/presentation/screens/salon_discovery_screen.dart';
 import '../../../loyalty/presentation/screens/client_loyalty_screen.dart';
 import '../../../salon/application/providers/salon_providers.dart';
+import '../../../evolution/cms/presentation/widgets/announcement_banner.dart';
 import '../../../notifications/presentation/widgets/unread_count_badge.dart';
 import 'client_bookings_screen.dart';
 import 'client_profile_screen.dart';
@@ -57,6 +58,7 @@ class _HomeClientScreenState extends ConsumerState<HomeClientScreen> {
       body: Column(
         children: [
           const KynzaOfflineBanner(),
+          const AnnouncementBanner(),
           Expanded(
             child: switch (_tabIndex) {
               0 => const _HomeTab(),
