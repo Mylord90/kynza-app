@@ -11,7 +11,7 @@
 //    derived from the booking + its salon/service.
 //  - { userId, event, salonId?, relatedBookingId?, data? } — direct
 //    events with no booking context (e.g. staff_joined).
-import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { sendFcmPush } from "../_shared/fcm.ts";
 import { sendWhatsappText } from "../_shared/whatsapp.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
@@ -44,6 +44,9 @@ function interpolate(text: string, vars: Record<string, string>): string {
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
+
+  const tooLarge = checkBodySize(req);
+  if (tooLarge) return tooLarge;
 
   try {
     const payload: NotificationPayload = await req.json();

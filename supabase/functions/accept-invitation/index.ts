@@ -3,13 +3,16 @@
 // here once authenticated — links their auth account to the staff_profiles
 // row the Owner created (staff_invite_screen.dart), which is the only way
 // a staff_profiles row ever gets a user_id (no self-serve staff signup).
-import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
+
+  const tooLarge = checkBodySize(req);
+  if (tooLarge) return tooLarge;
 
   try {
     const caller = await getAuthenticatedUser(req);

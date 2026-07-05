@@ -7,13 +7,16 @@
 // Access control: gated to is_system_admin (P2-9 fix, Master Plan CP2 —
 // see update-remote-config/index.ts for the same change and its
 // prerequisite).
-import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
+
+  const tooLarge = checkBodySize(req);
+  if (tooLarge) return tooLarge;
 
   try {
     const caller = await getAuthenticatedUser(req);

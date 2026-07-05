@@ -7,6 +7,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/enums/user_role.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../../../core/models/staff_profile_model.dart';
+import '../../../../core/permissions/permission_guard.dart';
 import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/crash_reporting_service.dart';
@@ -36,15 +37,20 @@ class StaffListScreen extends ConsumerWidget {
               tooltip: context.l10n.staffListCommissionsTooltip,
               onPressed: () => context.push(RouteNames.ownerTeamCommissions),
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => StaffInviteScreen(salonId: salon.id),
+            PermissionGuard(
+              feature: 'staff',
+              action: 'manage',
+              resource: 'all',
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => StaffInviteScreen(salonId: salon.id),
+                  ),
                 ),
-              ),
-              child: Text(
-                context.l10n.commonAdd,
-                style: const TextStyle(color: AppColors.primary),
+                child: Text(
+                  context.l10n.commonAdd,
+                  style: const TextStyle(color: AppColors.primary),
+                ),
               ),
             ),
           ],

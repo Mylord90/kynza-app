@@ -5,7 +5,7 @@
 // dozens of round trips. Single-flag inline checks (PermissionGuard) call
 // check_permission() directly via supabase.rpc() instead — see
 // lib/core/permissions/permission_service.dart.
-import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
@@ -40,6 +40,9 @@ async function resolvePermission(admin: any, salonId: string, userId: string, p:
 Deno.serve(async (req: Request) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
+
+  const tooLarge = checkBodySize(req);
+  if (tooLarge) return tooLarge;
 
   try {
     const caller = await getAuthenticatedUser(req);

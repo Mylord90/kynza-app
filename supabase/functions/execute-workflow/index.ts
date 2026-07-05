@@ -13,7 +13,7 @@
 // delay_seconds>0 actions are queued into automation_action_runs for
 // run-scheduled-actions (cron) to pick up later — same queue handles
 // retries via the same "scheduled_at" mechanism.
-import { handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
 import { recordActionRunResult, runAction } from "../_shared/automation_actions.ts";
 
@@ -70,6 +70,9 @@ function evaluateConditions(context: Record<string, unknown>, conditions: Condit
 Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
+
+  const tooLarge = checkBodySize(req);
+  if (tooLarge) return tooLarge;
 
   try {
     const payload: ExecuteWorkflowPayload = await req.json();
