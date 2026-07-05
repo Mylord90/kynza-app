@@ -4,8 +4,9 @@
 // deleting later ones) so the full history stays intact and is itself
 // re-revertible — an append-only rollback, not a destructive one.
 //
-// Same interim access-control caveat as update-remote-config: gated to
-// role === 'owner' until a SYSTEM_ADMIN scope exists (Phase 2/CP3).
+// Access control: gated to is_system_admin (P2-9 fix, Master Plan CP2 —
+// see update-remote-config/index.ts for the same change and its
+// prerequisite).
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -16,7 +17,7 @@ Deno.serve(async (req) => {
 
   try {
     const caller = await getAuthenticatedUser(req);
-    if (caller.role !== "owner") {
+    if (!caller.is_system_admin) {
       return jsonResponse({ error: "forbidden" }, 403);
     }
 

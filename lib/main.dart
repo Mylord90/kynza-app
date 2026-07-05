@@ -23,11 +23,15 @@ import 'core/services/secure_local_storage.dart';
 import 'core/services/session_service.dart';
 import 'core/services/timezone_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/profile_read_cache.dart';
 import 'core/widgets/auth_boot_gate.dart';
+import 'features/booking/data/booking_read_cache.dart';
 import 'features/evolution/cms/data/cms_cache.dart';
 import 'features/evolution/feature_flags/data/feature_flag_cache.dart';
 import 'features/evolution/remote_config/data/remote_config_cache.dart';
 import 'features/maps/data/salon_location_cache.dart';
+import 'features/notifications/data/notification_read_cache.dart';
+import 'features/search/data/search_read_cache.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/widgets/loader/providers/loader_overlay_provider.dart';
 import 'shared/widgets/loader/widgets/loader_overlay.dart';
@@ -67,6 +71,22 @@ Future<void> _bootstrap() async {
   await Hive.openBox(FeatureFlagCache.boxName);
   await Hive.openBox(RemoteConfigCache.boxName);
   await Hive.openBox(CmsCache.boxName);
+  await Hive.openBox(SearchReadCache.boxName);
+  // Cold-start-offline read caches (Master Plan CP3) hold real customer
+  // PII (booking/client/notification details) — encrypted with the same
+  // cipher as SessionService, same reasoning as that box.
+  await Hive.openBox(
+    BookingReadCache.boxName,
+    encryptionCipher: prefsCipher,
+  );
+  await Hive.openBox(
+    ProfileReadCache.boxName,
+    encryptionCipher: prefsCipher,
+  );
+  await Hive.openBox(
+    NotificationReadCache.boxName,
+    encryptionCipher: prefsCipher,
+  );
   await initializeDateFormatting('fr_FR');
 
   await Firebase.initializeApp();

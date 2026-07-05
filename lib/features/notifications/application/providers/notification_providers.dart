@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/notification_log_model.dart';
 import '../../../../core/models/notification_preferences_model.dart';
 import '../../../../core/providers/auth_providers.dart';
+import '../../data/notification_read_cache.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../../domain/repositories/notification_repository.dart';
 
@@ -9,13 +10,23 @@ final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => NotificationRepositoryImpl(),
 );
 
+/// Cold-start-offline fix (Master Plan CP3, `BUSINESS_CONTINUITY_REPORT.md`)
+/// — same cache-then-live pattern as booking_providers.dart's stream
+/// providers: yields the last on-disk snapshot immediately, then forwards
+/// every live emission, mirroring it back to disk.
 final notificationsProvider = StreamProvider.autoDispose
-    .family<List<NotificationLogModel>, int>((ref, limit) {
+    .family<List<NotificationLogModel>, int>((ref, limit) async* {
       final profile = ref.watch(currentUserProfileProvider).valueOrNull;
-      if (profile == null) return const Stream.empty();
-      return ref
+      if (profile == null) return;
+      final cached = NotificationReadCache.get(profile.id);
+      if (cached != null) yield cached.take(limit).toList();
+      yield* ref
           .watch(notificationRepositoryProvider)
-          .getNotifications(profile.id, limit: limit);
+          .getNotifications(profile.id, limit: limit)
+          .asyncMap((notifications) async {
+            await NotificationReadCache.set(profile.id, notifications);
+            return notifications;
+          });
     });
 
 final unreadCountProvider = StreamProvider.autoDispose((ref) {

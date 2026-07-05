@@ -25,10 +25,16 @@ export async function getAuthenticatedUser(req: Request) {
   const admin = createServiceRoleClient();
   const { data: profile, error: profileError } = await admin
     .from("users")
-    .select("id, role, salon_id, phone")
+    .select("id, role, salon_id, phone, is_system_admin")
     .eq("id", data.user.id)
     .single();
   if (profileError || !profile) throw new Error("profile_not_found");
 
-  return profile as { id: string; role: string; salon_id: string | null; phone: string | null };
+  return profile as {
+    id: string;
+    role: string;
+    salon_id: string | null;
+    phone: string | null;
+    is_system_admin: boolean;
+  };
 }

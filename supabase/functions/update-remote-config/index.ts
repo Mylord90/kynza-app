@@ -4,14 +4,10 @@
 // on that table (see 20260704110000_remote_config_engine.sql) — every write
 // goes through this function's validation gate first.
 //
-// Access control note (honest, not swept under the rug): gated to
-// role === 'owner' as an interim measure because no SYSTEM_ADMIN scope
-// exists yet in this codebase (see docs/backend-completion/
-// PHASE_1_FINAL_AUDIT.md §3, item 9 — assigned to Phase 2/CP3 of this same
-// pass). Remote config values are platform-wide, not salon-scoped, so any
-// owner being able to change them is broader than ideal — this MUST be
-// tightened to SYSTEM_ADMIN-only once that scope lands. Not fixed here
-// because creating that scope is explicitly out of Phase 4's remit.
+// Access control: gated to is_system_admin (P2-9 fix, Master Plan CP2 —
+// the SYSTEM_ADMIN scope from 20260704120000_observability_system_admin.sql
+// is a hard prerequisite for this gate and must be applied first, or every
+// caller is rejected).
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -74,7 +70,7 @@ Deno.serve(async (req) => {
 
   try {
     const caller = await getAuthenticatedUser(req);
-    if (caller.role !== "owner") {
+    if (!caller.is_system_admin) {
       return jsonResponse({ error: "forbidden" }, 403);
     }
 

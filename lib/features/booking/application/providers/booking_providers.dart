@@ -4,6 +4,7 @@ import '../../../../core/models/booking_model.dart';
 import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../loyalty/application/providers/loyalty_providers.dart';
+import '../../data/booking_read_cache.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/repositories/booking_repository.dart';
 
@@ -15,28 +16,69 @@ final bookingByIdProvider = FutureProvider.family<BookingModel?, String>(
   (ref, bookingId) => ref.read(bookingRepositoryProvider).getById(bookingId),
 );
 
+/// Cold-start-offline fix (Master Plan CP3, `BUSINESS_CONTINUITY_REPORT.md`):
+/// `SupabaseStreamBuilder` never errors on a cold start with no network —
+/// it just never emits — so catching an error here would never fire. The
+/// fix instead yields the last on-disk snapshot immediately (if one
+/// exists), then forwards every live emission, mirroring each one back to
+/// disk so the next cold start has fresh data.
 final clientBookingsProvider =
-    StreamProvider.family<List<BookingModel>, String>(
-      (ref, clientId) =>
-          ref.watch(bookingRepositoryProvider).getClientBookings(clientId),
-    );
+    StreamProvider.family<List<BookingModel>, String>((ref, clientId) async* {
+      final cached = BookingReadCache.getClientBookings(clientId);
+      if (cached != null) yield cached;
+      yield* ref
+          .watch(bookingRepositoryProvider)
+          .getClientBookings(clientId)
+          .asyncMap((bookings) async {
+            await BookingReadCache.setClientBookings(clientId, bookings);
+            return bookings;
+          });
+    });
 
 final salonBookingsProvider =
     StreamProvider.family<List<BookingModel>, (String salonId, DateTime date)>(
-      (ref, params) => ref
-          .watch(bookingRepositoryProvider)
-          .getSalonBookings(params.$1, params.$2),
+      (ref, params) async* {
+        final cached = BookingReadCache.getSalonBookings(
+          params.$1,
+          params.$2,
+        );
+        if (cached != null) yield cached;
+        yield* ref
+            .watch(bookingRepositoryProvider)
+            .getSalonBookings(params.$1, params.$2)
+            .asyncMap((bookings) async {
+              await BookingReadCache.setSalonBookings(
+                params.$1,
+                params.$2,
+                bookings,
+              );
+              return bookings;
+            });
+      },
     );
 
 final practitionerBookingsProvider =
     StreamProvider.family<
       List<BookingModel>,
       (String practitionerId, DateTime date)
-    >(
-      (ref, params) => ref
+    >((ref, params) async* {
+      final cached = BookingReadCache.getPractitionerBookings(
+        params.$1,
+        params.$2,
+      );
+      if (cached != null) yield cached;
+      yield* ref
           .watch(bookingRepositoryProvider)
-          .getPractitionerBookings(params.$1, params.$2),
-    );
+          .getPractitionerBookings(params.$1, params.$2)
+          .asyncMap((bookings) async {
+            await BookingReadCache.setPractitionerBookings(
+              params.$1,
+              params.$2,
+              bookings,
+            );
+            return bookings;
+          });
+    });
 
 class SalonKpis {
   const SalonKpis({
