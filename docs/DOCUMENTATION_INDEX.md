@@ -257,3 +257,38 @@ roles. Gates every admin-only dashboard/audit RPC introduced in this pass
 - **CP10 — Migration Review**: [`certification-v2/MIGRATION_REVIEW.md`](certification-v2/MIGRATION_REVIEW.md) — all 16 unapplied migrations classified SAFE/REVIEW, 0 BLOCKER
 - **CP11 — Auto-fix & Virtual PRs**: [`certification-v2/CP11_AUTOFIX_AND_VIRTUAL_PRS.md`](certification-v2/CP11_AUTOFIX_AND_VIRTUAL_PRS.md) — 2 migrations + 2 Edge Function patches drafted, none deployed
 - **CP12 — Final Report & Scorecard**: [`certification-v2/FINAL_ENTERPRISE_REPORT.md`](certification-v2/FINAL_ENTERPRISE_REPORT.md), [`certification-v2/SCORECARD_V2.md`](certification-v2/SCORECARD_V2.md)
+
+## Everything since Cert v2 (2026-07-04 → 2026-07-05) — consolidated pointer, not re-detailed
+
+Per this document's own mandate ("no further audit documentation is needed... additional passes
+should update the Master Inventory directly rather than producing a parallel report" —
+`KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md` §17), the 6 passes below are pointed to here,
+not re-summarized in full — each already has its own complete report set.
+
+| Pass | Directory | Tag | What it added |
+|---|---|---|---|
+| Enterprise Remediation | `remediation/` | `remediation-v1` | Real backup taken; 5 security fixes drafted+live-tested; CI/CD made to genuinely execute; 49-issue Master Matrix |
+| Final Enterprise Validation | `final-enterprise-validation/` | — | 2 real concurrency bugs found (not fixed there); 400k-row scale test; confirmed prod not observable |
+| Enterprise Resilience & Reliability Certification | `enterprise-resilience/` | — | Fixed the 2 concurrency bugs + 2 more; first circuit breaker; alerting design proven live on dr-scratch |
+| **`KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md`** | (top-level) | — | **Consolidates all 8 passes above into one 68-row Master Inventory — the current decision-making reference; read this first, not the individual pass reports, for "what's still open"** |
+| Master Plan Execution | `master-plan-execution/` | — | Cold-start-offline cache built; recurring backup automation built + 2 real runs + restore rehearsal; MANAGER/SYSTEM_ADMIN RLS isolation tested for the first time; 21-migration deployment batch prepared |
+| **Enterprise Final 100** | `enterprise-final-100/` | — | **This pass — see below** |
+
+### Enterprise Final 100 (CP1-CP11, 2026-07-05) — the campaign this document is being updated by
+
+Closure pass over the Master Inventory's remaining 42 open/untested rows — real fixes with live
+evidence, not a new discovery audit. See `enterprise-final-100/ZERO_INTERNAL_DEBT_DECLARATION.md`
+for the final row-count proof and honest declaration; each checkpoint below has its own report
+with the exact live-test evidence for every item it closed.
+
+- **CP1 — Architecture Backend**: [`enterprise-final-100/CP1_ARCHITECTURE_BACKEND.md`](enterprise-final-100/CP1_ARCHITECTURE_BACKEND.md) — both real `core`↔`feature` import cycles fixed, tool-verified closed
+- **CP2 — Security**: [`enterprise-final-100/CP2_SECURITY.md`](enterprise-final-100/CP2_SECURITY.md) — body-size DoS guard (16 functions), system-admin grant/revoke audit trail, `PermissionGuard` wired live
+- **CP3 — Infrastructure**: [`enterprise-final-100/CP3_INFRASTRUCTURE.md`](enterprise-final-100/CP3_INFRASTRUCTURE.md) — maintenance-window admin UI built, rollback-plan gaps closed
+- **CP4 — Code Quality**: [`enterprise-final-100/CP4_CODE_QUALITY.md`](enterprise-final-100/CP4_CODE_QUALITY.md) — 3 DB correctness fixes, real dead-code scan (corrected a stale "no barrel files" claim), Edge Function structured logging
+- **CP5 — Tests**: [`enterprise-final-100/CP5_TESTS.md`](enterprise-final-100/CP5_TESTS.md) — first repository-layer DI/mocking seam, found a real Firebase-mocking gap
+- **CP6 — Observability**: [`enterprise-final-100/CP6_OBSERVABILITY.md`](enterprise-final-100/CP6_OBSERVABILITY.md) — `activity_logs.ip_address`/`device_info` populated for real across all 9 call sites
+- **CP7 — Production Readiness**: [`enterprise-final-100/CP7_PRODUCTION_READINESS.md`](enterprise-final-100/CP7_PRODUCTION_READINESS.md) — closed this program's single most-repeated finding (proxipay-session race, 5× corroborated)
+- **CP8 — Scalability**: [`enterprise-final-100/CP8_SCALABILITY.md`](enterprise-final-100/CP8_SCALABILITY.md) — batched the 400k-row bulk-write-ceiling trigger, bounded all 3 unbounded Realtime streams
+- **CP9 — Reliability**: [`enterprise-final-100/CP9_RELIABILITY.md`](enterprise-final-100/CP9_RELIABILITY.md) — re-scan confirms no new concurrency-bug instances introduced by this campaign
+- **CP10 — Documentation**: this section + `docs/adr/` (new)
+- **CP11 — Final Certification**: [`enterprise-final-100/ZERO_INTERNAL_DEBT_DECLARATION.md`](enterprise-final-100/ZERO_INTERNAL_DEBT_DECLARATION.md), [`enterprise-final-100/EXTERNAL_GO_LIVE_DEPENDENCIES.md`](enterprise-final-100/EXTERNAL_GO_LIVE_DEPENDENCIES.md)

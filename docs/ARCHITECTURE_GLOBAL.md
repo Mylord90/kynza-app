@@ -37,6 +37,16 @@ directly — cross-feature reads happen through Riverpod providers reading anoth
 repository interface (e.g. booking reads services), never through a direct Dart import chain
 that would create a circular dependency.
 
+**Update (Enterprise Final 100 CP1, 2026-07-05)**: this invariant was tool-verified, not just
+asserted — an independent import/export reachability scanner found and fixed the 2 real
+`core`↔`feature` cycles the Enterprise Certification v2 pass had identified but not fixed
+(`core/providers/auth_providers.dart` and `core/providers/offline_sync_providers.dart` each split
+into a core-only half and a feature/composition half — see
+[`enterprise-final-100/CP1_ARCHITECTURE_BACKEND.md`](enterprise-final-100/CP1_ARCHITECTURE_BACKEND.md)
+for the fix). The same scan also found `lib/shared/widgets/kynza_widgets.dart` is a genuine
+barrel-export file — correcting `certification-v2/CP1_ARCHITECTURE_REVERIFY.md`'s prior claim
+that no barrel files exist in this codebase.
+
 ### 2.3 Clean Architecture layering
 
 See [`docs/diagrams/layer-diagram.mermaid`](diagrams/layer-diagram.mermaid).
