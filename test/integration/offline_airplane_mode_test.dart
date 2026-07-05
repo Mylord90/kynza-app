@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:kynza/core/models/review/review_model.dart';
 import 'package:kynza/core/models/review/salon_rating_model.dart';
 import 'package:kynza/core/providers/app_providers.dart';
+import 'package:kynza/core/providers/offline_sync_coordinator_provider.dart';
 import 'package:kynza/core/providers/offline_sync_providers.dart';
 import 'package:kynza/core/services/mutation_outbox_service.dart';
 import 'package:kynza/core/services/offline_sync_coordinator.dart';

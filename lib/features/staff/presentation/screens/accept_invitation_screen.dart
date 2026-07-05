@@ -11,6 +11,7 @@ import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../auth/application/providers/auth_notifier_provider.dart';
 
 enum _InvitationStatus { verifying, success, error }
 

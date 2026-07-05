@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/application/providers/auth_notifier_provider.dart';
 import '../../features/auth/data/datasources/auth_supabase_datasource.dart';
 import '../../shared/widgets/loader/widgets/loader_overlay.dart';
 import '../constants/app_colors.dart';

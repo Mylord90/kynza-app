@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/application/providers/auth_notifier_provider.dart';
 import '../../features/auth/presentation/screens/complete_profile_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -92,7 +93,6 @@ import '../constants/app_durations.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_typography.dart';
 import '../enums/user_role.dart';
-import '../providers/auth_providers.dart';
 import '../utils/auth_redirect.dart';
 import '../widgets/kynza_full_page_lock.dart';
 import 'auth_callback_screen.dart';

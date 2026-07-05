@@ -5,9 +5,9 @@ import '../../../../core/constants/app_branding.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/auth_redirect.dart';
+import '../../../auth/application/providers/auth_notifier_provider.dart';
 
 /// Minimum display time, independent of how fast the session check resolves.
 /// NEVER show a loading indicator here, and NEVER make network calls beyond

@@ -7,7 +7,7 @@ import '../../core/constants/app_durations.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/providers/offline_sync_providers.dart';
+import '../../core/providers/offline_sync_coordinator_provider.dart';
 import '../../core/services/crash_reporting_service.dart';
 import '../../features/legal/application/providers/legal_providers.dart';
 

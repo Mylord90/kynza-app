@@ -1,19 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/home_client/application/providers/client_profile_providers.dart';
-import '../../features/legal/application/providers/legal_providers.dart';
-import '../../features/reviews/application/providers/review_providers.dart';
 import '../services/mutation_outbox_service.dart';
-import '../services/offline_sync_coordinator.dart';
+
+// offlineSyncCoordinatorProvider deliberately does NOT live here — it's
+// declared in offline_sync_coordinator_provider.dart instead. Declaring it
+// in this file used to create 3 real core<->feature import cycles (this
+// file -> {client_profile,legal,review}_providers.dart -> this file,
+// tool-detected, Master Plan P3-1), since those 3 feature files only need
+// mutationOutboxServiceProvider below, not the coordinator itself.
 
 final mutationOutboxServiceProvider = Provider<MutationOutboxService>(
   (ref) => MutationOutboxService(),
-);
-
-final offlineSyncCoordinatorProvider = Provider<OfflineSyncCoordinator>(
-  (ref) => OfflineSyncCoordinator(
-    outbox: ref.watch(mutationOutboxServiceProvider),
-    reviewRepository: ref.watch(reviewRepositoryProvider),
-    dataDeletionRepository: ref.watch(dataDeletionRepositoryProvider),
-    clientProfileRepository: ref.watch(clientProfileRepositoryProvider),
-  ),
 );

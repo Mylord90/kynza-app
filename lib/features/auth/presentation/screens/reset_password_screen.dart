@@ -5,11 +5,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
-import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/auth_errors.dart';
 import '../../../../core/utils/validators.dart';
+import '../../application/providers/auth_notifier_provider.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../widgets/kynza_auth_card.dart';
 

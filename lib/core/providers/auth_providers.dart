@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../features/auth/application/notifiers/auth_notifier.dart';
-import '../../features/auth/domain/states/auth_ui_state.dart';
 import '../models/user_profile.dart';
 import '../services/profile_read_cache.dart';
 import 'app_providers.dart';
+
+// authNotifierProvider deliberately does NOT live here — it's declared in
+// features/auth/application/providers/auth_notifier_provider.dart instead.
+// Declaring it in this file used to create a real core<->feature import
+// cycle (this file -> auth_notifier.dart -> this file, tool-detected,
+// Master Plan P3-1), since AuthNotifier itself depends on
+// authStateStreamProvider/currentUserProfileProvider below.
 
 final authStateStreamProvider = StreamProvider<AuthState>((ref) {
   final client = ref.watch(supabaseClientProvider);
@@ -34,7 +39,3 @@ final currentUserProfileProvider = FutureProvider<UserProfile?>((ref) async {
     return ProfileReadCache.get(userId);
   }
 });
-
-final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, AuthUiState>(
-  AuthNotifier.new,
-);

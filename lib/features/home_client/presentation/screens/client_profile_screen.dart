@@ -11,6 +11,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/services/supabase_service.dart';
+import '../../../auth/application/providers/auth_notifier_provider.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';

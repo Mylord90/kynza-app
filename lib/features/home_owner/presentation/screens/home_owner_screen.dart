@@ -11,6 +11,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/services/freemium_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/navigation/kynza_bottom_nav.dart';
+import '../../../auth/application/providers/auth_notifier_provider.dart';
 import '../../../../shared/navigation/kynza_nav_item.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
 import '../../../booking/application/providers/booking_providers.dart';
