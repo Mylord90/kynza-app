@@ -40,6 +40,14 @@ class CmsNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
+  /// CP3 (docs/enterprise-resilience/CACHE_STRATEGY_REPORT.md §4): every
+  /// mutation here also invalidates `cmsPublishedProvider` (all family
+  /// instances — calling `ref.invalidate` on a `.family` provider with no
+  /// argument invalidates every cached instance of it), not just
+  /// `cmsAdminListProvider`. Previously only the admin list was
+  /// invalidated, so the client-facing read path (and its `CmsCache` Hive
+  /// mirror, refreshed by that same provider) kept serving pre-edit content
+  /// until something else happened to rebuild that exact family key.
   Future<void> create({
     required String type,
     required String slug,
@@ -57,6 +65,7 @@ class CmsNotifier extends AsyncNotifier<void> {
           bodyMarkdown: bodyMarkdown,
         );
     ref.invalidate(cmsAdminListProvider);
+    ref.invalidate(cmsPublishedProvider);
   }
 
   Future<void> updateContent({
@@ -68,11 +77,13 @@ class CmsNotifier extends AsyncNotifier<void> {
         .read(cmsRepositoryProvider)
         .update(id: id, title: title, bodyMarkdown: bodyMarkdown);
     ref.invalidate(cmsAdminListProvider);
+    ref.invalidate(cmsPublishedProvider);
   }
 
   Future<void> setStatus({required String id, required String status}) async {
     await ref.read(cmsRepositoryProvider).setStatus(id: id, status: status);
     ref.invalidate(cmsAdminListProvider);
+    ref.invalidate(cmsPublishedProvider);
   }
 }
 
