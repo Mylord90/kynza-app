@@ -2,10 +2,21 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Firebase (Crashlytics + FCM/App Check) — android/app/google-services.json is git-ignored (a
+// real Firebase project config, not meant to live in a public repo) and does not exist in a fresh
+// checkout. Applied conditionally, same graceful-degradation pattern as the keystore fallback
+// below: `flutter build`/CI keep working without it, the release build simply ships without
+// Crashlytics/FCM wired. Confirmed this was the actual, sole cause of CI's first "Build Release
+// APK" job failure (Remediation v1, Phase 4) — `processReleaseGoogleServices` task: "File
+// google-services.json is missing."
+val hasGoogleServicesConfig = file("google-services.json").exists()
+if (hasGoogleServicesConfig) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 // Release signing — android/key.properties is git-ignored and holds the
