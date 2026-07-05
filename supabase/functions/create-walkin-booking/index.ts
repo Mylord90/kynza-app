@@ -4,6 +4,7 @@
 // exists, otherwise provisions a minimal guest auth.users + public.users
 // row (service_role only — never reachable from the authenticated client
 // directly, since creating an auth identity is a privileged operation).
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -139,11 +140,11 @@ Deno.serve(async (req) => {
       throw insertError;
     }
 
-    await supabase.from("activity_logs").insert({
-      salon_id: salonId,
-      user_id: caller.id,
-      type_action: "booking_created",
-      new_values: { bookingId: booking.id, walkIn: true },
+    await logActivity(supabase, req, {
+      salonId: salonId,
+      userId: caller.id,
+      typeAction: "booking_created",
+      newValues: { bookingId: booking.id, walkIn: true },
     });
 
     return jsonResponse({ booking }, 200);

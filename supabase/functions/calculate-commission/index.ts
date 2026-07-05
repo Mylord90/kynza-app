@@ -3,6 +3,7 @@
 // is marked completed (same best-effort, non-blocking shape as
 // _awardLoyaltyStamp in booking_providers.dart) — computes the staff
 // member's commission for this booking from their staff_profiles rate.
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { logError, logInfo, newRequestId } from "../_shared/log.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
@@ -83,11 +84,11 @@ Deno.serve(async (req) => {
       throw insertError;
     }
 
-    await admin.from("activity_logs").insert({
-      salon_id: booking.salon_id,
-      user_id: caller.id,
-      type_action: "commission_calculated",
-      new_values: { bookingId: booking.id, staffId: booking.practitioner_id, amountBif },
+    await logActivity(admin, req, {
+      salonId: booking.salon_id,
+      userId: caller.id,
+      typeAction: "commission_calculated",
+      newValues: { bookingId: booking.id, staffId: booking.practitioner_id, amountBif },
     });
 
     logInfo(requestId, FN, "completed", { amountBif });

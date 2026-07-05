@@ -3,6 +3,7 @@
 // pending invoice with a reference for a manual bank transfer; KYNZA's
 // team (or the owner, after confirming payment out-of-band) later calls
 // the mark_invoice_paid RPC, which flips salons.plan.
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -64,11 +65,11 @@ Deno.serve(async (req) => {
       .single();
     if (insertError) throw insertError;
 
-    await admin.from("activity_logs").insert({
-      salon_id: caller.salon_id,
-      user_id: caller.id,
-      type_action: "invoice_created",
-      new_values: { invoiceId: invoice.id, planKey: plan.key },
+    await logActivity(admin, req, {
+      salonId: caller.salon_id,
+      userId: caller.id,
+      typeAction: "invoice_created",
+      newValues: { invoiceId: invoice.id, planKey: plan.key },
     });
 
     return jsonResponse({ success: true, invoice }, 200);

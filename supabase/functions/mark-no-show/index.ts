@@ -1,5 +1,6 @@
 // supabase/functions/mark-no-show/index.ts
 // Staff taps [Absent] on a booking tile, H+15min after start_time.
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -78,11 +79,11 @@ Deno.serve(async (req) => {
       .eq("status", "no_show");
 
     if ((count ?? 0) >= 3) {
-      await supabase.from("activity_logs").insert({
-        salon_id: booking.salon_id,
-        user_id: user.id,
-        type_action: "booking_no_show",
-        new_values: { clientId: booking.client_id, noShowCount: count },
+      await logActivity(supabase, req, {
+        salonId: booking.salon_id,
+        userId: user.id,
+        typeAction: "booking_no_show",
+        newValues: { clientId: booking.client_id, noShowCount: count },
       });
     }
 

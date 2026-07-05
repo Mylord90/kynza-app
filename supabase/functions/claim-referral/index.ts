@@ -3,6 +3,7 @@
 // (ReferralClaimScreen) — links the referrals row to the caller and, when
 // the referral was tied to a salon, grants a loyalty stamp to both the
 // referrer and the newly referred client.
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -102,11 +103,11 @@ Deno.serve(async (req) => {
       }).catch(() => {});
     }
 
-    await admin.from("activity_logs").insert({
-      salon_id: claimed.salon_id,
-      user_id: caller.id,
-      type_action: "referral_claimed",
-      new_values: { referralId: referral.id, referrerId: claimed.referrer_id },
+    await logActivity(admin, req, {
+      salonId: claimed.salon_id,
+      userId: caller.id,
+      typeAction: "referral_claimed",
+      newValues: { referralId: referral.id, referrerId: claimed.referrer_id },
     });
 
     return jsonResponse({ success: true, stampGranted, salonName }, 200);

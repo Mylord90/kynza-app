@@ -2,6 +2,7 @@
 // Staff/owner/manager scans a client's loyalty QR (loyalty_qr_screen.dart)
 // from loyalty_scan_screen.dart — atomically consumes the token, then adds
 // a stamp or redeems the reward depending on the card's current count.
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -91,11 +92,11 @@ Deno.serve(async (req) => {
       .eq("id", claimed.client_id)
       .maybeSingle();
 
-    await admin.from("activity_logs").insert({
-      salon_id: claimed.salon_id,
-      user_id: caller.id,
-      type_action: action === "redeemed" ? "loyalty_reward_redeemed" : "loyalty_stamp_added",
-      new_values: { cardId: claimed.card_id, clientId: claimed.client_id },
+    await logActivity(admin, req, {
+      salonId: claimed.salon_id,
+      userId: caller.id,
+      typeAction: action === "redeemed" ? "loyalty_reward_redeemed" : "loyalty_stamp_added",
+      newValues: { cardId: claimed.card_id, clientId: claimed.client_id },
     });
 
     return jsonResponse(

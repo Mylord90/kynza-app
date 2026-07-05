@@ -1,6 +1,7 @@
 // supabase/functions/leapa-webhook/index.ts
 // Called by Leapa, never by the Flutter app. No JWT auth — HMAC signature
 // is the only trust boundary, so it MUST be verified before any mutation.
+import { logActivity } from "../_shared/audit.ts";
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { verifyLeapaSignature } from "../_shared/hmac.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
@@ -84,11 +85,15 @@ Deno.serve(async (req) => {
         .eq("id", existing.booking_id)
         .single();
 
-      await supabase.from("activity_logs").insert({
-        salon_id: existing.salon_id,
-        user_id: confirmedBooking?.client_id,
-        type_action: "payment_completed",
-        new_values: { bookingId: existing.booking_id, idempotency_key },
+      // Note: req here is Leapa's own webhook call, not the client's device
+      // — ip_address/device_info capture Leapa's infrastructure, not the
+      // paying customer's, which is the correct (only available) signal
+      // for a server-to-server webhook.
+      await logActivity(supabase, req, {
+        salonId: existing.salon_id,
+        userId: confirmedBooking?.client_id,
+        typeAction: "payment_completed",
+        newValues: { bookingId: existing.booking_id, idempotency_key },
       });
 
       // Best-effort — a missed notification/workflow firing must never fail the webhook

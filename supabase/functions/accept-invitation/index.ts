@@ -3,6 +3,7 @@
 // here once authenticated — links their auth account to the staff_profiles
 // row the Owner created (staff_invite_screen.dart), which is the only way
 // a staff_profiles row ever gets a user_id (no self-serve staff signup).
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -77,11 +78,11 @@ Deno.serve(async (req) => {
       .eq("id", caller.id);
     if (updateUserError) throw updateUserError;
 
-    await supabase.from("activity_logs").insert({
-      salon_id: updated.salon_id,
-      user_id: caller.id,
-      type_action: "staff_invitation_accepted",
-      new_values: { staffProfileId: staffProfile.id },
+    await logActivity(supabase, req, {
+      salonId: updated.salon_id,
+      userId: caller.id,
+      typeAction: "staff_invitation_accepted",
+      newValues: { staffProfileId: staffProfile.id },
     });
 
     // Best-effort: notify whoever sent the invitation that it was accepted.

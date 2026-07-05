@@ -5,6 +5,7 @@
 // already serializes correctly against that constraint in Postgres; this
 // avoids holding a row lock across a slower multi-step transaction.
 import { logAppCheckStatus } from "../_shared/app_check.ts";
+import { logActivity } from "../_shared/audit.ts";
 import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
@@ -208,11 +209,11 @@ async function handleCreateBooking(req: Request): Promise<Response> {
       throw insertError;
     }
 
-    await supabase.from("activity_logs").insert({
-      salon_id: salonId,
-      user_id: user.id,
-      type_action: "booking_created",
-      new_values: { bookingId: booking.id },
+    await logActivity(supabase, req, {
+      salonId: salonId,
+      userId: user.id,
+      typeAction: "booking_created",
+      newValues: { bookingId: booking.id },
     });
 
     // Owner Success Journey — "first_booking" step. Best-effort: a missed
