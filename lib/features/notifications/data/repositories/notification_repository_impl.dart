@@ -8,6 +8,15 @@ class NotificationRepositoryImpl implements NotificationRepository {
   static const _logsTable = 'notification_logs';
   static const _prefsTable = 'notification_preferences';
 
+  // P2-23 (Master Inventory: 3 unbounded Realtime `.stream()` call sites,
+  // this being the 3rd — measured 46x slower at 400k rows). Same platform
+  // constraint as booking_repository_impl.dart: `SupabaseStreamBuilder`
+  // can't filter on channel/deleted_at server-side, so `.limit()` ordered
+  // by recency is the real available bound, generous enough to always
+  // cover the requested `limit` after the client-side channel/deleted_at
+  // filter below.
+  static const _realtimeStreamCap = 200;
+
   @override
   Stream<List<NotificationLogModel>> getNotifications(
     String userId, {
@@ -17,6 +26,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
         .from(_logsTable)
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(_realtimeStreamCap)
         .map(
           (rows) =>
               rows

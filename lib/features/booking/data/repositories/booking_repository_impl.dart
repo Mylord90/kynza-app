@@ -140,6 +140,18 @@ class BookingRepositoryImpl implements BookingRepository {
         );
   }
 
+  // P2-23 (Master Inventory: 3 unbounded Realtime `.stream()` call sites,
+  // measured 46x slower at 400k rows than a bounded equivalent). Supabase
+  // Flutter's `SupabaseStreamBuilder` only supports a single `.eq()`
+  // filter plus `.order()`/`.limit()` — it cannot express the
+  // salon_id+date-range filter this query actually needs, so a true
+  // server-side date bound isn't available on this SDK version. `.limit()`
+  // ordered by recency is the real bound that IS available: it caps the
+  // worst-case row count/transfer size regardless of a salon's total
+  // history, which is what actually caused the measured slowdown — the
+  // client-side date filter below still narrows to the requested day.
+  static const _realtimeStreamCap = 200;
+
   @override
   Stream<List<BookingModel>> getSalonBookings(String salonId, DateTime date) {
     final dayStart = DateTime(date.year, date.month, date.day);
@@ -148,6 +160,8 @@ class BookingRepositoryImpl implements BookingRepository {
         .from(_table)
         .stream(primaryKey: ['id'])
         .eq('salon_id', salonId)
+        .order('start_time', ascending: false)
+        .limit(_realtimeStreamCap)
         .map(
           (rows) =>
               rows
@@ -174,6 +188,8 @@ class BookingRepositoryImpl implements BookingRepository {
         .from(_table)
         .stream(primaryKey: ['id'])
         .eq('practitioner_id', practitionerId)
+        .order('start_time', ascending: false)
+        .limit(_realtimeStreamCap)
         .map(
           (rows) =>
               rows
