@@ -55,6 +55,10 @@ export async function recordActionRunResult(
 
   const backoffMinutes = BACKOFF_MINUTES[attemptCount - 1] ?? 8;
   await admin.from("automation_action_runs").update({
+    // CP0: explicitly back to 'pending' — the row was claimed into
+    // 'processing' by claim_pending_action_runs() before this ran, and
+    // must be reselectable once its backoff window passes.
+    status: "pending",
     attempt_count: attemptCount,
     last_error: result.error ?? "action_failed",
     scheduled_at: new Date(Date.now() + backoffMinutes * 60_000).toISOString(),

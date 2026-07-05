@@ -4,6 +4,14 @@
 // action whose time has come, or a failed action retrying after
 // backoff — both are just "a row with scheduled_at <= now()", so one
 // runner handles both concerns with no separate retry code path.
+//
+// CP0 (docs/enterprise-resilience/CONCURRENCY_REPORT.md): rows are claimed
+// atomically via claim_pending_action_runs() (`FOR UPDATE SKIP LOCKED`,
+// migration 20260705100000) *before* any processing starts, so two
+// overlapping invocations (a slow run can overlap the next 5-min tick)
+// can never both process the same row — previously a plain
+// `SELECT ... WHERE status='pending'` with no claim step, live-reproduced
+// to double-process a row on kynza-dr-scratch.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
 import { recordActionRunResult, runAction } from "../_shared/automation_actions.ts";
@@ -27,17 +35,14 @@ Deno.serve(async (req) => {
   try {
     const admin = createServiceRoleClient();
 
-    const { data: dueRuns, error: dueError } = await admin
-      .from("automation_action_runs")
-      .select("id, execution_log_id, action_id, salon_id, context, attempt_count")
-      .eq("status", "pending")
-      .lte("scheduled_at", new Date().toISOString())
-      .lt("attempt_count", MAX_ATTEMPTS)
-      .limit(BATCH_SIZE);
-    if (dueError) throw dueError;
+    const { data: claimedRuns, error: claimError } = await admin.rpc(
+      "claim_pending_action_runs",
+      { p_batch_size: BATCH_SIZE, p_max_attempts: MAX_ATTEMPTS },
+    );
+    if (claimError) throw claimError;
 
     let processed = 0;
-    for (const run of dueRuns ?? []) {
+    for (const run of claimedRuns ?? []) {
       await processRun(admin, run);
       processed += 1;
     }

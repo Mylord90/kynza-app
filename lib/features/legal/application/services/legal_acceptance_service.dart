@@ -1,3 +1,4 @@
+import '../../../../core/services/atomic_claim_service.dart';
 import '../../../../core/services/crash_reporting_service.dart';
 import '../../../../core/services/legal_acceptance_queue_service.dart';
 import '../../domain/repositories/legal_document_repository.dart';
@@ -48,35 +49,44 @@ class LegalAcceptanceService {
   /// leaves it queued for the next flush instead of losing it — up to
   /// [LegalAcceptanceQueueService.maxAttempts] times, after which it moves
   /// to the dead-letter queue instead of retrying forever.
-  Future<void> flushQueue() async {
-    for (final item in queue.pending()) {
-      final userId = item['userId'] as String;
-      final documentVersionId = item['documentVersionId'] as String;
-      try {
-        await consentRepository.acceptDocumentVersion(
-          userId: userId,
-          documentVersionId: documentVersionId,
-          appVersion: item['appVersion'] as String?,
-          platform: item['platform'] as String?,
-        );
-        await queue.removeQueued(userId, documentVersionId);
-      } catch (e, st) {
+  /// Claim key shared across every [LegalAcceptanceService] instance
+  /// (deliberately a fixed string, not per-instance) — same reasoning as
+  /// `OfflineSyncCoordinator._claimKey`: `KynzaOfflineBanner` is mounted
+  /// independently across ~40 screens, each building its own service, so
+  /// only an instance-independent claim key actually serializes them.
+  static const _claimKey = 'legal_acceptance_service.flushQueue';
+
+  Future<void> flushQueue() {
+    return AtomicClaimService.instance.runExclusive(_claimKey, () async {
+      for (final item in queue.pending()) {
+        final userId = item['userId'] as String;
+        final documentVersionId = item['documentVersionId'] as String;
         try {
-          CrashReportingService.recordError(e, st);
-        } catch (_) {
-          // Never let a Crashlytics failure (e.g. Firebase uninitialized —
-          // this path also runs in tests with no Firebase app) block the
-          // retry/DLQ bookkeeping below.
-        }
-        final attempts = await queue.recordFailedAttempt(
-          userId,
-          documentVersionId,
-        );
-        if (attempts >= LegalAcceptanceQueueService.maxAttempts) {
-          await queue.moveToDeadLetter(userId, documentVersionId);
+          await consentRepository.acceptDocumentVersion(
+            userId: userId,
+            documentVersionId: documentVersionId,
+            appVersion: item['appVersion'] as String?,
+            platform: item['platform'] as String?,
+          );
+          await queue.removeQueued(userId, documentVersionId);
+        } catch (e, st) {
+          try {
+            CrashReportingService.recordError(e, st);
+          } catch (_) {
+            // Never let a Crashlytics failure (e.g. Firebase uninitialized —
+            // this path also runs in tests with no Firebase app) block the
+            // retry/DLQ bookkeeping below.
+          }
+          final attempts = await queue.recordFailedAttempt(
+            userId,
+            documentVersionId,
+          );
+          if (attempts >= LegalAcceptanceQueueService.maxAttempts) {
+            await queue.moveToDeadLetter(userId, documentVersionId);
+          }
         }
       }
-    }
+    });
   }
 
   /// Whether [userId] has accepted the current version of [documentId] in

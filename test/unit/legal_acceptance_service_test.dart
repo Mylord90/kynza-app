@@ -183,6 +183,48 @@ void main() {
       },
     );
 
+    test(
+      'two flushQueue() calls firing at the same time (e.g. two connectivity-'
+      'change events, or two mounted KynzaOfflineBanner instances) never '
+      'apply the same item twice — same claim-based fix as '
+      'OfflineSyncCoordinator (see test/unit/offline_fault_injection_test.dart)',
+      () async {
+        for (var i = 0; i < 5; i++) {
+          await queue.enqueue(
+            userId: 'u-race-$i',
+            documentVersionId: 'v-race',
+          );
+        }
+        final consentRepo = _FakeUserConsentRepository();
+        final serviceA = LegalAcceptanceService(
+          documentRepository: _FakeLegalDocumentRepository(),
+          consentRepository: consentRepo,
+          queue: queue,
+        );
+        final serviceB = LegalAcceptanceService(
+          documentRepository: _FakeLegalDocumentRepository(),
+          consentRepository: consentRepo,
+          queue: LegalAcceptanceQueueService(),
+        );
+
+        await Future.wait([serviceA.flushQueue(), serviceB.flushQueue()]);
+
+        final counts = <String, int>{};
+        for (final acceptance in consentRepo.acceptedCalls) {
+          counts[acceptance.userId] = (counts[acceptance.userId] ?? 0) + 1;
+        }
+        expect(
+          counts.values.every((c) => c == 1),
+          isTrue,
+          reason:
+              'expected exactly one acceptDocumentVersion call per user, got: '
+              '$counts (a value > 1 means the concurrent flushes double-applied '
+              'an item)',
+        );
+        expect(counts.keys.length, 5, reason: 'no item should be lost either');
+      },
+    );
+
     test('flushing an empty queue is a no-op', () async {
       final consentRepo = _FakeUserConsentRepository();
       final service = LegalAcceptanceService(

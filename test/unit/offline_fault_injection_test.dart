@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:kynza/core/models/legal/data_deletion_request_model.dart';
 import 'package:kynza/core/models/review/review_model.dart';
 import 'package:kynza/core/models/review/salon_rating_model.dart';
+import 'package:kynza/core/services/atomic_claim_service.dart';
 import 'package:kynza/core/services/mutation_outbox_service.dart';
 import 'package:kynza/core/services/offline_sync_coordinator.dart';
 import 'package:kynza/features/home_client/domain/repositories/client_profile_repository.dart';
@@ -100,6 +101,7 @@ void main() {
   });
 
   tearDown(() async {
+    AtomicClaimService.instance.reset();
     await Hive.deleteBoxFromDisk(MutationOutboxService.boxName);
     await Hive.deleteBoxFromDisk(MutationOutboxService.deadLetterBoxName);
     await tempDir.delete(recursive: true);
@@ -188,8 +190,11 @@ void main() {
         );
         expect(pendingAtStall, hasLength(2));
 
-        // "Restart": a fresh coordinator/repos, same on-disk outbox,
-        // review repo now succeeds instead of hanging.
+        // "Restart": a real process kill wipes in-memory state along with
+        // it — including AtomicClaimService's lock map, which otherwise
+        // would still show `flush` held by the never-completing call
+        // above. Only the Hive-backed queue data survives to disk.
+        AtomicClaimService.instance.reset();
         final freshReview = _FakeReviewRepository();
         final freshProfile = _FakeClientProfileRepository();
         final freshCoordinator = _coordinator(
@@ -215,15 +220,6 @@ void main() {
     test(
       'two flush() calls firing at the same time (e.g. two connectivity-change '
       'events) never apply the same item twice',
-      skip:
-          'KNOWN BUG, found by this test (CP3, Final Enterprise Validation, '
-          '2026-07-05): MutationOutboxService has no lock around the read-'
-          'snapshot/apply/remove cycle, so two concurrent flush() calls both '
-          'read the same pending list before either removes anything, and '
-          'every item gets applied twice. Tracked in FINAL_ROADMAP.md. '
-          'Un-skip once flush() is made mutually-exclusive (e.g. a '
-          'synchronized/in-flight guard) — this test will pass unmodified '
-          'and prove the fix.',
       () async {
         final outbox = MutationOutboxService();
         for (var i = 0; i < 5; i++) {

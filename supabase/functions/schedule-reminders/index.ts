@@ -2,8 +2,17 @@
 // Called by pg_cron every hour (see migration 20260624062000). Finds
 // confirmed/in_progress bookings landing in the next ~24h or ~2h window
 // and fires the matching reminder template via send-notification.
-// Idempotent: skips a (booking, event_type) pair already present in
-// notification_logs so an hourly run never double-reminds.
+//
+// CP0 (docs/enterprise-resilience/CONCURRENCY_REPORT.md): idempotency used
+// to be a plain SELECT-then-invoke check against notification_logs, which
+// is a TOCTOU race if two runs ever overlap (an hourly cron job overlapping
+// requires a run to take >1h, but that's exactly the kind of "unlikely but
+// not impossible, and the blast radius is a real double WhatsApp/push send"
+// case CP0 exists to close). Each (booking, event_type) pair is now claimed
+// by inserting into reminder_dispatch_claims first — its primary key makes
+// a second concurrent claim attempt fail with 23505, so only one caller
+// ever proceeds to send — same "insert wins the claim" idiom already used
+// by claim-referral and calculate-commission.
 import { handleOptions, jsonResponse } from "../_shared/cors.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
 
@@ -59,14 +68,13 @@ Deno.serve(async (req) => {
         .is("deleted_at", null);
 
       for (const booking of bookings ?? []) {
-        const { data: already } = await supabase
-          .from("notification_logs")
-          .select("id")
-          .eq("related_booking_id", booking.id)
-          .eq("event_type", window.eventType)
-          .limit(1)
-          .maybeSingle();
-        if (already) continue;
+        const { error: claimError } = await supabase
+          .from("reminder_dispatch_claims")
+          .insert({ booking_id: booking.id, event_type: window.eventType });
+        if (claimError) {
+          if (claimError.code === "23505") continue; // already claimed by another run
+          throw claimError;
+        }
 
         await supabase.functions.invoke("send-notification", {
           body: { bookingId: booking.id, event: window.eventType },

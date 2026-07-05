@@ -3,6 +3,7 @@ import '../../features/legal/domain/repositories/data_deletion_repository.dart';
 import '../../features/reviews/domain/repositories/review_repository.dart';
 import '../enums/app_enums.dart';
 import '../models/review/review_model.dart';
+import '../services/atomic_claim_service.dart';
 import '../services/crash_reporting_service.dart';
 import '../services/mutation_outbox_service.dart';
 
@@ -35,29 +36,39 @@ class OfflineSyncCoordinator {
   final DataDeletionRepository dataDeletionRepository;
   final ClientProfileRepository clientProfileRepository;
 
-  Future<void> flush() async {
-    for (final item in outbox.pending()) {
-      final id = item['id'] as String;
-      final type = item['type'] as String;
-      final payload = (item['payload'] as Map).cast<String, dynamic>();
-      try {
-        final alreadySatisfied = await _isAlreadySatisfied(type, payload);
-        if (!alreadySatisfied) {
-          await _apply(type, payload);
-        }
-        await outbox.remove(id);
-      } catch (e, st) {
+  /// Claim key shared by every [OfflineSyncCoordinator] instance (this is
+  /// deliberately a fixed string, not per-instance) — `KynzaOfflineBanner`
+  /// is mounted independently across ~40 screens and each mounted instance
+  /// builds its own coordinator, so only a claim keyed by something
+  /// instance-independent actually serializes them. See
+  /// `AtomicClaimService` and docs/enterprise-resilience/CONCURRENCY_REPORT.md.
+  static const _claimKey = 'offline_sync_coordinator.flush';
+
+  Future<void> flush() {
+    return AtomicClaimService.instance.runExclusive(_claimKey, () async {
+      for (final item in outbox.pending()) {
+        final id = item['id'] as String;
+        final type = item['type'] as String;
+        final payload = (item['payload'] as Map).cast<String, dynamic>();
         try {
-          CrashReportingService.recordError(e, st);
-        } catch (_) {
-          // Never let a Crashlytics failure block the retry/DLQ bookkeeping.
-        }
-        final attempts = await outbox.recordFailedAttempt(id);
-        if (attempts >= MutationOutboxService.maxAttempts) {
-          await outbox.moveToDeadLetter(id);
+          final alreadySatisfied = await _isAlreadySatisfied(type, payload);
+          if (!alreadySatisfied) {
+            await _apply(type, payload);
+          }
+          await outbox.remove(id);
+        } catch (e, st) {
+          try {
+            CrashReportingService.recordError(e, st);
+          } catch (_) {
+            // Never let a Crashlytics failure block the retry/DLQ bookkeeping.
+          }
+          final attempts = await outbox.recordFailedAttempt(id);
+          if (attempts >= MutationOutboxService.maxAttempts) {
+            await outbox.moveToDeadLetter(id);
+          }
         }
       }
-    }
+    });
   }
 
   /// Checks whether this mutation's real-world effect already exists
