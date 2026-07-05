@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/models/proxipay/proxipay_session_model.dart';
 import '../../../../core/security/app_check_service.dart';
@@ -5,13 +6,22 @@ import '../../../../core/services/performance_monitoring_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../domain/repositories/proxipay_repository.dart';
 
+/// P2-10 (Master Inventory: zero repository-layer test files exist, no
+/// DI/mocking seam for any repository wrapping `SupabaseService` directly)
+/// — the injectable [client] parameter is the seam: production code never
+/// passes it (defaults to the real `SupabaseService.client`, identical
+/// behavior to before), tests inject a fake `SupabaseClient` instead.
 class ProxiPayRepositoryImpl implements ProxiPayRepository {
+  ProxiPayRepositoryImpl({SupabaseClient? client})
+    : _client = client ?? SupabaseService.client;
+
+  final SupabaseClient _client;
   static const _sessionsTable = 'proxipay_sessions';
 
   @override
   Future<ProxiPaySessionModel> createSession(String bookingId) async {
     try {
-      final res = await SupabaseService.client.functions.invoke(
+      final res = await _client.functions.invoke(
         'proxipay-create-session',
         body: {'bookingId': bookingId},
       );
@@ -29,9 +39,11 @@ class ProxiPayRepositoryImpl implements ProxiPayRepository {
 
   @override
   Future<ProxiPaySessionModel?> getSession(String sessionId) async {
-    final row = await SupabaseService.from(
-      _sessionsTable,
-    ).select().eq('id', sessionId).maybeSingle();
+    final row = await _client
+        .from(_sessionsTable)
+        .select()
+        .eq('id', sessionId)
+        .maybeSingle();
     return row == null ? null : ProxiPaySessionModel.fromSupabase(row);
   }
 
@@ -45,7 +57,7 @@ class ProxiPayRepositoryImpl implements ProxiPayRepository {
       'proxipay_payment_confirmation',
       () async {
         try {
-          final res = await SupabaseService.client.functions.invoke(
+          final res = await _client.functions.invoke(
             'proxipay-confirm',
             body: {'sessionId': sessionId, 'method': method, 'phone': phone},
             headers: await AppCheckService.headers(),
@@ -65,7 +77,7 @@ class ProxiPayRepositoryImpl implements ProxiPayRepository {
 
   @override
   Stream<ProxiPaySessionModel?> watchSession(String sessionId) {
-    return SupabaseService.client
+    return _client
         .from(_sessionsTable)
         .stream(primaryKey: ['id'])
         .eq('id', sessionId)

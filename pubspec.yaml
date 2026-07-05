@@ -74,6 +74,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.14.1
   flutter_native_splash: ^2.4.1
+  mocktail: ^1.0.4
 
 # phosphor_flutter 2.1.0 (pub.dev's latest) extends the SDK's now-`final`
 # IconData and fails to compile — see packages/phosphor_flutter/README_PATCH.md.
