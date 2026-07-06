@@ -22,13 +22,23 @@ were applied and live-verified during Phase 2 — an oversight in that pass's ow
 new finding about production itself. Corrected in place, cited to the same Phase 2 evidence
 already on file. Additionally, three real, currently-live gaps were found by direct re-testing
 against production during this certification pass (not assumed from any prior report): `P2-2`
-(`calculate-commission` cross-tenant commission leak), `P2-5` (no body-size limit — a real 300KB
-POST to `calculate-commission` timed out past 20 seconds, matching the exact pre-fix hang),
-and `P2-9` (`update-remote-config`/`rollback-remote-config` still gated on `role==='owner'`, not
+(`calculate-commission` cross-tenant commission leak), `P2-5` (no body-size limit), and `P2-9`
+(`update-remote-config`/`rollback-remote-config` still gated on `role==='owner'`, not
 `has_system_admin()`) — none of these three functions were among the four Phases 1-3 actually
-redeployed. All three fixes are already coded and dr-scratch-tested; what's missing is a
-`supabase functions deploy`, not new engineering. Corrected in the Master Inventory with honest
-"still open, confirmed live" status rather than left stale.
+redeployed.
+
+> **UPDATE (KYNZA — Backend Production Closure, 2026-07-06, CP1-CP5)**: all three gaps above were
+> addressed in a dedicated follow-up. **P2-2 and P2-9 are now `Fermé (preuve)`** — redeployed,
+> and their exact real exploit/bypass shapes reproduced live against production (not dr-scratch)
+> both before and after, with zero residual side effects. **P2-5 is explicitly NOT closed** —
+> redeploying it (all 16 functions) was not sufficient: live re-testing found the fix works only
+> intermittently (3 of 27 real attempts across production and `kynza-dr-scratch` returned the
+> correct `413`; the rest reproduced the original hang). This moved P2-5 from "just needs a
+> deploy" (Category B/Ops) to a genuine unresolved engineering investigation (Category A) — see
+> `docs/backend-production-closure/CP3_LIVE_VALIDATION.md` and `CP4_PRODUCTION_PARITY.md` for the
+> full evidence. The answers below are updated to reflect this; where an answer's *verdict* didn't
+> change, its *reasoning* has been updated to cite the real current state, not the original
+> three-gap framing.
 
 ---
 
@@ -38,14 +48,14 @@ redeployed. All three fixes are already coded and dr-scratch-tested; what's miss
 
 Every P0/P1 database-level fix is now closed in production (Phase 1: P0-1; Phase 2: P1-1, all 26
 migrations including P1-2/P1-3/P1-9-serveur/P1-12/P2-1/P2-3/P2-8/P2-11/P2-15/P2-24/P3-15; Phase 3:
-the operational activation of P1-3/P1-12/P2-3). But **3 real, confirmed-live security gaps remain
-in production today** — `calculate-commission`'s cross-tenant commission leak (P2-2), no
-body-size limit on 15 more Edge Functions (P2-5, re-confirmed live this session, not assumed), and
-2 Remote Config functions still gated on the wrong role check (P2-9). "Backend done" means the
-backend *as it actually runs in production*, and by that standard the answer is no — not because
-of unfinished engineering, but because 3 already-finished fixes were never redeployed by this
-go-live pass (their scope was migrations + backup/alerting/cron operations, not a general
-Edge-Function redeploy sweep).
+the operational activation of P1-3/P1-12/P2-3). **P2-2 and P2-9 are now also closed with
+production evidence** (Backend Production Closure CP1-CP4). **One real gap remains**: P2-5's
+body-size guard is deployed to all 16 functions but does not reliably trigger — live re-testing
+found it works in only 3 of 27 real attempts, the rest reproducing the original hang. "Backend
+done" means the backend *as it actually runs in production*, and by that standard the answer is
+still no — but for a narrower, more precisely understood reason than before: not "3 fixes never
+redeployed," but "1 fix redeployed and still not reliably effective," an unresolved engineering
+question, not a pending Ops action.
 
 ---
 
@@ -53,14 +63,15 @@ Edge-Function redeploy sweep).
 
 ## **OUI.**
 
-The distinction Question 1 does not make. All 3 remaining production gaps (P2-2/P2-5/P2-9) have
-**complete, dr-scratch-tested code already committed** — the only action needed is
-`supabase functions deploy <name>`, zero new code, zero new testing. This is Operations, not
-Engineering, by the same resolution rule the prior Final Engineering Certification established.
+The distinction Question 1 does not make. P2-2 and P2-9 are fully closed. **P2-5 is now honestly
+Category A (Engineering), not Category B (Ops)** — the redeploy alone didn't close it, and
+diagnosing why the guard triggers only intermittently is genuine new investigation, not a
+mechanical deploy. This does not flip this answer to NON: the resolution rule this program has
+used throughout gates on **P0/P1** severity only, and P2-5 remains P2 — real, but not blocking.
 The genuine Category A engineering-remaining items (19/24 untested repositories, RLS-performance
-review, root/jailbreak detection needing hardware, architecture debt, etc.) are unchanged by this
-go-live pass — all P2/P3 severity, none blocking, each with a previously-stated reason it wasn't
-rushed. No new engineering surfaced by executing Phases 1-3.
+review, root/jailbreak detection needing hardware, architecture debt, **and now P2-5's reliability
+investigation**) are all P2/P3 severity, none blocking, each with a stated reason. No P0/P1
+engineering surfaced by executing Phases 1-3 or this closure pass.
 
 ---
 
@@ -69,14 +80,14 @@ rushed. No new engineering surfaced by executing Phases 1-3.
 ## **NON.**
 
 Both P0/P1 vulnerabilities this entire program ever ranked above everything else are now closed
-and live-verified (P0-1's account-takeover vector, P1-1's mass-assignment). That is real,
-significant progress — no P0 or P1 security finding remains open anywhere in this program's
-history. But **security readiness as a whole is still not a clean "yes"**: P2-2 (cross-tenant data
-leak) and P2-5 (DoS) are real, currently-exploitable gaps in production, re-confirmed by direct
-testing during this certification, not merely carried forward from an old report. No security
-domain has ever scored above "Conditional" in this program, and this pass doesn't change that
-verdict — it moves the needle from "a live account-takeover vector" to "3 known, already-fixed,
-not-yet-deployed P2 gaps," a meaningfully smaller and better-understood risk, but not zero.
+and live-verified (P0-1's account-takeover vector, P1-1's mass-assignment) — and now **P2-2's
+cross-tenant data leak is closed too**, live-verified against production. That is real,
+significant progress. But **security readiness as a whole is still not a clean "yes"**: P2-5's
+body-size DoS guard is deployed but does not reliably protect production — confirmed by 27 real
+live attempts finding only 3 correct rejections. No security domain has ever scored above
+"Conditional" in this program, and this pass doesn't change that verdict — it moves the needle
+from "3 known gaps, none yet deployed" to "1 gap, deployed, but proven unreliable," a smaller and
+much more precisely understood risk, but not zero.
 
 ---
 
@@ -90,9 +101,11 @@ restore-verified against a real artifact (Phase 3); the alerting mechanism fired
 threshold categories and recorded them correctly (Phase 3); every cron job (`kynza-booking-
 reminders`, `kynza-run-scheduled-actions`, `kynza-platform-backup`, `kynza-check-system-alerts`)
 is registered and `active=true`; the atomic-claim concurrency protection was proven exclusive
-under a genuine parallel-request race, not just present in code. The 3 remaining Edge Function
-redeploys (P2-2/P2-5/P2-9) are a security-scoped gap, not an infrastructure-mechanism gap — the
-underlying infra (cron, storage, DB) that would carry those fixes is itself fully operational.
+under a genuine parallel-request race, not just present in code. P2-5's remaining reliability gap
+is a security/application-layer concern, not an infrastructure-mechanism gap — the underlying
+infra (cron, storage, DB, the Edge Functions platform itself) that would carry a fix is fully
+operational; what's unresolved is *why* one specific application-level guard doesn't fire
+consistently, not whether the platform underneath it works.
 
 ---
 
@@ -145,14 +158,14 @@ credential.
 ## **NON.**
 
 Real, substantial progress: every database-layer gap this program ever found is closed, backups
-and monitoring are live and proven, and the two most severe security findings are shut. But
-"production readiness" as a holistic claim is blocked by two distinct categories of remaining
-work, neither of which this go-live pass was scoped to close: (a) 3 Edge Function redeploys
-(P2-2/P2-5/P2-9 — Ops, minutes of work, just not done yet), and (b) External Go-Live Dependencies
-unchanged by this pass — real Android upload keystore, Play Store Data Safety form, final legal
-content, Apple Developer enrollment, real bank details, and a handful of real API keys (Google
-Maps, Facebook/Apple sign-in, WhatsApp). None of these are engineering debt; all are named,
-tracked, and owned in `docs/enterprise-final-100/EXTERNAL_GO_LIVE_DEPENDENCIES.md`.
+and monitoring are live and proven, and P0-1/P1-1/P2-2/P2-9 are all shut with production evidence.
+But "production readiness" as a holistic claim is blocked by two distinct categories of remaining
+work: (a) **P2-5's unresolved reliability gap** — no longer a pending Ops deploy, now a genuine
+open engineering investigation (Backend Production Closure CP3/CP4), and (b) External Go-Live
+Dependencies unchanged by this pass — real Android upload keystore, Play Store Data Safety form,
+final legal content, Apple Developer enrollment, real bank details, and a handful of real API keys
+(Google Maps, Facebook/Apple sign-in, WhatsApp). All are named, tracked, and owned in
+`docs/enterprise-final-100/EXTERNAL_GO_LIVE_DEPENDENCIES.md`.
 
 ---
 
@@ -169,9 +182,9 @@ items still open are Category C (External — Android keystore, legal content, i
 Play Store form), which this program's own Question 8/Question 9 resolution has always treated as
 a distinct question from "is there open engineering/ops work," and P1-9/P1-10's client half, which
 ships automatically with the next release and was never a deploy gate. **No P0 or P1 Engineering
-or Operations item remains open anywhere in this program's history as of this document.** The
-remaining P2 gaps (P2-2/P2-5/P2-9) are real but were never the bar this question's own rule set —
-only P0/P1 severity gates this answer.
+or Operations item remains open anywhere in this program's history as of this document.** P2-5's
+open reliability gap is real but was never the bar this question's own rule set — only P0/P1
+severity gates this answer, and it remains P2.
 
 ---
 
@@ -184,9 +197,10 @@ Play Store's specific blockers are all External Go-Live Dependencies: the real u
 the real verified data inventory it needs already exists), and final legal content (P1-6,
 infrastructure to serve it is fully built). Once those three externally-owned items are provided,
 nothing engineering-side blocks a Play Store submission — the backend those screens depend on is
-live, migrated, and (for its P0/P1 findings) secure. **Recommended, not required**: closing
-P2-2/P2-5/P2-9 before real public traffic arrives, since they are real, currently-exploitable
-findings, even though they don't block this specific question's literal Play Store gate.
+live, migrated, and (for its P0/P1 findings, plus P2-2/P2-9) secure. **Recommended, not required**:
+resolving P2-5's reliability gap before real public traffic arrives, since it's a real,
+intermittently-exploitable DoS finding, even though it doesn't block this specific question's
+literal Play Store gate.
 
 ---
 
@@ -224,16 +238,19 @@ with "waiting on weeks of unstarted engineering" — this document does not make
 
 ## What closing the remaining gaps actually requires
 
-1. **3 Edge Function redeploys** (P2-2, P2-5, P2-9) — `supabase functions deploy calculate-
-   commission`, `update-remote-config`, `rollback-remote-config`. Minutes of work, zero new code.
-   Not attempted by this prompt's own explicit phase boundaries (migrations + operations
-   activation only) — a natural next authorization if Mylord wants it.
-2. **External Go-Live Dependencies** — unchanged by this pass, all named and owned in
+1. ~~3 Edge Function redeploys (P2-2, P2-5, P2-9)~~ — **done** (Backend Production Closure
+   CP1-CP4, 2026-07-06). P2-2 and P2-9 are closed with production evidence.
+2. **P2-5's reliability investigation** — the body-size guard is deployed everywhere it needs to
+   be but triggers only intermittently (3/27 real attempts). Diagnosing why (candidates: edge
+   multi-instance Content-Length propagation, an upstream proxy/CDN layer, a runtime race) is
+   genuine engineering work, not a redeploy — see `docs/backend-production-closure/
+   CP3_LIVE_VALIDATION.md`/`CP4_PRODUCTION_PARITY.md` for the full evidence base to start from.
+3. **External Go-Live Dependencies** — unchanged by this pass, all named and owned in
    `EXTERNAL_GO_LIVE_DEPENDENCIES.md`: real Android keystore, Play Store Data Safety form, final
    legal content, Apple Developer enrollment, real bank details, Google Maps/Facebook/Apple/
    WhatsApp API keys.
-3. **iOS as a platform** — a genuine multi-week engineering effort, not a go-live-phase item,
+4. **iOS as a platform** — a genuine multi-week engineering effort, not a go-live-phase item,
    gated on the Apple Developer account existing first.
-4. Everything else this program has ever found is either closed with live proof (this document's
-   own re-verification) or explicitly deferred Category A engineering debt (P2/P3, non-blocking,
-   each with a stated reason), unchanged and not newly discovered by this certification.
+5. Everything else this program has ever found is either closed with live proof (this document's
+   own re-verification, now including P2-2/P2-9) or explicitly deferred Category A engineering
+   debt (P2/P3, non-blocking, each with a stated reason).
