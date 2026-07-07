@@ -30,9 +30,9 @@ in which case Phase 2 applies it directly, or it touches Supabase, in which case
 |---|---|---|
 | P0 | 1 | 0 |
 | P1 | 8 | 1 (Phase 0 backup, this pass) |
-| P2 | 21 | 0 |
+| P2 | 22 | 1 (P2-5, P2-5 ECR, 2026-07-07 — see entry for scope; P2-22 added same session, still open) |
 | P3 | 19 | 5 (fixed in earlier passes, verified still true) |
-| **Total distinct issues** | **49** | **6** |
+| **Total distinct issues** | **50** | **7** |
 
 ---
 
@@ -407,7 +407,21 @@ tabulated compactly with source + status (still individually traceable, per exit
   rejection before parsing, applied across all 20 functions (a mechanical, repo-wide Edge Function
   hardening pass, appropriately scoped as its own follow-up, not force-fit into this remediation
   pass's time budget).
-- **Status**: open, tracked, no fix drafted this pass.
+- **Status**: **Closed with Engineering Evidence (2026-07-07)** — see `docs/p2-5-rca/` (root cause:
+  `Content-Length` unreliable across the Supabase gateway→Deno-isolate hop, ~70% confidence, full
+  hypothesis-rejection table) and `docs/p2-5-ecr/` (fix: `readBodyGuarded()`, a shared streaming
+  byte-count guard in `supabase/functions/_shared/cors.ts` depending only on bytes actually read
+  from the request stream, never on the header; deployed to all 16 currently-affected Edge
+  Functions). **Live-validated on production**: at every payload size this program's tooling can
+  get the platform to reliably deliver (up to ~208KB, more than double `MAX_BODY_BYTES`), the fix
+  is 100% deterministic across 15-30 consecutive real attempts, per function, vs. 0-20% for the
+  pre-fix code tested the same session (`docs/p2-5-ecr/CP3_TESTS.md` Section H,
+  `docs/p2-5-ecr/CP5_VALIDATION.md`). A known, honestly-disclosed residual: the official
+  reproduction script's *default* ~300KB payload lands inside a separate, newly-discovered platform
+  ceiling (**tracked as P2-22**, not part of this closure) where large-enough bodies intermittently
+  never reach the isolate at all, identically on old and new code — this is why closure is scoped
+  to the `Content-Length`-reliability mechanism specifically, not to "every oversized request now
+  gets a fast `413`."
 
 ### P2-6 — MANAGER / SYSTEM_ADMIN role isolation never independently live-tested
 
@@ -579,6 +593,38 @@ tabulated compactly with source + status (still individually traceable, per exit
 - **Status**: open — pinning needs a captured real cert + a renewal-tracking process (ops decision,
   not just code); root/jailbreak detection has no code or roadmap start at all.
 
+### P2-22 — Request bodies ≳210KB have a substantial-to-near-total chance of never reaching the Edge Function isolate at all, identically on any code version
+
+- **Corroboration: 1 pass** — discovered during the P2-5 Engineering Change Request
+  (`docs/p2-5-ecr/CP3_TESTS.md` Sections G-H, `docs/p2-5-ecr/CP5_VALIDATION.md`) while validating
+  the P2-5 streaming-guard fix, not part of any prior pass's scope.
+- **Impact**: DoS-shaped — for payloads at or beyond roughly 210KB (a range that includes the
+  original 2MB finding that opened P2-5, and the official reproduction script's own default
+  ~300KB payload), the client-observed request intermittently — and at ~300KB, almost always —
+  never receives any HTTP response at all (a genuine connection hang, not a slow success;
+  confirmed with a 90s extended-wait precedent in the P2-5 RCA and repeated 10-20s timeouts here).
+- **Evidence this is not an application-code bug**: proven with the *unmodified pre-ECR* code on
+  **production**, given an honest, `curl`-computed, entirely accurate `Content-Length` header (no
+  header trickery at all) — hung 5/5 times at 210,000 bytes. The new streaming guard (P2-5's fix)
+  shows the identical behavior at the same sizes. Old code and new code are affected equally,
+  which rules out either implementation as the cause — this is evidence of a platform-level
+  (most plausibly the same class of Supabase gateway↔Deno-isolate propagation unreliability the
+  P2-5 RCA already found for the `Content-Length` header, but here affecting the request body
+  stream itself once it grows past some threshold) limitation, not a code defect.
+- **Why this is a separate item from P2-5, not folded into it**: P2-5's root cause and fix were
+  specifically scoped to `Content-Length` reliability; this ceiling persists even with a fully
+  correct, present header, and even with a fix that never reads the header at all — a structurally
+  different mechanism the P2-5 ECR's own "zero-scope-creep" constraint correctly excluded from
+  that session's fix.
+- **Proposed fix**: not drafted. Would need its own RCA with the same rigor as P2-5's (the P2-5 RCA
+  itself suspected an unsynchronized-region/replica mechanism for the header case, folded in as
+  the leading candidate rather than independently proven — the same open question likely applies
+  here). No tooling available to this program can currently see inside a hung invocation from the
+  outside (same ceiling the P2-5 RCA named explicitly), so root-causing this further likely needs
+  Supabase dashboard Logs Explorer access or a support request, neither exercised so far.
+- **Status**: open, newly discovered, not fixed, not fixable from this codebase's application code
+  alone based on evidence gathered so far.
+
 ---
 
 ## P3 (tech debt / low-priority — compact form)
@@ -678,3 +724,7 @@ CP11_AUTOFIX_AND_VIRTUAL_PRS.md→P2-1,P2-2,P2-3(fix drafts); FINAL_ENTERPRISE_R
 **PRODUCTION_CHECKLIST.md**: every dated update section cross-checked above; no items found in it
 that aren't already covered by one of the source-pass documents that originated them (it is itself
 a consolidated log, not an independent source of new findings).
+
+**P2-5 RCA + ECR (2026-07-07, post-dates the 5 passes above)**: `docs/p2-5-rca/FINAL_RCA_REPORT.md`
+→P2-5(root-caused); `docs/p2-5-ecr/CP1_DESIGN_REVIEW.md` through `CP6_DOCUMENTATION_CLOSURE.md`
+→P2-5(closed with engineering evidence, see entry for scope), P2-22(discovered, opened).

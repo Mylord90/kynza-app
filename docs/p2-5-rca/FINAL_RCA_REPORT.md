@@ -163,3 +163,27 @@ the finding because the actual defect is not in this codebase's deployment state
 or code — it is in the reliability of an external platform signal this program's current
 implementation depends on. Closing it requires writing and validating new code (the streaming
 guard above), not re-running any existing deployment step.
+
+---
+
+## Resolution note (added 2026-07-07, P2-5 Engineering Change Request — this RCA's findings and
+text above are otherwise unchanged)
+
+This RCA's recommended strategy was implemented, tested, and validated in `docs/p2-5-ecr/`
+(`readBodyGuarded()`, `supabase/functions/_shared/cors.ts`, deployed to all 16 affected Edge
+Functions, live on production). **The narrow mechanism this RCA identifies above — `Content-Length`
+unreliability causing the guard's documented fallback to admit an unbounded body — is closed**,
+evidenced at every payload size this program's tooling can get the platform to reliably deliver
+(`docs/p2-5-ecr/CP3_TESTS.md` Section H, `docs/p2-5-ecr/CP5_VALIDATION.md`: 100% deterministic
+across repeated live attempts, vs. this RCA's own measured ~4% for the pre-fix code).
+
+**One addition to this RCA's picture, not a correction of it**: validating the fix surfaced a
+second, separate platform-level phenomenon — payloads roughly ≥210KB (a range that includes the
+2MB body this RCA's own finding used) have a substantial-to-near-total chance of never reaching the
+isolate at all, proven identically present on the *unmodified* pre-fix code with an honest, accurate
+`Content-Length` header. This is consistent with, and may be the fuller explanation for, this RCA's
+own ~4% (not 0%, not 100%) success-rate observation — but establishing that with this RCA's own
+level of rigor is future work, tracked separately as **P2-22**
+(`docs/remediation/MASTER_ISSUES_MATRIX.md`), not folded into this document or into P2-5's closure.
+See `docs/p2-5-ecr/CP6_DOCUMENTATION_CLOSURE.md` and `docs/p2-5-ecr/FINAL_CERTIFICATION.md` for the
+full closure record.
