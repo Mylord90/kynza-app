@@ -264,43 +264,74 @@ référence).
 
 ---
 
-## Fiche 6 — RC-11 : activer la protection contre les mots de passe divulgués (Leaked Password Protection)
+## Fiche 6 (RÉVISÉE, 2026-07-07, post-incident) — RC-11 : activer la protection contre les mots de passe divulgués (Leaked Password Protection)
 
 **Priorité** : Moyen.
 
-**Nature différente des 5 fiches précédentes** : ce n'est pas une migration SQL — c'est un réglage
-du projet Auth (GoTrue), absent de `supabase/config.toml` aujourd'hui (`grep -n "hibp"
-supabase/config.toml` → aucune occurrence).
+> **Pourquoi cette fiche est révisée** : la première tentative (`supabase/config.toml` +
+> `supabase config push`) a causé un incident réel — `config push` ne pousse pas un champ isolé,
+> il pousse un diff de section entière, et `password_hibp_enabled` s'est révélé être une clé
+> **invalide** dans le schéma `config.toml` de la CLI installée (2.107.0), cassant l'outillage
+> local sans jamais confirmer avoir atteint la plateforme. Détail complet, restauration effectuée
+> et preuve : `docs/advisors-review/CP6_EXECUTION_LOG.md` (section RC-11). **`config.toml` /
+> `config push` est exclu comme mécanisme pour cette fiche — plus jamais utilisé pour un
+> changement Auth ponctuel.**
 
-**Changement proposé** — ajouter sous `[auth]` dans `supabase/config.toml` :
-```toml
-password_hibp_enabled = true
-```
-puis `supabase config push --linked` (après validation, per Rule 8 — jamais avant accord).
+**Mécanisme révisé** : appel direct à l'API Management REST, jamais via `config.toml`. Confirmé
+par la documentation Supabase (recherche effectuée le 2026-07-07) : l'endpoint
+`GET/PATCH https://api.supabase.com/v1/projects/{ref}/config/auth` existe, et `password_hibp_enabled`
+(booléen) est bien le nom de champ correct côté API — le problème initial n'était pas un nom de
+champ erroné, seulement son absence du schéma local `config.toml` de cette version de CLI.
+Sources : [Management API Reference](https://supabase.com/docs/reference/api/introduction),
+[Get auth config](https://supabase.com/docs/reference/api/v1-get-auth-config).
+
+**Séquence obligatoire, dans cet ordre, jamais inversée** :
+1. **GET en lecture seule d'abord** — `GET /v1/projects/hhdkjfpgaklhrhfoxlhj/config/auth`, lire
+   `password_hibp_enabled` dans la réponse, consigner sa valeur actuelle exacte (déduction du
+   Checkpoint 6 : très probablement `false`/absent, jamais transmis — mais ceci doit être remplacé
+   par une preuve directe, pas une déduction, avant toute écriture).
+2. **PATCH ensuite, uniquement ce champ** — corps de requête limité à
+   `{"password_hibp_enabled": true}`, jamais un objet de configuration plus large (c'est
+   exactement la discipline qui a manqué à la première tentative).
+3. **GET de vérification** — relire `password_hibp_enabled`, confirmer `true`.
+
+**Blocage opérationnel à lever avant exécution** : je n'ai pas d'accès direct et sanctionné à un
+jeton d'accès Management API (PAT) pour exécuter ces appels moi-même — la CLI `supabase` gère son
+propre jeton en interne sans l'exposer (`--debug` ne le journalise pas, confirmé), et je ne
+tenterai pas de l'extraire d'un magasin d'identifiants d'un autre outil sur cette machine (extension
+VSCode, config MCP d'un autre IDE) : ce serait hors périmètre de cette session. **Deux options
+pour débloquer, au choix de Mylord** :
+- **Option A (recommandée)** : effectuer les 3 étapes ci-dessus directement dans le Dashboard
+  Supabase (Authentication → Sign In / Providers → Password Security, ou équivalent) — un simple
+  toggle, zéro risque de diff en lot, évite complètement la classe de risque qui a causé l'incident
+  RC-11 initial. Je n'ai pas besoin d'y participer pour cette option.
+- **Option B** : Mylord fournit un jeton d'accès Management API (PAT) scopé, temporaire, pour cette
+  session uniquement — j'exécute alors moi-même les 3 appels ci-dessus avec preuve à chaque étape,
+  puis recommande sa révocation immédiate après usage.
 
 **Bénéfices attendus** : empêche un utilisateur de définir un mot de passe déjà présent dans une
 fuite de données connue (vérification via k-anonymity contre l'API Have I Been Pwned, standard
 Supabase) — contrôle de sécurité de base actuellement absent.
 
-**Risques** : quasi nul — n'affecte que les futurs choix/changements de mot de passe (inscription,
-reset), aucun impact sur les sessions ou comptes existants. Dépendance externe : l'appel à l'API
-HIBP au moment de l'inscription/changement de mot de passe (latence additionnelle marginale,
-échec de l'appel HIBP lui-même documenté comme fail-open côté Supabase, cohérent avec ADR-0001).
+**Risques** : quasi nul pour le changement lui-même (n'affecte que les futurs choix/changements de
+mot de passe, aucun impact sur les sessions ou comptes existants, l'échec de l'API HIBP est
+documenté fail-open côté Supabase, cohérent avec ADR-0001) — le risque réel identifié était dans le
+**mécanisme d'application** (`config push`), pas dans le changement, d'où la révision ci-dessus.
 
-**Plan de rollback** : retirer la ligne `password_hibp_enabled = true` (ou la passer à `false`)
-et `supabase config push --linked`.
+**Plan de rollback** : `PATCH /v1/projects/{ref}/config/auth` avec
+`{"password_hibp_enabled": false}` (Option B) ou le même toggle dans le Dashboard (Option A).
 
 **Dépendances** : aucune.
 
 **Impact sécurité** : positif. **Impact performance** : négligeable (latence additionnelle au
 moment du choix de mot de passe uniquement). **Impact disponibilité** : aucun. **Impact RLS** :
 aucun. **Impact Auth** : oui, par construction — c'est le point même de ce changement ; aucune
-session existante affectée. **Impact Realtime** : aucun.
+session existante affectée, aucun autre champ Auth touché (contrairement à l'incident initial).
+**Impact Realtime** : aucun.
 
-**Validation post-correction proposée** : tenter une inscription/un changement de mot de passe
-avec un mot de passe connu comme divulgué (ex. `password123`) et confirmer le rejet ; confirmer via
-Management API (`GET /v1/projects/{ref}/config/auth`) que `password_hibp_enabled: true` est bien
-reflété côté plateforme.
+**Validation post-correction proposée** : GET de vérification (étape 3 ci-dessus) ; puis tenter une
+inscription/un changement de mot de passe avec un mot de passe connu comme divulgué
+(ex. `password123`) et confirmer le rejet.
 
 ---
 
@@ -308,13 +339,14 @@ reflété côté plateforme.
 
 | # | Fiche | Priorité | Type de changement | Accord requis avant |
 |---|---|---|---|---|
-| 1 | RC-5c — REVOKE SELECT sur 31 vues/MV | Critique | SQL (grants) | Test dr-scratch puis prod |
-| 2 | RC-6d — REVOKE EXECUTE `claim_pending_action_runs` | Critique | SQL (grants) | Test dr-scratch puis prod |
-| 3 | RC-6c — REVOKE EXECUTE `check_system_alerts` | Haut | SQL (grants) | Test dr-scratch puis prod |
-| 4 | RC-4 — 15 `CREATE INDEX` | Moyen | Migration SQL | Test dr-scratch puis prod |
-| 5 | RC-8 — 6 `ALTER FUNCTION ... SET search_path` | Moyen | Migration SQL | Test dr-scratch puis prod |
-| 6 | RC-11 — `password_hibp_enabled = true` | Moyen | Config Auth (non-SQL) | Accord direct puis `config push` |
+| 1 | RC-5c — REVOKE ALL sur 31 vues/MV (portée élargie depuis SELECT, cf. CP6 log) | Critique | SQL (grants) | **Fait sur dr-scratch, commit `1ac5368`** — attend accord prod |
+| 2 | RC-6d — REVOKE EXECUTE `claim_pending_action_runs` | Critique | SQL (grants) | **Fait sur dr-scratch, commit `8d9350a`** — attend accord prod |
+| 3 | RC-6c — REVOKE EXECUTE `check_system_alerts` | Haut | SQL (grants) | **Fait sur dr-scratch, commit `8d9350a`** — attend accord prod |
+| 4 | RC-4 — 15 `CREATE INDEX` | Moyen | Migration SQL | **Fait sur dr-scratch, commit `86f21b8`** — attend accord prod |
+| 5 | RC-8 — 6 `ALTER FUNCTION ... SET search_path` | Moyen | Migration SQL | **Fait sur dr-scratch, commit `53c9041`** — attend accord prod |
+| 6 | RC-11 — `password_hibp_enabled = true` | Moyen | API Management directe (jamais `config.toml`/`config push`, cf. révision ci-dessus) | Bloqué sur Option A ou B ci-dessus |
 
-**Aucune de ces 6 corrections n'a été exécutée, ni sur `kynza-dr-scratch` ni sur production.**
-Merci de valider chaque fiche individuellement (ou de demander des ajustements) avant que je
-procède au Checkpoint 6 pour l'item concerné.
+**5 des 6 corrections sont appliquées et validées sur `kynza-dr-scratch`, aucune sur production.**
+RC-11 reste bloquée sur un choix de mécanisme (Dashboard direct ou PAT temporaire) avant même une
+tentative staging. Merci de valider chaque fiche individuellement avant passage en production —
+toujours item par item, jamais en lot.
