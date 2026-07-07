@@ -47,26 +47,32 @@ export type BodyReadResult =
 /// This reads the body from the standard `Request.body` `ReadableStream`
 /// incrementally and aborts (cancels the reader) the instant cumulative
 /// bytes exceed `MAX_BODY_BYTES` — before the full body is ever buffered or
-/// parsed. This is the real backstop: it depends only on bytes actually
-/// delivered to the isolate, never on a header a proxy layer can drop or
-/// misreport, so it enforces the same outcome whether `Content-Length` is
-/// correct, wrong, or absent entirely.
+/// parsed. This is the sole authority, by design: it never reads
+/// `Content-Length` at all, so it enforces the same outcome whether the
+/// header is correct, wrong, or absent — there is nothing for a proxy layer
+/// to drop or misreport that this check depends on.
 ///
-/// The `Content-Length` pre-check below is kept only as a fast-path
-/// optimization for the common well-behaved case (reject before waiting on
-/// the stream at all when the header is both present and already honest
-/// about being oversized) — it is never the sole authority; the streaming
-/// count always runs and is what actually protects the invocation.
+/// An earlier draft of this function kept a `Content-Length` pre-check as a
+/// "fast path" for oversized-and-honestly-labeled requests. CP3 testing
+/// (`docs/p2-5-ecr/CP3_TESTS.md`) found that keeping any header-driven
+/// rejection branch re-introduces a dependency the ECR's mandate rules out
+/// outright ("depends only on data actually received, never on a declared
+/// header") — and demonstrated that a client which understates its own
+/// declared length relative to what it sends does not produce a clean,
+/// observable false accept/reject at this layer at all; it hangs at the
+/// HTTP framing layer below the isolate, before any application code runs.
+/// Since the header cannot be used as a rejection shortcut without
+/// re-admitting exactly the dependency this fix exists to remove, and since
+/// the streaming count below already aborts within one `MAX_BODY_BYTES`
+/// chunk of the true start of the body regardless of size, the header is
+/// not read here at all — removing it costs no meaningful performance
+/// (measured in `docs/p2-5-ecr/CP4_PERFORMANCE.md`) and removes the
+/// dependency entirely rather than partially.
 ///
 /// Single shared utility — every Edge Function that accepts a JSON body
 /// must call this instead of `req.json()` directly, so there is exactly one
 /// place this guard is implemented.
 export async function readBodyGuarded(req: Request): Promise<BodyReadResult> {
-  const declaredLen = req.headers.get("content-length");
-  if (declaredLen && Number(declaredLen) > MAX_BODY_BYTES) {
-    return { ok: false, response: tooLargeResponse() };
-  }
-
   const reader = req.body?.getReader();
   if (!reader) {
     return { ok: true, text: "" };
