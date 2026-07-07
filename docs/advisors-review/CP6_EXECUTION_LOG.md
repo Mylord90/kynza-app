@@ -326,13 +326,13 @@ d'erreur SQL).
    {}`. Cascade confirmée : `SELECT count(*) FROM auth.users WHERE id='...'` → `0` ;
    `SELECT count(*) FROM public.users WHERE id='...'` → `0`.
 
-**Quel log a capturé la création/suppression, vérifié explicitement** : `auth.audit_log_entries`
-(le journal d'audit natif de GoTrue) a été interrogé après coup — **`SELECT count(*) FROM
-auth.audit_log_entries` retourne `0` ligne au total sur ce projet**, pas seulement pour cette
-identité : ce journal n'est pas alimenté sur ce projet (mécanisme de plateforme, hors du contrôle
-du code applicatif KYNZA). **Il n'existe donc aucun log SQL-interrogeable de cette création ni de
-cette suppression** — la seule trace vérifiable est la présente session (les appels HTTP et leurs
-réponses, reproduits ci-dessus) et ce document. À noter pour toute reproduction future de ce test.
+**Quel log a capturé la création/suppression** : `auth.audit_log_entries` (journal natif GoTrue)
+interrogé après coup, retourne `0` ligne — **pas seulement pour cette identité, `0` au total sur
+tout le projet**. Il n'existe donc aucun log SQL-interrogeable de cette création ni de cette
+suppression ; seule trace vérifiable : la présente session (appels HTTP et réponses ci-dessus) et
+ce document. **Ce constat dépasse le cadre de cette seule identité de test** — voir la section
+dédiée « Constat hors périmètre » plus bas (**P2-29**), qui le traite comme un finding à part
+entière, pas comme un détail méthodologique de RC-5c.
 
 **Confirmation qu'aucune trace n'a pollué `activity_logs`/`v_audit_security_trail`** (la table que
 cette correction vient précisément de sécuriser — vérification demandée explicitement pour éviter
@@ -352,3 +352,39 @@ par le chemin applicatif `logActivity()` qui alimente `activity_logs`.
 
 **Les 5 items sont clos en production, chacun avec preuve négative, preuve positive et comparateur
 Advisors avant/après.**
+
+---
+
+## Constat hors périmètre — `auth.audit_log_entries` vide sur l'ensemble du projet (P2-29)
+
+**Ceci n'est pas un défaut lié à RC-5c ni à aucune des 6 alertes traitées dans cette session** —
+c'est une découverte incidente, faite en documentant le mécanisme de l'identité de test temporaire
+ci-dessus, d'un état préexistant à cette session entière et indépendant d'elle.
+
+**Constat** : `SELECT count(*) FROM auth.audit_log_entries` → `0` ligne, en production, sur
+l'ensemble du projet — pas seulement pour l'identité de test créée pendant RC-5c. Le journal
+d'audit natif de GoTrue (qui devrait normalement enregistrer les actions admin — créations/
+suppressions de comptes, resets de mot de passe, etc.) n'est vérifiablement alimenté par aucune
+action, jamais, sur ce projet.
+
+**Distinction importante** : `system_admin_audit` (table applicative alimentée par les RPC
+`grant_system_admin()`/`revoke_system_admin()`, P2-8, déjà fermée avec preuve) est un mécanisme
+**séparé et fonctionnel** — ce constat ne le remet pas en cause, il porte spécifiquement sur le
+journal natif GoTrue, distinct du mécanisme applicatif KYNZA.
+
+**Classification (per les règles de ce prompt — constat, pas correction improvisée)** : **Vrai
+problème, gravité P2** — aucun exploit live, mais un vrai manque de capacité de réponse à incident
+(aucune trace native des actions admin console si certaines ont eu lieu hors des chemins de
+journalisation applicatifs). Deux hypothèses non encore départagées : (a) le mécanisme est
+désactivé/non configuré au niveau plateforme pour ce projet, (b) il n'a simplement jamais été
+sollicité par une action console admin (les actions de cette session sont passées par l'API Admin/
+SQL direct, dont on vient de prouver qu'elles ne l'alimentent pas non plus). **Aucune investigation
+plus poussée ni correction n'a été tentée** — hors du périmètre de cette session (6 alertes
+Advisors classifiées), nécessite sa propre investigation dédiée avant toute proposition de
+correction, exactement comme P2-28 en son temps.
+
+**Ticket créé** : `P2-29` dans `docs/KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md` §2, suivant
+la règle du projet (un seul compteur par préfixe de sévérité, prochain numéro libre après P2-28,
+per `BACKEND_GOVERNANCE_GUIDE.md` §1.2) — ajouté dans la même session que sa découverte, comme
+l'exige cette même règle. Statut : **Ouvert**, en attente d'une décision dédiée sur si/comment
+l'activer.
