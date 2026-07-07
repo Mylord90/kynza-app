@@ -1,5 +1,16 @@
 # KYNZA — Master Issues Matrix (Remediation v1, Phase 1)
 
+> ## ⚠️ SUPERSEDED (2026-07-07)
+> **This document is historical evidence only — it is no longer the canonical issue tracker.**
+> It was last updated 2026-07-04 and was never revised after the 2026-07-06 go-live deployments
+> closed several items still marked open below (see `docs/final-doc-verification/P0_VERIFICATION.md`
+> and `P1_VERIFICATION.md` for the live re-verification that found this). **The canonical, actively-
+> maintained Master Inventory is `docs/KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md` §2** — consult
+> that document for current issue status. This file remains on disk, unmodified in its findings
+> below except for the ID-collision correction noted at P2-22/P2-28, as the evidentiary record of
+> the Remediation v1 pass itself. See `docs/governance/PHASE_1_DOCUMENTARY_UNIFICATION.md` for the
+> full canonicalization ruling.
+
 > Deduplicated union of every still-open finding from the 5 prior passes — Enterprise Architecture
 > & Documentation Expansion ("Doc pass"), Enterprise Hardening & Production Readiness ("Hardening
 > pass", tag `post-hardening-v1`), Backend Enterprise Completion ("Backend pass", tag
@@ -30,7 +41,7 @@ in which case Phase 2 applies it directly, or it touches Supabase, in which case
 |---|---|---|
 | P0 | 1 | 0 |
 | P1 | 8 | 1 (Phase 0 backup, this pass) |
-| P2 | 22 | 1 (P2-5, P2-5 ECR, 2026-07-07 — see entry for scope; P2-22 added same session, still open) |
+| P2 | 22 | 1 (P2-5, P2-5 ECR, 2026-07-07 — see entry for scope; P2-28 added same session, still open) |
 | P3 | 19 | 5 (fixed in earlier passes, verified still true) |
 | **Total distinct issues** | **50** | **7** |
 
@@ -418,7 +429,7 @@ tabulated compactly with source + status (still individually traceable, per exit
   pre-fix code tested the same session (`docs/p2-5-ecr/CP3_TESTS.md` Section H,
   `docs/p2-5-ecr/CP5_VALIDATION.md`). A known, honestly-disclosed residual: the official
   reproduction script's *default* ~300KB payload lands inside a separate, newly-discovered platform
-  ceiling (**tracked as P2-22**, not part of this closure) where large-enough bodies intermittently
+  ceiling (**tracked as P2-28**, not part of this closure) where large-enough bodies intermittently
   never reach the isolate at all, identically on old and new code — this is why closure is scoped
   to the `Content-Length`-reliability mechanism specifically, not to "every oversized request now
   gets a fast `413`."
@@ -593,7 +604,14 @@ tabulated compactly with source + status (still individually traceable, per exit
 - **Status**: open — pinning needs a captured real cert + a renewal-tracking process (ops decision,
   not just code); root/jailbreak detection has no code or roadmap start at all.
 
-### P2-22 — Request bodies ≳210KB have a substantial-to-near-total chance of never reaching the Edge Function isolate at all, identically on any code version
+### P2-28 — Request bodies ≳210KB have a substantial-to-near-total chance of never reaching the Edge Function isolate at all, identically on any code version
+
+> **Renumbered 2026-07-07** (Backend Governance, Phase 1): this item was originally filed as
+> `P2-22` in this document, which collided with an unrelated, already-closed `P2-22` (the
+> bulk-write trigger ceiling fix, `docs/KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md:81`) in
+> the canonical Master Inventory. Renumbered to `P2-28` — the next free ID in that document's own
+> numbering space — to resolve the collision. See
+> `docs/governance/PHASE_1_DOCUMENTARY_UNIFICATION.md`.
 
 - **Corroboration: 1 pass** — discovered during the P2-5 Engineering Change Request
   (`docs/p2-5-ecr/CP3_TESTS.md` Sections G-H, `docs/p2-5-ecr/CP5_VALIDATION.md`) while validating
@@ -727,4 +745,5 @@ a consolidated log, not an independent source of new findings).
 
 **P2-5 RCA + ECR (2026-07-07, post-dates the 5 passes above)**: `docs/p2-5-rca/FINAL_RCA_REPORT.md`
 →P2-5(root-caused); `docs/p2-5-ecr/CP1_DESIGN_REVIEW.md` through `CP6_DOCUMENTATION_CLOSURE.md`
-→P2-5(closed with engineering evidence, see entry for scope), P2-22(discovered, opened).
+→P2-5(closed with engineering evidence, see entry for scope), P2-28(discovered, opened, renumbered
+from P2-22 2026-07-07 per Backend Governance Phase 1 to resolve an ID collision).

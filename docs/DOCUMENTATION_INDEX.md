@@ -292,3 +292,28 @@ with the exact live-test evidence for every item it closed.
 - **CP9 — Reliability**: [`enterprise-final-100/CP9_RELIABILITY.md`](enterprise-final-100/CP9_RELIABILITY.md) — re-scan confirms no new concurrency-bug instances introduced by this campaign
 - **CP10 — Documentation**: this section + `docs/adr/` (new)
 - **CP11 — Final Certification**: [`enterprise-final-100/ZERO_INTERNAL_DEBT_DECLARATION.md`](enterprise-final-100/ZERO_INTERNAL_DEBT_DECLARATION.md), [`enterprise-final-100/EXTERNAL_GO_LIVE_DEPENDENCIES.md`](enterprise-final-100/EXTERNAL_GO_LIVE_DEPENDENCIES.md)
+
+## Everything since Enterprise Final 100 (2026-07-06 → 2026-07-07) — consolidated pointer
+
+Same rule as above: each pass below has its own complete report set, pointed to here rather than
+re-detailed. **`KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md` remains the single canonical
+Master Inventory throughout this entire section** — every pass below updated it in place rather
+than producing a competing tracker (with one exception, corrected by Backend Governance Phase 1:
+see the note on `MASTER_ISSUES_MATRIX.md` below).
+
+| Pass | Directory | Date | What it added |
+|---|---|---|---|
+| Final Engineering Certification | (top-level) `KYNZA_FINAL_ENGINEERING_CERTIFICATION.md` | 2026-07-06 | Reconciliation pass, not new engineering — resolved the test-count history, produced a definitive 42-row remaining-items inventory, answered 9 status questions. **Its Q5/Q8 verdicts (P0-1 still open, UI/UX Premium blocked) were superseded 21 minutes later** by Go-Live Phase 1 closing P0-1 — see that document's own text explaining the flip. Its other content (test-count reconciliation, domain scores) stands unmodified. |
+| Go-Live Execution | `go-live/` | 2026-07-06 | Phases 1-3 actually deployed to production: P0-1 fix, all 26 remaining migrations, recurring backup + alerting cron. `FINAL_PRODUCTION_CERTIFICATION.md` answers 11 questions; its own "UPDATE" block cites Backend Production Closure for what changed after. |
+| Backend Production Closure | `backend-production-closure/` | 2026-07-06 | Closed P2-2 and P2-9 with production evidence; found P2-5's redeploy-alone was insufficient (3/27 reliability) and re-scoped it to a genuine engineering investigation — the finding that opened the P2-5 RCA below. |
+| P2-5 Root Cause Analysis | `p2-5-rca/` | 2026-07-07 | Diagnostic only, no fix — root-caused P2-5 to `Content-Length` unreliability across the Supabase gateway→Deno-isolate hop. |
+| P2-5 Engineering Change Request | `p2-5-ecr/` | 2026-07-07 | Implemented and validated the RCA's recommended streaming byte-count guard (`readBodyGuarded()`), deployed to all 16 affected functions and to production; closed P2-5 with engineering evidence, precisely scoped; discovered the separate platform ceiling now tracked as P2-28. |
+| Final Documentary Verification | `final-doc-verification/` | 2026-07-07 | Targeted verification, not a new audit — found `docs/remediation/MASTER_ISSUES_MATRIX.md` had never been updated after the 2026-07-06 go-live deployments (still showing P0-1/P1-1/P1-2/P1-5 as open), and found the `P2-22` ID collision between that file and this Master Plan document. Proposed both corrections; **applied by Backend Governance Phase 1** (below), not by that session itself, per its own "propose, don't silently apply" rule. |
+| **Backend Governance** | `governance/` | 2026-07-07 | **This pass.** Applied `final-doc-verification`'s proposed corrections: marked `docs/remediation/MASTER_ISSUES_MATRIX.md` **Superseded** (banner added, pointing here); renumbered the collision to `P2-28`; corrected `KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md`'s own internal staleness (§1/§19/§20 hadn't been updated to match §2's row-level progress). Full documentary canonicalization: `governance/PHASE_1_DOCUMENTARY_UNIFICATION.md`. |
+
+**`docs/remediation/MASTER_ISSUES_MATRIX.md` status**: superseded 2026-07-07 (Backend Governance
+Phase 1) — it was, in effect, briefly acting as a second, competing "Master Inventory" that
+diverged silently from this one after 2026-07-04. It remains on disk as the Remediation v1 pass's
+evidentiary record, with an explicit banner at its top pointing back to
+`KYNZA_FINAL_PRODUCTION_DEPLOYMENT_MASTER_PLAN.md`. See `docs/governance/BACKEND_GOVERNANCE_GUIDE.md`
+for the standing rule that prevents this specific failure mode from recurring.
