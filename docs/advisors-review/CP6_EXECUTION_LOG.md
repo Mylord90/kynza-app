@@ -280,23 +280,75 @@ rappelé.
   - **Vérification défensive** : `count(*)` sur les 3 tables sous-jacentes filtré sur les valeurs
     de test envoyées → **0 partout**. Aucune ligne écrite malgré les tentatives, confirmé
     directement, pas supposé du seul code HTTP.
-- **Test positif — chemin RPC légitime, production** : aucun `system_admin` réel n'existait en
-  production (contrairement à dr-scratch qui avait des fixtures QA) — une identité de test
-  temporaire créée pour l'occasion (`kynza.advisors.rc5c.writetest@example.com`, marquée
-  explicitement dans `user_metadata.purpose`), `is_system_admin` accordé directement en base
-  (postgres/service_role, la RPC `grant_system_admin()` exigeant elle-même déjà un `system_admin`
-  existant), session réelle générée par magiclink, exercée :
+- **Test positif — chemin RPC légitime, production** : voir action dédiée ci-dessous
+  (« Identité `system_admin` temporaire ») pour le mécanisme complet.
   - `get_supabase_dashboard()` → `200`, données réelles (`table_count`, `index_count`, etc.).
   - `get_bi_revenue()` → `200`, `[]` (vide, cohérent avec le trafic quasi nul).
   - `get_audit_security_trail()` → `200`, les 2 lignes légitimes réelles déjà connues
     (`user_login`/`user_logout`) — confirme que le chemin gated retourne bien les vraies données,
     pas seulement qu'il ne plante pas.
-  - **Nettoyage immédiat** : utilisateur de test supprimé (`DELETE /auth/v1/admin/users/{id}`),
-    zéro résidu confirmé directement (`auth.users`/`public.users`, count = 0 pour les deux, la
-    cascade a fonctionné).
 - Advisors : `security_definer_view` **32 → 3** (exactement `v_popular_searches`,
   `v_mv_daily_revenue`, `v_staff_directory_public` — les 3 exclusions délibérées, aucun autre) ;
   `materialized_view_in_api` **2 → 0**. Aucune nouvelle alerte.
+
+### Action dédiée — identité `system_admin` temporaire pour le test positif RC-5c
+
+Mylord a demandé que cette action soit documentée à part, avec le mécanisme exact, distincte du
+test RC-5c lui-même — voici le détail complet.
+
+**Pourquoi une identité temporaire était nécessaire** : `SELECT id, email FROM public.users WHERE
+is_system_admin = true` en production retourne **0 ligne** — contrairement à `kynza-dr-scratch` qui
+porte des fixtures QA (`kynza.qa.sysadmin.cp1@example.com`), production n'a jamais eu de compte
+`system_admin` réel. Sans identité de ce type, impossible de prouver que le chemin RPC gated
+fonctionne réellement pour un appelant autorisé (par opposition à simplement constater l'absence
+d'erreur SQL).
+
+**Mécanisme exact, étape par étape** :
+1. **Création** — `POST /auth/v1/admin/users` (Auth Admin API, clé `service_role`), email
+   `kynza.advisors.rc5c.writetest@example.com`, `user_metadata.purpose` explicitement renseigné à
+   `"advisors-rc5c-verification-temporary"` pour qu'aucune ambiguïté ne subsiste sur l'intention.
+   Écrit dans `auth.users` (table GoTrue, hors du schéma `public`) ; une ligne correspondante est
+   apparue automatiquement dans `public.users` (mécanisme de synchronisation déjà en place dans le
+   projet, un trigger sur `auth.users`, non créé pour l'occasion).
+2. **Élévation de privilège** — `UPDATE public.users SET is_system_admin = true WHERE id = '...'`
+   exécuté directement en SQL (rôle `postgres`/`service_role` via `supabase db query --linked`),
+   **pas** via la RPC `grant_system_admin()` : cette RPC exige elle-même un appelant déjà
+   `system_admin` (`IF NOT has_system_admin(auth.uid()) THEN RAISE EXCEPTION`), donc inutilisable
+   pour créer le tout premier admin. Conséquence directe : **`system_admin_audit` (la table que
+   `grant_system_admin()` alimente normalement) est restée à 0 ligne** — vérifié après coup
+   (`SELECT count(*) FROM public.system_admin_audit` → `0`). Aucun log applicatif n'a donc capturé
+   cette élévation ; seule trace : la commande SQL elle-même dans cette session, consignée ici.
+3. **Génération de session réelle** — `POST /auth/v1/admin/generate_link` (`type: magiclink`,
+   `service_role`) → `hashed_token` ; puis `POST /auth/v1/verify` (`type: magiclink`,
+   `token_hash: ...`, clé publique) → session réelle (`access_token` JWT signé, pas un jeton
+   fabriqué à la main). C'est ce token qui a servi aux 3 appels RPC ci-dessus.
+4. **Suppression** — `DELETE /auth/v1/admin/users/{id}` (Auth Admin API, `service_role`) → `200
+   {}`. Cascade confirmée : `SELECT count(*) FROM auth.users WHERE id='...'` → `0` ;
+   `SELECT count(*) FROM public.users WHERE id='...'` → `0`.
+
+**Quel log a capturé la création/suppression, vérifié explicitement** : `auth.audit_log_entries`
+(le journal d'audit natif de GoTrue) a été interrogé après coup — **`SELECT count(*) FROM
+auth.audit_log_entries` retourne `0` ligne au total sur ce projet**, pas seulement pour cette
+identité : ce journal n'est pas alimenté sur ce projet (mécanisme de plateforme, hors du contrôle
+du code applicatif KYNZA). **Il n'existe donc aucun log SQL-interrogeable de cette création ni de
+cette suppression** — la seule trace vérifiable est la présente session (les appels HTTP et leurs
+réponses, reproduits ci-dessus) et ce document. À noter pour toute reproduction future de ce test.
+
+**Confirmation qu'aucune trace n'a pollué `activity_logs`/`v_audit_security_trail`** (la table que
+cette correction vient précisément de sécuriser — vérification demandée explicitement pour éviter
+l'ironie d'une contamination) :
+```sql
+SELECT count(*) FROM public.activity_logs
+WHERE user_id = '15efb772-40ad-4814-988d-f6e2a008088f'
+   OR type_action ILIKE '%rc5c%' OR type_action ILIKE '%writetest%';
+-- résultat : 0
+```
+Contenu complet de `v_audit_security_trail` relu après suppression de l'identité de test :
+exactement les 2 mêmes lignes légitimes déjà connues depuis le Checkpoint 3
+(`user_login`/`user_logout`, même `salon_id`/`user_id`, mêmes horodatages) — **aucune ligne
+supplémentaire, aucune trace de l'identité de test.** Cohérent avec le fait qu'aucune des actions
+effectuées (création/élévation/session/suppression, toutes via l'API Admin ou SQL direct) ne passe
+par le chemin applicatif `logActivity()` qui alimente `activity_logs`.
 
 **Les 5 items sont clos en production, chacun avec preuve négative, preuve positive et comparateur
 Advisors avant/après.**
