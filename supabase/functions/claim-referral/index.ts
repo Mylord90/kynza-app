@@ -4,7 +4,7 @@
 // the referral was tied to a salon, grants a loyalty stamp to both the
 // referrer and the newly referred client.
 import { logActivity } from "../_shared/audit.ts";
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
@@ -12,8 +12,8 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   try {
     const caller = await getAuthenticatedUser(req);
@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
     }
 
-    const body = await req.json();
+    const body = JSON.parse(bodyGuard.text);
     const referralToken = body.referral_token ?? body.token;
     if (!referralToken) return jsonResponse({ error: "missing_fields" }, 400);
 

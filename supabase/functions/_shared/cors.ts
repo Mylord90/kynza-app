@@ -25,21 +25,71 @@ const MAX_BODY_BYTES = 100 * 1024; // 100KB — every real payload in this app
 // (create-manual-invoice's line-items array) without leaving the door open
 // to the 2MB/45s-hang finding (P2-5, `PHASE_6_SECURITY_OFFENSIVE.md`).
 
-/// Rejects an oversized body via `Content-Length` *before* `req.json()`
-/// ever buffers/parses it — the actual fix for P2-5 (an unbounded body
-/// hangs an Edge Function 45+ seconds parsing it). A missing/absent
-/// `Content-Length` header (some clients omit it for chunked bodies) is
-/// let through here; it's not a bypass; `req.json()` itself always has to
-/// buffer the full body to parse it regardless of this header's presence,
-/// so this check is a fast-path rejection for the common case, not the
-/// only backstop.
-export function checkBodySize(req: Request): Response | null {
-  const len = req.headers.get("content-length");
-  if (len && Number(len) > MAX_BODY_BYTES) {
-    return jsonResponse(
-      { error: "payload_too_large", max_bytes: MAX_BODY_BYTES },
-      413,
-    );
+function tooLargeResponse(): Response {
+  return jsonResponse(
+    { error: "payload_too_large", max_bytes: MAX_BODY_BYTES },
+    413,
+  );
+}
+
+export type BodyReadResult =
+  | { ok: true; text: string }
+  | { ok: false; response: Response };
+
+/// P2-5 ECR (`docs/p2-5-ecr/`): the RCA found `Content-Length` does not
+/// reliably survive the Supabase gateway→Deno-isolate hop — when it's lost,
+/// the old header-only guard's documented fallback let the request through
+/// to `req.json()`, which had to buffer the real oversized body and
+/// reproduced the exact unbounded-buffering hang the guard existed to
+/// prevent (silently killed by the platform's `WORKER_RESOURCE_LIMIT`, no
+/// response ever sent).
+///
+/// This reads the body from the standard `Request.body` `ReadableStream`
+/// incrementally and aborts (cancels the reader) the instant cumulative
+/// bytes exceed `MAX_BODY_BYTES` — before the full body is ever buffered or
+/// parsed. This is the real backstop: it depends only on bytes actually
+/// delivered to the isolate, never on a header a proxy layer can drop or
+/// misreport, so it enforces the same outcome whether `Content-Length` is
+/// correct, wrong, or absent entirely.
+///
+/// The `Content-Length` pre-check below is kept only as a fast-path
+/// optimization for the common well-behaved case (reject before waiting on
+/// the stream at all when the header is both present and already honest
+/// about being oversized) — it is never the sole authority; the streaming
+/// count always runs and is what actually protects the invocation.
+///
+/// Single shared utility — every Edge Function that accepts a JSON body
+/// must call this instead of `req.json()` directly, so there is exactly one
+/// place this guard is implemented.
+export async function readBodyGuarded(req: Request): Promise<BodyReadResult> {
+  const declaredLen = req.headers.get("content-length");
+  if (declaredLen && Number(declaredLen) > MAX_BODY_BYTES) {
+    return { ok: false, response: tooLargeResponse() };
   }
-  return null;
+
+  const reader = req.body?.getReader();
+  if (!reader) {
+    return { ok: true, text: "" };
+  }
+
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_BODY_BYTES) {
+      await reader.cancel();
+      return { ok: false, response: tooLargeResponse() };
+    }
+    chunks.push(value);
+  }
+
+  const combined = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    combined.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { ok: true, text: new TextDecoder().decode(combined) };
 }

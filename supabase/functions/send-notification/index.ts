@@ -11,7 +11,7 @@
 //    derived from the booking + its salon/service.
 //  - { userId, event, salonId?, relatedBookingId?, data? } — direct
 //    events with no booking context (e.g. staff_joined).
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { sendFcmPush } from "../_shared/fcm.ts";
 import { sendWhatsappText } from "../_shared/whatsapp.ts";
 import { createServiceRoleClient } from "../_shared/supabase_admin.ts";
@@ -45,11 +45,11 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   try {
-    const payload: NotificationPayload = await req.json();
+    const payload: NotificationPayload = JSON.parse(bodyGuard.text);
     if (!payload.event) return jsonResponse({ error: "missing_event" }, 400);
 
     const supabase = createServiceRoleClient();

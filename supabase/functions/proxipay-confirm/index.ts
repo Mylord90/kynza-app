@@ -6,7 +6,7 @@
 // idempotency-key/transactions flow create-payment already uses, so
 // settlement still arrives through the existing leapa-webhook.
 import { logAppCheckStatus } from "../_shared/app_check.ts";
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { buildIdempotencyKey } from "../_shared/hmac.ts";
 import { initiateLeapaPayment } from "../_shared/leapa.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
@@ -16,8 +16,8 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   try {
     logAppCheckStatus(req, "proxipay-confirm");
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
     }
 
-    const { sessionId, method, phone } = await req.json();
+    const { sessionId, method, phone } = JSON.parse(bodyGuard.text);
     if (!sessionId || !method || !phone) return jsonResponse({ error: "missing_fields" }, 400);
 
     const { data: session, error: sessionError } = await supabase

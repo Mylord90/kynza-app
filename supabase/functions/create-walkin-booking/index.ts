@@ -5,7 +5,7 @@
 // row (service_role only — never reachable from the authenticated client
 // directly, since creating an auth identity is a privileged operation).
 import { logActivity } from "../_shared/audit.ts";
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
@@ -13,8 +13,8 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   try {
     const caller = await getAuthenticatedUser(req);
@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
     }
 
-    const body = await req.json();
+    const body = JSON.parse(bodyGuard.text);
     const { salonId, serviceId, practitionerId, startTime, guestFirstName, guestPhone, notes } =
       body;
 

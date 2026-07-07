@@ -6,7 +6,7 @@
 // avoids holding a row lock across a slower multi-step transaction.
 import { logAppCheckStatus } from "../_shared/app_check.ts";
 import { logActivity } from "../_shared/audit.ts";
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
@@ -97,11 +97,11 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   const startedAt = Date.now();
-  const response = await handleCreateBooking(req);
+  const response = await handleCreateBooking(req, bodyGuard.text);
   const admin = createServiceRoleClient();
   admin.from("edge_function_invocations").insert({
     function_name: "create-booking",
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
   return response;
 });
 
-async function handleCreateBooking(req: Request): Promise<Response> {
+async function handleCreateBooking(req: Request, bodyText: string): Promise<Response> {
   try {
     logAppCheckStatus(req, "create-booking");
     const user = await getAuthenticatedUser(req);
@@ -120,7 +120,7 @@ async function handleCreateBooking(req: Request): Promise<Response> {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
     }
 
-    const body = await req.json();
+    const body = JSON.parse(bodyText);
     const { salonId, serviceId, practitionerId, startTime, notes } = body;
 
     if (!salonId || !serviceId || !practitionerId || !startTime) {

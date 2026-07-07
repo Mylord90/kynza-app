@@ -3,7 +3,7 @@
 // in-person client can scan it and pay without staff ever touching the
 // client's Mobile Money number. Amount is always read from the booking
 // server-side — never trusted from the request body (R02/R16).
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
 import { createServiceRoleClient, getAuthenticatedUser } from "../_shared/supabase_admin.ts";
 
@@ -13,8 +13,8 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   try {
     const user = await getAuthenticatedUser(req);
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
     }
 
-    const { bookingId } = await req.json();
+    const { bookingId } = JSON.parse(bodyGuard.text);
     if (!bookingId) return jsonResponse({ error: "missing_fields" }, 400);
 
     const { data: booking, error: bookingError } = await supabase

@@ -1,5 +1,5 @@
 // supabase/functions/create-payment/index.ts
-import { checkBodySize, handleOptions, jsonResponse } from "../_shared/cors.ts";
+import { handleOptions, jsonResponse, readBodyGuarded } from "../_shared/cors.ts";
 import { buildIdempotencyKey } from "../_shared/hmac.ts";
 import { initiateLeapaPayment } from "../_shared/leapa.ts";
 import { checkRateLimit } from "../_shared/rate_limit.ts";
@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   const preflight = handleOptions(req);
   if (preflight) return preflight;
 
-  const tooLarge = checkBodySize(req);
-  if (tooLarge) return tooLarge;
+  const bodyGuard = await readBodyGuarded(req);
+  if (!bodyGuard.ok) return bodyGuard.response;
 
   try {
     const user = await getAuthenticatedUser(req);
@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "rate_limit_exceeded" }, 429);
     }
 
-    const { bookingId, method, phone } = await req.json();
+    const { bookingId, method, phone } = JSON.parse(bodyGuard.text);
     if (!bookingId || !method) return jsonResponse({ error: "missing_fields" }, 400);
 
     const { data: booking, error: bookingError } = await supabase
