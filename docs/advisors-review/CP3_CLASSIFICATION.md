@@ -1,5 +1,23 @@
 # Point de Contrôle 3 — Classification prouvée
 
+> ## Addendum daté (2026-07-07, pendant le Checkpoint 6) — RC-5c aggravé : exposition en écriture, pas seulement en lecture
+> Ce document original n'a testé que la **lecture** (`SELECT`) des 31 objets RC-5c. Pendant la
+> vérification de portée demandée avant application en production du Checkpoint 6, une requête
+> `pg_class.relacl` directe contre la production a montré que `anon`/`authenticated` détenaient en
+> réalité `INSERT`/`UPDATE`/`DELETE`/`REFERENCES`/`TRUNCATE`/`TRIGGER` sur les 31 objets, pas
+> seulement `SELECT`. Pire : 3 des 29 vues (`v_audit_financial_accounting` → `invoices`,
+> `v_audit_security_trail` → `activity_logs`, `v_security_dashboard` → `rate_limit_buckets`) sont
+> des `SELECT` simples sans agrégation ni `INSTEAD OF` trigger — **structurellement
+> auto-updatable par Postgres** (`information_schema.views.is_insertable_into/is_updatable`).
+> Combiné au grant d'écriture réel et à `SECURITY DEFINER` (contourne RLS sur la table réelle), ceci
+> constituait une **voie d'écriture non authentifiée réelle** vers `invoices`/`activity_logs`/
+> `rate_limit_buckets` — pas seulement une exposition en lecture comme classifié ici. Vérification
+> de non-falsification effectuée (contenu actuel de `activity_logs`/`invoices` inspecté, rien
+> d'anormal trouvé — voir le commit `1ac5368`). La correction RC-5c (`REVOKE ALL`, pas
+> `REVOKE SELECT`) couvre déjà ce risque intégralement. Ce document reste ci-dessous inchangé comme
+> trace de l'analyse originale ; se référer à ce paragraphe et à
+> `docs/advisors-review/CP6_EXECUTION_LOG.md` pour l'état courant.
+
 **Date** : 2026-07-07. **Entrée** : les 11 causes racines du Checkpoint 2
 (`docs/advisors-review/CP2_CAUSES_RACINES.md`). **Méthode** : pour chaque cause, lecture directe
 du corps de fonction (`pg_get_functiondef`), des ACL (`pg_proc.proacl`,
