@@ -1,5 +1,6 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'firebase_init_failure_log.dart';
 import 'supabase_service.dart';
 
 abstract class CrashReportingService {
@@ -9,6 +10,41 @@ abstract class CrashReportingService {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+  }
+
+  /// Catch-up for a `Firebase.initializeApp()` failure recorded by
+  /// [FirebaseInitFailureLog] on a previous boot (main.dart) — Crashlytics
+  /// couldn't record it itself at the time since Firebase wasn't up yet.
+  /// Only meaningful to call once Crashlytics is actually initialized.
+  ///
+  /// [recordError] is an injectable seam so this is unit-testable without
+  /// `FirebaseCrashlytics.instance` (a real Firebase app, unavailable in
+  /// plain unit tests — see proxipay_repository_impl_test.dart's own note
+  /// on why no `setupFirebaseCoreMocks`-style plumbing exists in this test
+  /// suite yet). Defaults to the real Crashlytics call in production.
+  static Future<void> reportPendingInitFailure({
+    void Function(Object error, {required String reason, required bool fatal})?
+        recordError,
+  }) async {
+    final pending = FirebaseInitFailureLog.peek();
+    if (pending == null) return;
+    final record = recordError ??
+        (Object error, {required String reason, required bool fatal}) =>
+            FirebaseCrashlytics.instance.recordError(
+              error,
+              null,
+              reason: reason,
+              fatal: fatal,
+            );
+    record(
+      Exception(
+        'Previous session Firebase init failure at ${pending['timestamp']}: '
+        '${pending['error']}',
+      ),
+      reason: 'firebase_init_failure_catch_up',
+      fatal: false,
+    );
+    await FirebaseInitFailureLog.clear();
   }
 
   static void setUser(String userId, String role) {

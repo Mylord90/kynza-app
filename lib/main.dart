@@ -14,6 +14,7 @@ import 'core/security/certificate_pinning_service.dart';
 import 'core/providers/app_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/crash_reporting_service.dart';
+import 'core/services/firebase_init_failure_log.dart';
 import 'core/services/hive_encryption_key_service.dart';
 import 'core/services/legal_acceptance_queue_service.dart';
 import 'core/services/mutation_outbox_service.dart';
@@ -72,6 +73,7 @@ Future<void> _bootstrap() async {
   await Hive.openBox(RemoteConfigCache.boxName);
   await Hive.openBox(CmsCache.boxName);
   await Hive.openBox(SearchReadCache.boxName);
+  await Hive.openBox(FirebaseInitFailureLog.boxName);
   // Cold-start-offline read caches (Master Plan CP3) hold real customer
   // PII (booking/client/notification details) — encrypted with the same
   // cipher as SessionService, same reasoning as that box.
@@ -89,10 +91,28 @@ Future<void> _bootstrap() async {
   );
   await initializeDateFormatting('fr_FR');
 
-  await Firebase.initializeApp();
-  await CrashReportingService.init();
-  await PerformanceMonitoringService.startColdStartTrace();
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // Firebase is observability + push only — nothing booking/payment-critical
+  // depends on it (KYNZA_BACKEND_MAINTENANCE_HANDBOOK.md §1.3) — so a failure
+  // here degrades this session's crash/perf/push visibility rather than
+  // blocking the app. Crashlytics can't record its own init failure (it
+  // needs Firebase to exist), so the raw error goes to logcat directly and
+  // to FirebaseInitFailureLog for CrashReportingService to catch up on the
+  // next boot where Firebase does come up.
+  var firebaseAvailable = true;
+  try {
+    await Firebase.initializeApp();
+  } catch (error, stack) {
+    firebaseAvailable = false;
+    debugPrint('Firebase.initializeApp() failed, continuing without '
+        'Firebase this session: $error\n$stack');
+    await FirebaseInitFailureLog.record(error);
+  }
+  if (firebaseAvailable) {
+    await CrashReportingService.init();
+    await CrashReportingService.reportPendingInitFailure();
+    await PerformanceMonitoringService.startColdStartTrace();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
 
   assert(
     Env.supabaseUrl.startsWith('https://'),
