@@ -339,14 +339,18 @@ inscription/un changement de mot de passe avec un mot de passe connu comme divul
 
 | # | Fiche | Priorité | Type de changement | Accord requis avant |
 |---|---|---|---|---|
-| 1 | RC-5c — REVOKE ALL sur 31 vues/MV (portée élargie depuis SELECT, cf. CP6 log) | Critique | SQL (grants) | **Fait sur dr-scratch, commit `1ac5368`** — attend accord prod |
-| 2 | RC-6d — REVOKE EXECUTE `claim_pending_action_runs` | Critique | SQL (grants) | **Fait sur dr-scratch, commit `8d9350a`** — attend accord prod |
-| 3 | RC-6c — REVOKE EXECUTE `check_system_alerts` | Haut | SQL (grants) | **Fait sur dr-scratch, commit `8d9350a`** — attend accord prod |
-| 4 | RC-4 — 15 `CREATE INDEX` | Moyen | Migration SQL | **Fait sur dr-scratch, commit `86f21b8`** — attend accord prod |
-| 5 | RC-8 — 6 `ALTER FUNCTION ... SET search_path` | Moyen | Migration SQL | **Fait sur dr-scratch, commit `53c9041`** — attend accord prod |
-| 6 | RC-11 — `password_hibp_enabled = true` | Moyen | API Management directe (jamais `config.toml`/`config push`, cf. révision ci-dessus) | Bloqué sur Option A ou B ci-dessus |
+| 1 | RC-5c — REVOKE ALL sur 31 vues/MV (portée élargie depuis SELECT, cf. CP6 log) | Critique | SQL (grants) | **Clos en production** |
+| 2 | RC-6d — REVOKE EXECUTE `claim_pending_action_runs` | Critique | SQL (grants) | **Clos en production** |
+| 3 | RC-6c — REVOKE EXECUTE `check_system_alerts` | Haut | SQL (grants) | **Clos en production** |
+| 4 | RC-4 — 15 `CREATE INDEX` | Moyen | Migration SQL | **Clos en production** |
+| 5 | RC-8 — 6 `ALTER FUNCTION ... SET search_path` | Moyen | Migration SQL | **Clos en production** |
+| 6 | RC-11 — `password_hibp_enabled = true` | Moyen | API Management directe | **Différé — dépendance business** |
 
-**5 des 6 corrections sont appliquées et validées sur `kynza-dr-scratch`, aucune sur production.**
-RC-11 reste bloquée sur un choix de mécanisme (Dashboard direct ou PAT temporaire) avant même une
-tentative staging. Merci de valider chaque fiche individuellement avant passage en production —
-toujours item par item, jamais en lot.
+**5 des 6 corrections sont closes en production** (preuve complète : `CP6_EXECUTION_LOG.md`,
+synthèse : `CP9_RAPPORT_FINAL.md`). **RC-11 mise à jour (2026-07-07, post-tentative Dashboard)** :
+bloquée non pas par un choix de mécanisme, mais par le **plan Supabase actuel (Free)** —
+confirmé par le message d'erreur explicite du Dashboard lors de la tentative d'activation par
+Mylord : *"leaked password protection via HaveIBeenPwned.org is available on Pro Plans and up."*
+Différé jusqu'à un upgrade vers le plan Pro, décision et calendrier appartenant à Mylord — cette
+fiche reste valide et prête à exécuter telle quelle une fois le plan actif, aucune reprise
+d'analyse nécessaire.
