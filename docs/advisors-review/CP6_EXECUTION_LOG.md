@@ -1,9 +1,16 @@
 # Point de Contrôle 6 — Journal d'exécution
 
 **Date** : 2026-07-07. Toutes les corrections sont d'abord appliquées et validées sur
-`kynza-dr-scratch` (ref `hzjmyeptytvjmzbnsmwp`). **Aucune n'a été appliquée en production**
-(`hhdkjfpgaklhrhfoxlhj`) — chaque item attend un accord explicite séparé avant ce passage, per
-Rule 8.
+`kynza-dr-scratch` (ref `hzjmyeptytvjmzbnsmwp`), puis en production (`hhdkjfpgaklhrhfoxlhj`)
+**une par une, avec accord explicite séparé pour chaque item avant son application**, per Rule 8 —
+jamais d'enchaînement automatique même après un succès. Méthode utilisée pour garantir qu'un seul
+item est éligible par exécution de `supabase db push` : déplacement temporaire hors de
+`supabase/migrations/` des migrations non encore approuvées, restauration une à une au fur et à
+mesure des accords.
+
+**État final (2026-07-07)** : RC-4, RC-8, RC-6c, RC-6d, RC-5c appliqués et validés en production.
+RC-11 en attente (bascule prévue côté Dashboard par Mylord, Option A de la Fiche 6 révisée). Détail
+de chaque application production en fin de document, section « Application en production ».
 
 ---
 
@@ -209,6 +216,87 @@ lecture déjà documentée au Checkpoint 3 sur l'ensemble des 31.
 
 ## RC-11 (reprise)
 
-**Statut** : Fiche 6 révisée à soumettre dans le prochain lot, avec un GET Management API en
-lecture seule en premier avant toute écriture — accord de Mylord déjà donné pour ce séquencement,
-pas de validation séparée requise avant présentation.
+**Statut** : Fiche 6 révisée soumise (`docs/advisors-review/CP5_PLAN_CORRECTION.md`), `config.toml`/
+`config push` exclu comme mécanisme suite à l'incident ci-dessus. Mylord a choisi l'Option A
+(bascule directe dans le Dashboard Supabase, Authentication → Password Security) — action de son
+côté, pas la mienne. En attente de sa confirmation d'application avant vérification indépendante.
+
+---
+
+## Application en production — 5 items, un par un, accord explicite avant chacun
+
+Toutes les migrations testées ci-dessus sur `kynza-dr-scratch` ont ensuite été appliquées en
+production dans l'ordre demandé par Mylord (RC-4 → RC-8 → RC-6c/RC-6d → RC-5c), chacune avec son
+propre tour d'approbation — jamais d'enchaînement automatique.
+
+### RC-4 (production)
+- Migration seule éligible (les 3 autres temporairement hors de `supabase/migrations/`).
+- 15 index confirmés présents (`pg_indexes`, 15/15).
+- Advisors : `unindexed_foreign_keys` **15 → 0** (production n'avait que les 15 ciblés, contrairement
+  à dr-scratch qui en portait 16 avec un objet hors périmètre — différentiel plus propre qu'en
+  staging).
+- Test fonctionnel = présence des index (convenu pour cette catégorie).
+
+### RC-8 (production)
+- `pg_proc.proconfig` confirme `search_path=public, pg_temp` sur les 6 fonctions.
+- Test fonctionnel réel : `UPDATE public.salons SET name = name` sur une vraie ligne de production
+  → `updated_at` incrémenté (`2026-07-01` → `2026-07-07 12:20:56`), `trigger_fired: true`.
+- Advisors : `function_search_path_mutable` **6 → 0**.
+
+### RC-6c + RC-6d (production)
+- Les deux fonctions Edge (`run-scheduled-actions`, `check-system-alerts`) confirmées déjà
+  déployées en production (contrairement à dr-scratch, où `check-system-alerts` avait dû être
+  déployée pour le test).
+- `proacl` post-fix : `{postgres, service_role}` uniquement sur les deux fonctions SQL.
+- Test négatif : `POST /rest/v1/rpc/<fn>` avec la clé publique de production seule → `401 42501
+  permission denied` pour les deux.
+- Test positif : secret `cron_secret` de production lu depuis `vault.decrypted_secrets` (même
+  mécanisme qu'en staging, aucune extraction d'identifiants tiers) ; `run-scheduled-actions` →
+  `{"status":"processed","count":0}`, `200` ; `check-system-alerts` →
+  `{"status":"checked","newAlerts":0,"dispatched":0}`, `200`. Aucune régression.
+- Advisors : `anon_security_definer_function_executable` 47 → 45,
+  `authenticated_security_definer_function_executable` 50 → 48. Aucune nouvelle alerte.
+
+### RC-5c (production)
+
+**Preuves soumises et validées avant application** (à la demande explicite de Mylord, compte tenu
+de la gravité réelle découverte pendant l'exécution staging) : ACL live re-confirmée juste avant
+push (exposition toujours vivante, inchangée depuis l'analyse), migration relue, plan de rollback
+rappelé.
+
+- `relacl` post-fix confirmé sur 6 objets échantillonnés : seuls `postgres`/`service_role`
+  restent (`arwdDxtm` complet pour eux, rien pour `anon`/`authenticated`).
+- **Test négatif générique** : `GET` non authentifié sur 6 objets → `401 42501` pour les 6 (était
+  `200`/`206` avec données réelles avant, notamment `v_supabase_dashboard`).
+- **Test dédié à l'écriture, demandé explicitement par Mylord** (la partie la plus critique de
+  cette correction) : tentative d'`INSERT` non authentifié sur les 3 vues structurellement
+  auto-updatable —
+  - `v_audit_financial_accounting` (→ `invoices`) : `POST` avec un faux enregistrement de facture
+    → `401 42501 permission denied`.
+  - `v_audit_security_trail` (→ `activity_logs`) : `POST` avec un faux événement `role_changed`
+    sévérité `critical` → `401 42501 permission denied`.
+  - `v_security_dashboard` (→ `rate_limit_buckets`) : `POST` avec une fausse ligne de compteur
+    → `401 42501 permission denied`.
+  - **Vérification défensive** : `count(*)` sur les 3 tables sous-jacentes filtré sur les valeurs
+    de test envoyées → **0 partout**. Aucune ligne écrite malgré les tentatives, confirmé
+    directement, pas supposé du seul code HTTP.
+- **Test positif — chemin RPC légitime, production** : aucun `system_admin` réel n'existait en
+  production (contrairement à dr-scratch qui avait des fixtures QA) — une identité de test
+  temporaire créée pour l'occasion (`kynza.advisors.rc5c.writetest@example.com`, marquée
+  explicitement dans `user_metadata.purpose`), `is_system_admin` accordé directement en base
+  (postgres/service_role, la RPC `grant_system_admin()` exigeant elle-même déjà un `system_admin`
+  existant), session réelle générée par magiclink, exercée :
+  - `get_supabase_dashboard()` → `200`, données réelles (`table_count`, `index_count`, etc.).
+  - `get_bi_revenue()` → `200`, `[]` (vide, cohérent avec le trafic quasi nul).
+  - `get_audit_security_trail()` → `200`, les 2 lignes légitimes réelles déjà connues
+    (`user_login`/`user_logout`) — confirme que le chemin gated retourne bien les vraies données,
+    pas seulement qu'il ne plante pas.
+  - **Nettoyage immédiat** : utilisateur de test supprimé (`DELETE /auth/v1/admin/users/{id}`),
+    zéro résidu confirmé directement (`auth.users`/`public.users`, count = 0 pour les deux, la
+    cascade a fonctionné).
+- Advisors : `security_definer_view` **32 → 3** (exactement `v_popular_searches`,
+  `v_mv_daily_revenue`, `v_staff_directory_public` — les 3 exclusions délibérées, aucun autre) ;
+  `materialized_view_in_api` **2 → 0**. Aucune nouvelle alerte.
+
+**Les 5 items sont clos en production, chacun avec preuve négative, preuve positive et comparateur
+Advisors avant/après.**
