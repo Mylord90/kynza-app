@@ -428,6 +428,36 @@ abstract class AppLocalizations {
   /// **'Équipe'**
   String get navTeam;
 
+  /// No description provided for @onboardingHeadlinePart1.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toute la beauté et le bien-être, réunis dans '**
+  String get onboardingHeadlinePart1;
+
+  /// No description provided for @onboardingHeadlineAccent.
+  ///
+  /// In fr, this message translates to:
+  /// **'une seule application'**
+  String get onboardingHeadlineAccent;
+
+  /// No description provided for @onboardingHeadlinePart2.
+  ///
+  /// In fr, this message translates to:
+  /// **'.'**
+  String get onboardingHeadlinePart2;
+
+  /// No description provided for @onboardingSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservez facilement vos rendez-vous auprès des meilleurs salons, barbiers, spas, nail artists, maquilleurs et experts skincare.'**
+  String get onboardingSubtitle;
+
+  /// No description provided for @onboardingProgressStep.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {current} sur {total}'**
+  String onboardingProgressStep(int current, int total);
+
   /// No description provided for @authLogin.
   ///
   /// In fr, this message translates to:

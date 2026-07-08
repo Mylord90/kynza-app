@@ -8,6 +8,9 @@ abstract class AppDurations {
   static const shimmer = Duration(milliseconds: 1500);
   static const pageTransition = Duration(milliseconds: 320);
 
+  /// Onboarding carousel crossfade between slides — cinematic, never abrupt.
+  static const crossfade = Duration(milliseconds: 1000);
+
   /// Durée d'un cycle complet de rotation du KynzaLoader — calibrée pour
   /// rester fluide sans paraître mou ou nerveux. Ne pas modifier sans
   /// validation produit explicite.

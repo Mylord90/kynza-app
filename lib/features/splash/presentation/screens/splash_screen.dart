@@ -5,6 +5,7 @@ import '../../../../core/constants/app_branding.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/auth_redirect.dart';
 import '../../../auth/application/providers/auth_notifier_provider.dart';
@@ -85,17 +86,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     final authState = authValue.valueOrNull;
     final destination = authState == null
-        ? RouteNames.login
+        ? _unauthenticatedDestination()
         : authState.when(
-            initial: () => RouteNames.login,
+            initial: () => _unauthenticatedDestination(),
             loading: () => null,
-            error: (_) => RouteNames.login,
-            unauthenticated: () => RouteNames.login,
+            error: (_) => _unauthenticatedDestination(),
+            unauthenticated: () => _unauthenticatedDestination(),
             authenticated: redirectAfterAuth,
             emailNotVerified: (email, userId) => RouteNames.verifyEmail,
             profileIncomplete: (userId) => RouteNames.completeProfile,
           );
     if (destination != null) context.go(destination);
+  }
+
+  /// First-ever unauthenticated visit goes through the onboarding carousel;
+  /// every subsequent one (or once it's been completed) goes straight to
+  /// login. Reuses `SessionService.markOnboardingDone`/`isOnboardingDone`,
+  /// which existed but was never wired to anything until this screen.
+  String _unauthenticatedDestination() {
+    final seenOnboarding = ref.read(sessionServiceProvider).isOnboardingDone();
+    return seenOnboarding ? RouteNames.login : RouteNames.onboarding;
   }
 
   @override

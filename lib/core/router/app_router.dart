@@ -77,6 +77,7 @@ import '../../features/salon/application/providers/salon_providers.dart';
 import '../../shared/widgets/kynza_widgets.dart';
 import '../../features/salon/presentation/screens/salon_creation_wizard_screen.dart';
 import '../../features/services/presentation/screens/services_list_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen_1.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/billing/presentation/screens/billing_screen.dart';
 import '../../features/billing/presentation/screens/invoice_history_screen.dart';
@@ -94,6 +95,7 @@ import '../constants/app_durations.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_typography.dart';
 import '../enums/user_role.dart';
+import '../providers/app_providers.dart';
 import '../utils/auth_redirect.dart';
 import '../widgets/kynza_full_page_lock.dart';
 import 'auth_callback_screen.dart';
@@ -120,6 +122,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     final path = state.matchedLocation;
     final isAuthRoute = path.startsWith('/auth');
     final isSplash = path == RouteNames.splash;
+    final isOnboarding = path == RouteNames.onboarding;
     final isAcceptInvitation =
         path == RouteNames.acceptInvitation ||
         path == RouteNames.acceptReferral;
@@ -141,7 +144,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // The splash screen owns its own minimum-display-time transition
       // (see SplashScreen) — the generic guard never touches '/'.
       unauthenticated: () {
-        if (isAuthRoute || isSplash || isAcceptInvitation) return null;
+        if (isAuthRoute || isSplash || isOnboarding || isAcceptInvitation) {
+          return null;
+        }
         return RouteNames.login;
       },
       authenticated: (user) {
@@ -193,6 +198,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: redirect,
     routes: [
       _fadeRoute(RouteNames.splash, (context, state) => const SplashScreen()),
+      _fadeRoute(
+        RouteNames.onboarding,
+        (context, state) => OnboardingScreen1(
+          onNext: () {
+            ref.read(sessionServiceProvider).markOnboardingDone();
+            context.go(RouteNames.login);
+          },
+        ),
+      ),
       _fadeRoute(RouteNames.login, (context, state) => const LoginScreen()),
       _fadeRoute(
         RouteNames.register,

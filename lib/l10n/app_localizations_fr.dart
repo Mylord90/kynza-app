@@ -174,6 +174,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navTeam => 'Équipe';
 
   @override
+  String get onboardingHeadlinePart1 =>
+      'Toute la beauté et le bien-être, réunis dans ';
+
+  @override
+  String get onboardingHeadlineAccent => 'une seule application';
+
+  @override
+  String get onboardingHeadlinePart2 => '.';
+
+  @override
+  String get onboardingSubtitle =>
+      'Réservez facilement vos rendez-vous auprès des meilleurs salons, barbiers, spas, nail artists, maquilleurs et experts skincare.';
+
+  @override
+  String onboardingProgressStep(int current, int total) {
+    return 'Étape $current sur $total';
+  }
+
+  @override
   String get authLogin => 'Se connecter';
 
   @override

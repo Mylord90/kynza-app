@@ -61,6 +61,12 @@
   "navPerformance": "Performance",
   "navTeam": "Team",
 
+  "onboardingHeadlinePart1": "All beauty and wellness, brought together in ",
+  "onboardingHeadlineAccent": "one single app",
+  "onboardingHeadlinePart2": ".",
+  "onboardingSubtitle": "Easily book appointments with the best salons, barbers, spas, nail artists, makeup artists and skincare experts.",
+  "onboardingProgressStep": "Step {current} of {total}",
+
   "authLogin": "Sign in",
   "authLogout": "Sign out",
   "authRegister": "Create account",

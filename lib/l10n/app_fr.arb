@@ -63,6 +63,15 @@
   "navPerformance": "Performances",
   "navTeam": "Équipe",
 
+  "onboardingHeadlinePart1": "Toute la beauté et le bien-être, réunis dans ",
+  "onboardingHeadlineAccent": "une seule application",
+  "onboardingHeadlinePart2": ".",
+  "onboardingSubtitle": "Réservez facilement vos rendez-vous auprès des meilleurs salons, barbiers, spas, nail artists, maquilleurs et experts skincare.",
+  "onboardingProgressStep": "Étape {current} sur {total}",
+  "@onboardingProgressStep": {
+    "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } }
+  },
+
   "authLogin": "Se connecter",
   "authLogout": "Se déconnecter",
   "authRegister": "Créer un compte",

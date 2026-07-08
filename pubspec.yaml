@@ -107,7 +107,8 @@ flutter:
     - assets/illustrations/
     - assets/avatars/
     - assets/categories/
-    - assets/onboarding/
+    - assets/onboarding/webp/
+    - assets/onboarding/lqip/
     - assets/empty_states/
     - assets/sounds/
     - assets/notifications/
