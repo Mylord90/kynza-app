@@ -71,6 +71,12 @@
   "@onboardingProgressStep": {
     "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } }
   },
+  "onboardingScreen2HeadlineLine1": "Toute la beauté.",
+  "onboardingScreen2HeadlineLine2": "Une seule app.",
+  "onboardingScreen2Subtitle": "Trouvez des professionnels de confiance, réservez en un instant, et vivez une expérience premium — tout au même endroit.",
+  "onboardingScreen3Headline": "Votre prochaine expérience beauté commence ici.",
+  "onboardingScreen3Subtitle": "Réservez facilement vos soins, découvrez les meilleurs professionnels et profitez d'une expérience beauté pensée pour vous.",
+  "onboardingGetStarted": "Commencer",
 
   "authLogin": "Se connecter",
   "authLogout": "Se déconnecter",

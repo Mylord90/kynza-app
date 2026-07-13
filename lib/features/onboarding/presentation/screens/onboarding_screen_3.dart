@@ -7,34 +7,30 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 import '../../domain/onboarding_flow.dart';
 import '../../domain/onboarding_slide.dart';
-import '../widgets/kynza_onboarding_next_button.dart';
 import '../widgets/kynza_onboarding_progress.dart';
 import '../widgets/onboarding_bottom_scrim.dart';
 import '../widgets/onboarding_carousel_controller.dart';
 import '../widgets/onboarding_crossfade_carousel.dart';
+import '../widgets/sliding_get_started_button.dart';
 
-/// Onboarding screen 1 — full-bleed editorial photo carousel with a fixed
-/// headline/subtitle, KYNZA's signature blob "next" button and a segmented
-/// progress indicator.
-///
-/// Responsive strategy (breakpoint: [AppBreakpoints.tablet], matching
-/// [KynzaAuthCard]'s existing large-screen convention): below the
-/// breakpoint the carousel runs edge-to-edge; at or above it, the portrait
-/// 9:16 composition is preserved and centered in a fixed-width panel on a
-/// full-bleed black background, rather than stretching a portrait photo
-/// across a landscape viewport.
-class OnboardingScreen1 extends StatefulWidget {
-  const OnboardingScreen1({super.key, required this.onNext});
+/// Onboarding screen 3 — the final CTA screen. Shares screen 1/2's
+/// full-bleed editorial carousel, scrim and responsive panel strategy, but
+/// swaps [KynzaOnboardingNextButton] for [SlidingGetStartedButton]: this is
+/// the conversion moment, not an intermediate "next", so [onNext] here also
+/// carries the flow-completion side effect (see the router's wiring —
+/// this screen owns marking onboarding done, not screen 2 anymore).
+class OnboardingScreen3 extends StatefulWidget {
+  const OnboardingScreen3({super.key, required this.onNext});
 
   final VoidCallback onNext;
 
   @override
-  State<OnboardingScreen1> createState() => _OnboardingScreen1State();
+  State<OnboardingScreen3> createState() => _OnboardingScreen3State();
 }
 
-class _OnboardingScreen1State extends State<OnboardingScreen1> {
+class _OnboardingScreen3State extends State<OnboardingScreen3> {
   late final _carouselController = OnboardingCarouselController(
-    slideCount: OnboardingSlides.all.length,
+    slideCount: OnboardingSlides.screen3.length,
   );
 
   @override
@@ -50,12 +46,13 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
     final panelWidth = isLargeScreen ? OnboardingFlow.panelWidth : size.width;
     final cacheWidth = (panelWidth * MediaQuery.devicePixelRatioOf(context))
         .round();
+    final l10n = context.l10n;
 
     final content = Stack(
       fit: StackFit.expand,
       children: [
         OnboardingCrossfadeCarousel(
-          slides: OnboardingSlides.all,
+          slides: OnboardingSlides.screen3,
           controller: _carouselController,
           cacheWidth: cacheWidth,
         ),
@@ -73,24 +70,27 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _OnboardingHeadline(),
+                Text(
+                  l10n.onboardingScreen3Headline,
+                  style: AppTypography.headlineLarge,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  context.l10n.onboardingSubtitle,
+                  l10n.onboardingScreen3Subtitle,
                   style: AppTypography.bodyLarge,
                 ),
                 const SizedBox(height: AppSpacing.xxl),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const KynzaOnboardingProgress(
-                      itemCount: OnboardingFlow.totalScreens,
-                      currentIndex: 0,
-                      currentProgress: 1.0,
-                    ),
-                    KynzaOnboardingNextButton(onPressed: widget.onNext),
-                  ],
+                const Center(
+                  child: KynzaOnboardingProgress(
+                    itemCount: OnboardingFlow.totalScreens,
+                    currentIndex: 2,
+                    currentProgress: 1.0,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SlidingGetStartedButton(
+                  label: l10n.onboardingGetStarted,
+                  onPressed: widget.onNext,
                 ),
               ],
             ),
@@ -109,28 +109,6 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
               ),
             )
           : content,
-    );
-  }
-}
-
-class _OnboardingHeadline extends StatelessWidget {
-  const _OnboardingHeadline();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Text.rich(
-      TextSpan(
-        style: AppTypography.headlineLarge,
-        children: [
-          TextSpan(text: l10n.onboardingHeadlinePart1),
-          TextSpan(
-            text: l10n.onboardingHeadlineAccent,
-            style: const TextStyle(color: AppColors.primary),
-          ),
-          TextSpan(text: l10n.onboardingHeadlinePart2),
-        ],
-      ),
     );
   }
 }

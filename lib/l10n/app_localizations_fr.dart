@@ -193,6 +193,27 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get onboardingScreen2HeadlineLine1 => 'Toute la beauté.';
+
+  @override
+  String get onboardingScreen2HeadlineLine2 => 'Une seule app.';
+
+  @override
+  String get onboardingScreen2Subtitle =>
+      'Trouvez des professionnels de confiance, réservez en un instant, et vivez une expérience premium — tout au même endroit.';
+
+  @override
+  String get onboardingScreen3Headline =>
+      'Votre prochaine expérience beauté commence ici.';
+
+  @override
+  String get onboardingScreen3Subtitle =>
+      'Réservez facilement vos soins, découvrez les meilleurs professionnels et profitez d\'une expérience beauté pensée pour vous.';
+
+  @override
+  String get onboardingGetStarted => 'Commencer';
+
+  @override
   String get authLogin => 'Se connecter';
 
   @override

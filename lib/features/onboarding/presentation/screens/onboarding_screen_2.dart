@@ -13,28 +13,22 @@ import '../widgets/onboarding_bottom_scrim.dart';
 import '../widgets/onboarding_carousel_controller.dart';
 import '../widgets/onboarding_crossfade_carousel.dart';
 
-/// Onboarding screen 1 — full-bleed editorial photo carousel with a fixed
-/// headline/subtitle, KYNZA's signature blob "next" button and a segmented
-/// progress indicator.
-///
-/// Responsive strategy (breakpoint: [AppBreakpoints.tablet], matching
-/// [KynzaAuthCard]'s existing large-screen convention): below the
-/// breakpoint the carousel runs edge-to-edge; at or above it, the portrait
-/// 9:16 composition is preserved and centered in a fixed-width panel on a
-/// full-bleed black background, rather than stretching a portrait photo
-/// across a landscape viewport.
-class OnboardingScreen1 extends StatefulWidget {
-  const OnboardingScreen1({super.key, required this.onNext});
+/// Onboarding screen 2 — sells KYNZA's benefits (trusted pros, instant
+/// booking, premium experience, everything in one app) on the same
+/// full-bleed editorial carousel, scrim, next button and responsive panel
+/// strategy as [OnboardingScreen1], second of [OnboardingFlow.totalScreens].
+class OnboardingScreen2 extends StatefulWidget {
+  const OnboardingScreen2({super.key, required this.onNext});
 
   final VoidCallback onNext;
 
   @override
-  State<OnboardingScreen1> createState() => _OnboardingScreen1State();
+  State<OnboardingScreen2> createState() => _OnboardingScreen2State();
 }
 
-class _OnboardingScreen1State extends State<OnboardingScreen1> {
+class _OnboardingScreen2State extends State<OnboardingScreen2> {
   late final _carouselController = OnboardingCarouselController(
-    slideCount: OnboardingSlides.all.length,
+    slideCount: OnboardingSlides.screen2.length,
   );
 
   @override
@@ -55,7 +49,7 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
       fit: StackFit.expand,
       children: [
         OnboardingCrossfadeCarousel(
-          slides: OnboardingSlides.all,
+          slides: OnboardingSlides.screen2,
           controller: _carouselController,
           cacheWidth: cacheWidth,
         ),
@@ -73,10 +67,10 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _OnboardingHeadline(),
+                const _OnboardingScreen2Headline(),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  context.l10n.onboardingSubtitle,
+                  context.l10n.onboardingScreen2Subtitle,
                   style: AppTypography.bodyLarge,
                 ),
                 const SizedBox(height: AppSpacing.xxl),
@@ -86,7 +80,7 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
                   children: [
                     const KynzaOnboardingProgress(
                       itemCount: OnboardingFlow.totalScreens,
-                      currentIndex: 0,
+                      currentIndex: 1,
                       currentProgress: 1.0,
                     ),
                     KynzaOnboardingNextButton(onPressed: widget.onNext),
@@ -113,8 +107,8 @@ class _OnboardingScreen1State extends State<OnboardingScreen1> {
   }
 }
 
-class _OnboardingHeadline extends StatelessWidget {
-  const _OnboardingHeadline();
+class _OnboardingScreen2Headline extends StatelessWidget {
+  const _OnboardingScreen2Headline();
 
   @override
   Widget build(BuildContext context) {
@@ -123,12 +117,12 @@ class _OnboardingHeadline extends StatelessWidget {
       TextSpan(
         style: AppTypography.headlineLarge,
         children: [
-          TextSpan(text: l10n.onboardingHeadlinePart1),
+          TextSpan(text: l10n.onboardingScreen2HeadlineLine1),
+          const TextSpan(text: '\n'),
           TextSpan(
-            text: l10n.onboardingHeadlineAccent,
+            text: l10n.onboardingScreen2HeadlineLine2,
             style: const TextStyle(color: AppColors.primary),
           ),
-          TextSpan(text: l10n.onboardingHeadlinePart2),
         ],
       ),
     );

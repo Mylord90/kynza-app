@@ -48,4 +48,55 @@ abstract class OnboardingSlides {
       kenBurnsDriftDirection: 1,
     ),
   ];
+
+  /// The 4 slides for onboarding screen 2, in the imposed display order.
+  static const screen2 = [
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen2/webp/slide2_1.webp',
+      lqipAsset: 'assets/onboarding/screen2/lqip/slide2_1_lqip.webp',
+      alignment: Alignment(0, -0.15),
+      kenBurnsDriftDirection: 1,
+    ),
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen2/webp/slide2_2.webp',
+      lqipAsset: 'assets/onboarding/screen2/lqip/slide2_2_lqip.webp',
+      alignment: Alignment(0, -0.2),
+      kenBurnsDriftDirection: -1,
+    ),
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen2/webp/slide2_3.webp',
+      lqipAsset: 'assets/onboarding/screen2/lqip/slide2_3_lqip.webp',
+      alignment: Alignment(0, -0.05),
+      kenBurnsDriftDirection: 0,
+    ),
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen2/webp/slide2_4.webp',
+      lqipAsset: 'assets/onboarding/screen2/lqip/slide2_4_lqip.webp',
+      alignment: Alignment(0, -0.15),
+      kenBurnsDriftDirection: 1,
+    ),
+  ];
+
+  /// The 3 slides for onboarding screen 3 (the final CTA screen), in the
+  /// imposed display order.
+  static const screen3 = [
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen3/webp/slide3_1.webp',
+      lqipAsset: 'assets/onboarding/screen3/lqip/slide3_1_lqip.webp',
+      alignment: Alignment(0, -0.15),
+      kenBurnsDriftDirection: 1,
+    ),
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen3/webp/slide3_2.webp',
+      lqipAsset: 'assets/onboarding/screen3/lqip/slide3_2_lqip.webp',
+      alignment: Alignment(0, -0.2),
+      kenBurnsDriftDirection: -1,
+    ),
+    OnboardingSlide(
+      webpAsset: 'assets/onboarding/screen3/webp/slide3_3.webp',
+      lqipAsset: 'assets/onboarding/screen3/lqip/slide3_3_lqip.webp',
+      alignment: Alignment(0, -0.05),
+      kenBurnsDriftDirection: 0,
+    ),
+  ];
 }

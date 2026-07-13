@@ -1,5 +1,7 @@
 # Re-run after replacing files in assets/onboarding/source/:
 #   powershell -File tool/generate_onboarding_assets.ps1
+# Or for onboarding screen 2's slide set:
+#   powershell -File tool/generate_onboarding_assets.ps1 -SlideSet screen2
 #
 # Encodes each source PNG to a production lossy WebP and a tiny WebP LQIP
 # thumbnail using Google's official cwebp encoder. Source PNGs are
@@ -9,11 +11,18 @@
 # Requires cwebp on PATH, or set $env:CWEBP_PATH to its full path.
 # Official binaries: https://storage.googleapis.com/downloads.webmproject.org/releases/webp/
 
+param(
+    # "root" = assets/onboarding/{source,webp,lqip} (screen 1).
+    # Any other value = assets/onboarding/<SlideSet>/{source,webp,lqip}.
+    [string]$SlideSet = "root"
+)
+
 $ErrorActionPreference = "Stop"
 
-$sourceDir = "assets/onboarding/source"
-$webpDir = "assets/onboarding/webp"
-$lqipDir = "assets/onboarding/lqip"
+$baseDir = if ($SlideSet -eq "root") { "assets/onboarding" } else { "assets/onboarding/$SlideSet" }
+$sourceDir = "$baseDir/source"
+$webpDir = "$baseDir/webp"
+$lqipDir = "$baseDir/lqip"
 $lqipWidth = 28
 
 $cwebp = $env:CWEBP_PATH

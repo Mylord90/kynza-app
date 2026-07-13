@@ -78,6 +78,8 @@ import '../../shared/widgets/kynza_widgets.dart';
 import '../../features/salon/presentation/screens/salon_creation_wizard_screen.dart';
 import '../../features/services/presentation/screens/services_list_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen_1.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen_2.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen_3.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/billing/presentation/screens/billing_screen.dart';
 import '../../features/billing/presentation/screens/invoice_history_screen.dart';
@@ -122,7 +124,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     final path = state.matchedLocation;
     final isAuthRoute = path.startsWith('/auth');
     final isSplash = path == RouteNames.splash;
-    final isOnboarding = path == RouteNames.onboarding;
+    final isOnboarding = path.startsWith('/onboarding');
     final isAcceptInvitation =
         path == RouteNames.acceptInvitation ||
         path == RouteNames.acceptReferral;
@@ -201,6 +203,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _fadeRoute(
         RouteNames.onboarding,
         (context, state) => OnboardingScreen1(
+          onNext: () => context.go(RouteNames.onboardingStep2),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.onboardingStep2,
+        (context, state) => OnboardingScreen2(
+          onNext: () => context.go(RouteNames.onboardingStep3),
+        ),
+      ),
+      _fadeRoute(
+        RouteNames.onboardingStep3,
+        (context, state) => OnboardingScreen3(
           onNext: () {
             ref.read(sessionServiceProvider).markOnboardingDone();
             context.go(RouteNames.login);

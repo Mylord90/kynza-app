@@ -109,6 +109,10 @@ flutter:
     - assets/categories/
     - assets/onboarding/webp/
     - assets/onboarding/lqip/
+    - assets/onboarding/screen2/webp/
+    - assets/onboarding/screen2/lqip/
+    - assets/onboarding/screen3/webp/
+    - assets/onboarding/screen3/lqip/
     - assets/empty_states/
     - assets/sounds/
     - assets/notifications/

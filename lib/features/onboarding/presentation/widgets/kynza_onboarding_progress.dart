@@ -5,13 +5,16 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
 
-/// Segmented progress indicator for the onboarding carousel — one bar per
-/// slide, the active segment fills gold over [currentProgress] (0..1).
-/// Stateless and driver-fed so re-paints stay scoped to whatever
-/// `AnimatedBuilder` the caller wraps it in, never the whole screen.
+/// Segmented pagination indicator for the onboarding flow — one bar per
+/// onboarding screen, the active segment fills gold over [currentProgress]
+/// (0..1). Stateless and driver-fed so callers that do animate it (e.g. a
+/// future in-screen transition) can scope re-paints to an `AnimatedBuilder`
+/// instead of rebuilding the whole screen; most callers pass a constant
+/// [currentProgress] of 1.0 since it marks the current screen, not a
+/// per-frame value.
 ///
 /// Reused across every onboarding screen — keep this widget generic
-/// (no screen-1-specific logic) when extending the flow.
+/// (no screen-specific logic) when extending the flow.
 class KynzaOnboardingProgress extends StatelessWidget {
   const KynzaOnboardingProgress({
     super.key,

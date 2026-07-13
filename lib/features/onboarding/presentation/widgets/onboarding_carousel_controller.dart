@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 /// Reports the carousel's current slide index and how far the active
-/// segment has filled (0..1) — read by [KynzaOnboardingProgress] via
-/// `AnimatedBuilder` so only the progress bar repaints on each tick, not
-/// the rest of the screen.
+/// segment has filled (0..1) — required by [OnboardingCrossfadeCarousel]'s
+/// API so it always has somewhere to report per-frame progress, whether or
+/// not the hosting screen's UI currently visualizes it. `KynzaOnboardingProgress`
+/// no longer reads this: the onboarding flow's pagination now represents the
+/// screen's position in the 3-screen flow, not the carousel's image rhythm.
 ///
 /// A plain [ChangeNotifier] rather than a Riverpod provider deliberately:
 /// this fires on every animation frame, and routing that through a

@@ -458,6 +458,42 @@ abstract class AppLocalizations {
   /// **'Étape {current} sur {total}'**
   String onboardingProgressStep(int current, int total);
 
+  /// No description provided for @onboardingScreen2HeadlineLine1.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toute la beauté.'**
+  String get onboardingScreen2HeadlineLine1;
+
+  /// No description provided for @onboardingScreen2HeadlineLine2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une seule app.'**
+  String get onboardingScreen2HeadlineLine2;
+
+  /// No description provided for @onboardingScreen2Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trouvez des professionnels de confiance, réservez en un instant, et vivez une expérience premium — tout au même endroit.'**
+  String get onboardingScreen2Subtitle;
+
+  /// No description provided for @onboardingScreen3Headline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre prochaine expérience beauté commence ici.'**
+  String get onboardingScreen3Headline;
+
+  /// No description provided for @onboardingScreen3Subtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réservez facilement vos soins, découvrez les meilleurs professionnels et profitez d\'une expérience beauté pensée pour vous.'**
+  String get onboardingScreen3Subtitle;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer'**
+  String get onboardingGetStarted;
+
   /// No description provided for @authLogin.
   ///
   /// In fr, this message translates to:

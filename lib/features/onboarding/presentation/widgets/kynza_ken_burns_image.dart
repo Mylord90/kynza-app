@@ -36,22 +36,30 @@ class _KynzaKenBurnsImageState extends State<KynzaKenBurnsImage>
   static const _zoomEnd = 1.02;
   static const _driftPixels = 10.0;
 
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: widget.duration,
-  );
-  late final Animation<double> _scale = Tween<double>(
-    begin: 1.0,
-    end: _zoomEnd,
-  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  late final Animation<double> _driftY = Tween<double>(
-    begin: 0,
-    end: _driftPixels * widget.slide.kenBurnsDriftDirection,
-  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _driftY;
 
   @override
   void initState() {
     super.initState();
+    // Constructed unconditionally (not as a lazy `late final` field
+    // initializer) so `_controller` always exists by the time dispose()
+    // runs. When reduceMotion is true nothing else ever touches these
+    // fields during the widget's active life — a lazy initializer would
+    // defer AnimationController's ticker-registration (which needs a
+    // live BuildContext) to dispose() itself, when the element is already
+    // deactivated, throwing "Looking up a deactivated widget's ancestor
+    // is unsafe."
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: _zoomEnd,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _driftY = Tween<double>(
+      begin: 0,
+      end: _driftPixels * widget.slide.kenBurnsDriftDirection,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     if (!widget.reduceMotion) _controller.forward();
   }
 

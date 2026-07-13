@@ -66,6 +66,12 @@
   "onboardingHeadlinePart2": ".",
   "onboardingSubtitle": "Easily book appointments with the best salons, barbers, spas, nail artists, makeup artists and skincare experts.",
   "onboardingProgressStep": "Step {current} of {total}",
+  "onboardingScreen2HeadlineLine1": "Everything beauty.",
+  "onboardingScreen2HeadlineLine2": "One app.",
+  "onboardingScreen2Subtitle": "Discover trusted beauty professionals, book instantly, and enjoy premium experiences—all in one place.",
+  "onboardingScreen3Headline": "Your next beauty experience starts here.",
+  "onboardingScreen3Subtitle": "Easily book your treatments, discover the best professionals, and enjoy a beauty experience designed just for you.",
+  "onboardingGetStarted": "Get Started",
 
   "authLogin": "Sign in",
   "authLogout": "Sign out",
