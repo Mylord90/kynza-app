@@ -5,6 +5,7 @@ import 'package:kynza/features/onboarding/application/providers/onboarding_preca
 import 'package:kynza/features/onboarding/presentation/screens/onboarding_screen_3.dart';
 import 'package:kynza/features/onboarding/presentation/widgets/kynza_ken_burns_image.dart';
 import 'package:kynza/features/onboarding/presentation/widgets/kynza_onboarding_progress.dart';
+import 'package:kynza/features/onboarding/presentation/widgets/onboarding_sign_in_link.dart';
 import 'package:kynza/features/onboarding/presentation/widgets/sliding_get_started_button.dart';
 import 'package:kynza/l10n/app_localizations.dart';
 
@@ -46,7 +47,7 @@ void main() {
       (tester) async {
         var tapped = false;
         await tester.pumpWidget(
-          _wrap(OnboardingScreen3(onNext: () => tapped = true)),
+          _wrap(OnboardingScreen3(onNext: () => tapped = true, onSignIn: () {})),
         );
         await tester.pump();
 
@@ -65,7 +66,9 @@ void main() {
     );
 
     testWidgets('wraps the carousel in a RepaintBoundary', (tester) async {
-      await tester.pumpWidget(_wrap(OnboardingScreen3(onNext: () {})));
+      await tester.pumpWidget(
+        _wrap(OnboardingScreen3(onNext: () {}, onSignIn: () {})),
+      );
       await tester.pump();
 
       expect(find.byType(RepaintBoundary), findsWidgets);
@@ -80,7 +83,7 @@ void main() {
           Builder(
             builder: (context) {
               capturedContext = context;
-              return OnboardingScreen3(onNext: () {});
+              return OnboardingScreen3(onNext: () {}, onSignIn: () {});
             },
           ),
         ),
@@ -98,7 +101,7 @@ void main() {
         var tapped = false;
         await tester.pumpWidget(
           _wrap(
-            OnboardingScreen3(onNext: () => tapped = true),
+            OnboardingScreen3(onNext: () => tapped = true, onSignIn: () {}),
             disableAnimations: true,
           ),
         );
@@ -118,6 +121,31 @@ void main() {
 
         await tester.pumpWidget(const SizedBox());
         expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'sign-in link calls onSignIn without ever triggering onNext',
+      (tester) async {
+        var nextTapped = false;
+        var signInTapped = false;
+        await tester.pumpWidget(
+          _wrap(
+            OnboardingScreen3(
+              onNext: () => nextTapped = true,
+              onSignIn: () => signInTapped = true,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(OnboardingSignInLink), findsOneWidget);
+
+        await tester.tap(find.byType(OnboardingSignInLink));
+        await tester.pumpAndSettle();
+
+        expect(signInTapped, isTrue);
+        expect(nextTapped, isFalse);
       },
     );
   });

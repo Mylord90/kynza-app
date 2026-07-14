@@ -11,6 +11,7 @@ import '../widgets/kynza_onboarding_progress.dart';
 import '../widgets/onboarding_bottom_scrim.dart';
 import '../widgets/onboarding_carousel_controller.dart';
 import '../widgets/onboarding_crossfade_carousel.dart';
+import '../widgets/onboarding_sign_in_link.dart';
 import '../widgets/sliding_get_started_button.dart';
 
 /// Onboarding screen 3 — the final CTA screen. Shares screen 1/2's
@@ -19,10 +20,20 @@ import '../widgets/sliding_get_started_button.dart';
 /// the conversion moment, not an intermediate "next", so [onNext] here also
 /// carries the flow-completion side effect (see the router's wiring —
 /// this screen owns marking onboarding done, not screen 2 anymore).
+///
+/// [onSignIn] is the secondary "already have an account?" link
+/// ([OnboardingSignInLink]) — a returning user's shortcut straight to
+/// login, bypassing the primary CTA entirely. No business logic lives here:
+/// both callbacks are wired by the router (app_router.dart).
 class OnboardingScreen3 extends StatefulWidget {
-  const OnboardingScreen3({super.key, required this.onNext});
+  const OnboardingScreen3({
+    super.key,
+    required this.onNext,
+    required this.onSignIn,
+  });
 
   final VoidCallback onNext;
+  final VoidCallback onSignIn;
 
   @override
   State<OnboardingScreen3> createState() => _OnboardingScreen3State();
@@ -91,6 +102,13 @@ class _OnboardingScreen3State extends State<OnboardingScreen3> {
                 SlidingGetStartedButton(
                   label: l10n.onboardingGetStarted,
                   onPressed: widget.onNext,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                OnboardingSignInLink(
+                  question: l10n.onboardingAlreadyHaveAccount,
+                  accent: l10n.authLogin,
+                  onPressed: widget.onSignIn,
+                  semanticHint: l10n.onboardingSignInLinkHint,
                 ),
               ],
             ),

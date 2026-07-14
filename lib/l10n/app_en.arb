@@ -72,6 +72,8 @@
   "onboardingScreen3Headline": "Your next beauty experience starts here.",
   "onboardingScreen3Subtitle": "Easily book your treatments, discover the best professionals, and enjoy a beauty experience designed just for you.",
   "onboardingGetStarted": "Get Started",
+  "onboardingAlreadyHaveAccount": "Already have an account?",
+  "onboardingSignInLinkHint": "Opens the login screen",
 
   "authLogin": "Sign in",
   "authLogout": "Sign out",

@@ -214,6 +214,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGetStarted => 'Commencer';
 
   @override
+  String get onboardingAlreadyHaveAccount => 'Vous avez déjà un compte ?';
+
+  @override
+  String get onboardingSignInLinkHint => 'Ouvre l\'écran de connexion';
+
+  @override
   String get authLogin => 'Se connecter';
 
   @override

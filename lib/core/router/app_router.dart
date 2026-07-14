@@ -219,6 +219,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ref.read(sessionServiceProvider).markOnboardingDone();
             context.go(RouteNames.login);
           },
+          // Pushed (not go()) so the back button/gesture from Login returns
+          // here rather than unwinding the whole onboarding stack. Marks
+          // onboarding done up front too — otherwise a user who signs in
+          // via this shortcut and later signs out would see the onboarding
+          // carousel again next launch, despite already knowing the app.
+          onSignIn: () {
+            ref.read(sessionServiceProvider).markOnboardingDone();
+            context.push(RouteNames.login);
+          },
         ),
       ),
       _fadeRoute(RouteNames.login, (context, state) => const LoginScreen()),

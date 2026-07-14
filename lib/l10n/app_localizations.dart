@@ -494,6 +494,18 @@ abstract class AppLocalizations {
   /// **'Commencer'**
   String get onboardingGetStarted;
 
+  /// No description provided for @onboardingAlreadyHaveAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous avez déjà un compte ?'**
+  String get onboardingAlreadyHaveAccount;
+
+  /// No description provided for @onboardingSignInLinkHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvre l\'écran de connexion'**
+  String get onboardingSignInLinkHint;
+
   /// No description provided for @authLogin.
   ///
   /// In fr, this message translates to:

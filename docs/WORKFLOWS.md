@@ -116,6 +116,70 @@ their buttons render with `onPressed: null` behind a "coming soon" tooltip on bo
 function) for self-registered users; staff-via-invitation and client-via-referral get their role
 set server-side by the respective Edge Function instead, bypassing this screen.
 
+### 2.7 Onboarding completion & the 3-branch launch decision
+
+**Session source of truth**: Supabase is the sole auth/session authority — `AuthNotifier`
+(`lib/features/auth/application/notifiers/auth_notifier.dart`) builds off
+`SupabaseService.auth.currentSession`; the refresh token itself lives in the OS Keychain/Keystore
+via `SecureLocalStorage` (`lib/core/services/secure_local_storage.dart`), wired into
+`Supabase.initialize(authOptions: FlutterAuthClientOptions(localStorage: SecureLocalStorage()))`
+in `main.dart`. Firebase is observability/push only (Crashlytics, Performance, Messaging) — grep
+for `FirebaseAuth`/`firebase_auth` across `lib/` returns zero matches; no business logic depends
+on it. `SessionService` (Hive box `kynza_prefs`) stores **no tokens**, only two app-level flags:
+`session_persisted` (write-only today, never read back) and `onboarding_done`.
+
+**The 3-branch launch decision already exists as a single, unified mechanism** — it was not built
+as new work for the sign-in-link feature below, it was verified against the code:
+`SplashScreen._maybeNavigate()` (`lib/features/splash/presentation/screens/splash_screen.dart`)
+resolves `authNotifierProvider`'s state to exactly one destination:
+
+1. `authenticated(user)` → `redirectAfterAuth(user)` (`lib/core/utils/auth_redirect.dart`) →
+   role-based Home (`homeOwner`/`homeManager`/`homeStaff`/`homeClient`), skipping the onboarding
+   flag entirely — an authenticated user can never see onboarding or login at launch, by
+   construction (the `authState.when` branches are mutually exclusive; the onboarding-flag check
+   in branch 2/3 below is never even evaluated once authenticated).
+2. `unauthenticated` + `SessionService.isOnboardingDone() == true` → `login`.
+3. `unauthenticated` + `isOnboardingDone() == false` → `onboarding`.
+
+`AuthBootGate` (`lib/core/widgets/auth_boot_gate.dart`) blocks the router from mounting at all
+until `authNotifierProvider`'s first value resolves, showing a branded, `KynzaSkeleton`-based
+loader (never `CircularProgressIndicator`) — so by the time `SplashScreen` itself renders, the
+auth state is already known; its own 1500ms minimum-display timer is purely for brand pacing, not
+for waiting on data. Home screens (`HomeOwnerScreen` et al.) self-load their own data via
+`FutureProvider`s (`ownerSalonProvider`, `currentUserProfileProvider`) keyed off the authenticated
+session — the exact same code path already exercised every time a returning, already-logged-in
+user reopens the app, so direct-to-Home arrival at launch is a proven, everyday path, not a new
+risk.
+
+**`markOnboardingDone()` has exactly one call site** (`app_router.dart`, the `onboardingStep3`
+route's `onNext`), tied to the primary `SlidingGetStartedButton` CTA.
+
+**Sign-in shortcut link** (`OnboardingSignInLink`, screen 3 only, under the CTA): pushes
+(`context.push`, not `go`) `RouteNames.login` so the back gesture returns to screen 3, never
+unwinds to screen 1 — and **also** calls `markOnboardingDone()` before pushing. Without that
+second call site, a user who authenticates via this shortcut and later signs out would fail
+`isOnboardingDone()` on their next launch and see the onboarding carousel again, despite already
+knowing the app; both call sites now keep the flag consistent regardless of which path a user
+takes to their first successful login. Once authenticated, `LoginScreen`'s own
+`ref.listen(authNotifierProvider, ...)` (`login_screen.dart`) calls `context.go(resolvePostAuthRoute(...))`,
+which replaces the entire navigation stack — the pushed login screen and everything beneath it
+(the whole onboarding flow) is discarded, so there is no path back to onboarding after a
+successful sign-in.
+
+Tests: `test/features/splash/splash_screen_test.dart` proves all 3 launch branches against a
+standalone router (stand-in destination screens, not the full production router — which needs a
+fully authenticated app context far beyond what this decision needs to prove) with a fixed
+`AuthNotifier` override and an in-memory fake `SessionService` (real Hive/disk I/O turned out to be
+unreliable on this machine's own documented instability — see §3's launch-decision entry — so the
+fake substitutes only the one flag SplashScreen reads, `isOnboardingDone()`, without touching disk).
+`test/features/onboarding/onboarding_sign_in_navigation_test.dart` proves the push/pop contract
+(`Navigator.canPop()` after the push, not widget presence — go_router doesn't keep an inactive
+page's widget built while covered) using a lightweight stand-in instead of the real
+`OnboardingScreen3`, whose carousel/precache machinery is already covered separately.
+`test/features/onboarding/onboarding_sign_in_link_test.dart` and the updated
+`onboarding_screen_3_test.dart` cover the link widget itself (tap-after-animation, Reduce Motion,
+semantics, hover underline, non-competition with the primary CTA).
+
 ## 3. Role Workflows
 
 ### 3.1 CLIENT
@@ -275,11 +339,12 @@ No route-specific performance targets beyond the general ones in Part 13
 
 ## 8. Stratégie de tests
 
-No route/workflow-level integration tests currently exist verifying the redirect chain or
-per-role route access end-to-end. Recommended (not yet implemented): a `go_router` test harness
-asserting each `_RoleGuard`/`_RoleGuard.anyOf` combination redirects correctly for every role,
-and a regression test for the manager-home-is-a-stub gap so a future implementation is
-intentional, not silently reverted.
+The 3-branch launch decision (§2.7) is now covered end-to-end (`splash_screen_test.dart`) —
+previously zero tests existed for `SplashScreen`/`_unauthenticatedDestination` despite the logic
+predating this doc. Per-role `_RoleGuard`/`_RoleGuard.anyOf` route access still has no integration
+test — recommended (not yet implemented): a `go_router` test harness asserting each combination
+redirects correctly for every role, and a regression test for the manager-home-is-a-stub gap so a
+future implementation is intentional, not silently reverted.
 
 ## 9. Documentation associée
 

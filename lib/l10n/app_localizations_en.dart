@@ -214,6 +214,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGetStarted => 'Get Started';
 
   @override
+  String get onboardingAlreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get onboardingSignInLinkHint => 'Opens the login screen';
+
+  @override
   String get authLogin => 'Sign in';
 
   @override
