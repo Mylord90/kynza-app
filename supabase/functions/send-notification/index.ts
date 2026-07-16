@@ -117,7 +117,17 @@ Deno.serve(async (req) => {
           data: {
             event_type: payload.event,
             booking_id: relatedBookingId ?? "",
-            deepLink: relatedBookingId ? `/booking/${relatedBookingId}` : "",
+            // relatedBookingId here only gates WHETHER this is a
+            // booking-related event — the target below doesn't use the id
+            // itself. Do not "simplify" this ternary to a plain string:
+            // dropping the check would make every non-booking event (e.g.
+            // staff_joined) deep-link into the bookings list too. No
+            // client-side booking detail screen exists yet (a separate,
+            // future product ticket) so the list is the target that's
+            // never wrong — paid, cancelled, or upcoming, the booking is
+            // findable there — unlike /client/payment/:id, a live payment
+            // tunnel that no booking past pending_payment should reopen.
+            deepLink: relatedBookingId ? "/client/bookings" : "",
           },
         });
       } catch (e) {

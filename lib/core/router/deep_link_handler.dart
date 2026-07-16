@@ -83,9 +83,18 @@ abstract class DeepLinkHandler {
       case 'salon':
         final id = _firstSegment(uri);
         return id == null ? null : RouteNames.clientSalonDetailPath(id);
+      // No known emitter in the codebase today (grepped: share_service.dart
+      // only ever produces accept-invitation/accept-referral/salon links),
+      // but the 'booking' host IS a live registered intent-filter
+      // (AndroidManifest.xml) — a dormant mapping is still a real bug
+      // waiting for its first emitter. Targets the bookings list, not
+      // /client/payment/:id (a live payment tunnel — same reasoning as
+      // send-notification's deepLink, which this used to duplicate): no
+      // booking past pending_payment should reopen a payment form. The id
+      // segment is intentionally unused, same filter-not-source-of-value
+      // shape as there.
       case 'booking':
-        final id = _firstSegment(uri);
-        return id == null ? null : RouteNames.clientPaymentPath(id);
+        return RouteNames.clientBookings;
       default:
         return null;
     }

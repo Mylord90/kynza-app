@@ -100,6 +100,7 @@ GoRouter _testRouter() {
         RouteNames.completeProfile,
         RouteNames.homeClient,
         RouteNames.notifications,
+        RouteNames.clientBookings,
       ])
         GoRoute(path: path, builder: (context, state) => const SizedBox()),
     ],
@@ -163,6 +164,33 @@ void main() {
         );
 
         expect(redirect, RouteNames.notifications);
+      },
+    );
+
+    test(
+      'Item 2 end-to-end: a send-notification-shaped booking payload '
+      '(deepLink: "/client/bookings") is captured, validated and reaches '
+      'the bookings list — not the old broken "/booking/:id"',
+      () async {
+        final router = _testRouter();
+        final container = await _containerFor(
+          authState: AuthUiState.authenticated(
+            _profile(role: UserRole.client),
+          ),
+          sessionService: _FakeSessionService(),
+        );
+        // Simulates the RemoteMessage.data['deepLink'] value that
+        // send-notification/index.ts now emits for a booking-related event.
+        const fcmPayloadDeepLink = RouteNames.clientBookings;
+        DeepLinkHandler.capturePendingIntent(fcmPayloadDeepLink);
+
+        final redirect = computeAppRedirect(
+          ref: container.read(_refProvider),
+          state: _stateFor(router, RouteNames.splash),
+          router: router,
+        );
+
+        expect(redirect, RouteNames.clientBookings);
       },
     );
 

@@ -47,11 +47,18 @@ void main() {
       expect(route, isNull);
     });
 
-    test('booking host with an id segment rewrites to the payment route', () {
+    test('booking host rewrites to the bookings list, id ignored', () {
       final route = DeepLinkHandler.parseRoute(
         Uri.parse('com.kynza.app://booking/booking-321'),
       );
-      expect(route, '/client/payment/booking-321');
+      expect(route, '/client/bookings');
+    });
+
+    test('booking host without an id segment also rewrites to the list', () {
+      final route = DeepLinkHandler.parseRoute(
+        Uri.parse('com.kynza.app://booking'),
+      );
+      expect(route, '/client/bookings');
     });
 
     test('unrecognized host returns null', () {
