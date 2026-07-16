@@ -77,7 +77,7 @@ document. Points structurants pour la conception qui suit :
 | `lib/core/router/app_router.dart`, `route_names.dart`, `deep_link_handler.dart` | Extension additive (nouvelles routes/constantes/cas `switch`), puis refonte structurelle (D1) | **Élevé** pour D1 — touche les 4 écrans de rôle ; **faible** pour l'ajout de routes Messages (pattern déjà éprouvé) |
 | `lib/core/services/notification_service.dart`, `main.dart` | Ajout `getInitialMessage()`, migration de la persistance du token vers `device_tokens` | Moyen — touche un chemin d'auth-boot déjà fragile (`AuthBootGate`) |
 | `lib/core/services/mutation_outbox_service.dart`, `offline_sync_coordinator.dart` | Extension additive (nouveau `OutboxMutationType`, nouveau champ `nextRetryAt`) | Faible — mécanisme généralisé dès l'origine pour ça |
-| Supabase — nouvelles tables | 7 nouvelles tables, 0 table existante modifiée en schéma (sauf lecture de `promotions`/`bookings`/`staff_profiles`) | Faible — additif pur |
+| Supabase — nouvelles tables | 4 nouvelles tables (V1, après descope anti-inflation — voir §5.5), 0 table existante modifiée en schéma (sauf lecture de `promotions`/`bookings`/`staff_profiles`) | Faible — additif pur |
 | `notification_logs`/`notification_preferences`/`notification_templates` | **Aucune modification** (D2) | Nul |
 | Design system (`AppColors`, `AppTypography`, `KynzaCard`, `KynzaSkeleton`) | Lecture seule, aucune extension nécessaire | Nul |
 | Supabase Realtime / quota Free | Nouveaux canaux (par thread ouvert + par liste de conversations) | Moyen — à chiffrer avant Phase 3 large (voir §9) |
@@ -103,14 +103,14 @@ document. Points structurants pour la conception qui suit :
 | `KynzaOfflineBanner` | `lib/shared/widgets/` | Réutilisé tel quel dans l'écran de conversation et l'inbox |
 | Pattern repo/modèle/provider de `reviews` | `lib/features/reviews/` | Copié comme squelette pour `lib/features/messaging/` (freezed+json_serializable, Provider/FutureProvider/AsyncNotifierProvider classiques) |
 | `promotions` (table existante) | `20260624090000_phase3a_schema.sql` | Référencée par `messages.attachment` (`promotionId`), **jamais dupliquée** |
-| `pg_cron`/`pg_net` (extensions déjà actives) | — | Réutilisables si un job périodique est nécessaire plus tard (ex. purge des `gift_cards` expirées) ; **non utilisées pour déclencher le push** (voir §7.4, choix de cohérence avec le pattern existant) |
+| `pg_cron`/`pg_net` (extensions déjà actives) | — | Réutilisables si un job périodique est nécessaire plus tard (ex. purge des dead-letter de l'outbox) ; **non utilisées pour déclencher le push** (voir §7.4, choix de cohérence avec le pattern existant) ; **aucun job n'est défini dans ce document pour une table retirée en §5.5 — vérifié (voir §5.5)** |
 
 ### Créé (nouveau, justifié)
 
 | Élément nouveau | Justification anti-inflation |
 |---|---|
-| Tables `conversations`, `messages`, `broadcast_campaigns`, `broadcast_recipients`, `gift_cards`, `device_tokens`, `message_reports` | Aucune ne recoupe une table existante (vérifié par grep sur `message*`/`chat*`/`conversation*`/`thread*`/`gift_card*`/`device_token*` — zéro résultat) |
-| Edge Functions `create-conversation`, `send-message-push`, `create-broadcast`, `redeem-gift-card` | Miroir du pattern déjà établi (`create-booking` pour l'atomicité serveur-autoritaire, `_shared/fcm.ts` réutilisé) — pas un nouveau pattern |
+| Tables `conversations`, `messages`, `device_tokens`, `message_reports` (V1 — 4 tables, après descope anti-inflation, voir §5.5) | Aucune ne recoupe une table existante (vérifié par grep sur `message*`/`chat*`/`conversation*`/`thread*`/`device_token*` — zéro résultat) |
+| Edge Functions `create-conversation`, `send-message-push` | Miroir du pattern déjà établi (`create-booking` pour l'atomicité serveur-autoritaire, `_shared/fcm.ts` réutilisé) — pas un nouveau pattern |
 | `lib/features/messaging/` (domain/data/application/presentation) | Feature-first, calqué sur `reviews/` — aucune structure alternative inventée |
 | `KynzaMessageBubble`, `KynzaGiftCardCard`, `KynzaPromotionCard`, `KynzaBookingConfirmationCard` | Composés de `KynzaCard` + tokens existants ; aucun équivalent trouvé (le bloc "réponse" de `ReviewTile` n'a ni alignement directionnel ni avatar) |
 | Champ `nextRetryAt` sur les items de `MutationOutboxService` + logique de backoff dans `OfflineSyncCoordinator.flush()` | Le mécanisme existant n'a **aucun** backoff (compteur d'essais seulement) — extension minimale, pas un second système de queue |
@@ -132,12 +132,6 @@ erDiagram
     users ||--o{ messages : "sender_id"
     messages ||--o{ message_reports : "message_id"
     users ||--o{ message_reports : "reporter_id"
-    salons ||--o{ broadcast_campaigns : "salon_id"
-    broadcast_campaigns ||--o{ broadcast_recipients : "campaign_id"
-    users ||--o{ broadcast_recipients : "client_id"
-    salons ||--o{ gift_cards : "salon_id"
-    users ||--o{ gift_cards : "client_id"
-    bookings ||--o| gift_cards : "redeemed_booking_id"
     promotions ||--o{ messages : "attachment.promotionId (référence logique, pas de FK JSONB)"
     users ||--o{ device_tokens : "user_id"
     users ||--o{ notification_logs : "user_id (catégorie 4, inchangé — D2)"
@@ -278,7 +272,7 @@ CREATE TABLE public.messages (
   sender_id UUID NOT NULL REFERENCES public.users(id),
   client_message_id UUID NOT NULL,
   kind TEXT NOT NULL CHECK (kind IN (
-    'text','image','gif','gift_card','coupon','promotion','booking_confirmation'
+    'text','image','gif','promotion','booking_confirmation'
   )),
   body TEXT,
   attachment JSONB,
@@ -309,13 +303,34 @@ d'idempotence : un renvoi par la file offline avec le même id ne crée pas de d
 { "type": "image", "url": "...", "width": 800, "height": 600, "thumbnailUrl": "..." }
 // gif
 { "type": "gif", "url": "...", "width": 480, "height": 270 }
-// gift_card — référence gift_cards.id, champs dénormalisés pour rendu offline
-{ "type": "gift_card", "giftCardId": "uuid", "amountBif": 20000, "expiresAt": "2026-08-01T00:00:00Z" }
-// coupon / promotion — référence promotions.id existante, jamais dupliquée en écriture
+// promotion — référence promotions.id existante, jamais dupliquée en écriture ; title/imageUrl
+// dénormalisés au moment de l'envoi pour un rendu offline, mais jamais utilisés seuls pour
+// décider si l'offre est encore valable (voir "Promo expirée/désactivée/épuisée" ci-dessous)
 { "type": "promotion", "promotionId": "uuid", "title": "...", "imageUrl": "..." }
 // booking_confirmation — référence bookings.id existante
 { "type": "booking_confirmation", "bookingId": "uuid" }
 ```
+
+**Promo expirée / désactivée / épuisée — un message est immuable, la promo qu'il référence ne
+l'est pas.** La rich card ne se contente jamais des champs dénormalisés de `attachment` pour
+décider si le bouton "Réserver maintenant" est actif : elle relit `promotions` en **fetch séparé**
+à chaque affichage (un nouveau provider `promotionByIdProvider`
+— `FutureProvider.autoDispose.family<PromotionModel?, String>`, même famille que
+`salonRatingProvider`/`canReviewProvider` dans `reviews/`), **jamais une jointure SQL sur la
+requête des messages** — coupler le stream borné de `messages` (§7.2) à l'état de `promotions`
+romprait le bornage volontaire du Realtime. Deux cas distincts, vérifiés contre la RLS réelle de
+`promotions` (`public_read_promotions`, `20260624090000_phase3a_schema.sql:416-419` :
+`is_active = true AND deleted_at IS NULL AND ends_at > NOW()`) :
+
+- **Expirée, désactivée ou supprimée** → la RLS bloque purement et simplement la lecture : le
+  fetch renvoie **zéro ligne** pour un non-owner/manager. La rich card affiche alors "Offre
+  expirée" en s'appuyant uniquement sur `title`/`imageUrl` dénormalisés dans `attachment` (seule
+  donnée encore accessible), CTA désactivé.
+- **Épuisée** (`current_uses >= max_uses`) mais encore `is_active`/non expirée → la RLS **laisse
+  passer** la lecture (elle ne vérifie pas `current_uses`/`max_uses`), donc le fetch réussit ; la
+  rich card doit comparer `current_uses`/`max_uses` côté client sur la ligne obtenue et désactiver
+  le CTA elle-même — ce n'est pas la RLS qui protège ce cas, c'est un contrôle applicatif, cohérent
+  avec le fait que la RLS `public_read_promotions` ne l'a jamais couvert.
 
 Extensible sans refonte : un futur `{ "type": "pdf", ... }` / `"video"` / `"audio"` ajoute un cas au
 `CHECK` de `kind` (migration additive) et un nouveau widget de rendu — la colonne `attachment`
@@ -448,112 +463,63 @@ Ceci répond directement à l'exigence du §11 du cahier des charges ("éviter l
 chaque render") sans reproduire l'anti-pattern déjà identifié dans le module notifications
 (`watchUnreadCount()` qui recompte sur chaque émission Realtime d'un stream non filtré).
 
-### 5.5 `broadcast_campaigns` / `broadcast_recipients` (catégorie 3 — diffusion)
+### 5.5 Hors périmètre V1 — catégorie 3 (diffusion) et carte cadeau différées
 
-Décision de conception : une diffusion à N clients n'est **pas** une conversation (cardinalité et
-pattern d'accès radicalement différents — un message, potentiellement des milliers de
-destinataires, pas de fil de discussion). La forcer dans le schéma `conversations`/`messages`
-obligerait à créer une ligne de conversation par destinataire pour un seul envoi, ce qui contredit
-"diffusion, pas conversation 1:1" du cahier des charges. Le schéma choisi **réutilise le pattern
-déjà éprouvé de `notification_logs`** (ligne par destinataire, `is_read`/`read_at`), pas un
-troisième pattern.
+**Amendement post-audit anti-inflation** (voir l'échange qui a précédé cet amendement) : cette
+section contenait initialement 3 tables (`broadcast_campaigns`, `broadcast_recipients`,
+`gift_cards`). Elles sont retirées du schéma V1 — le raisonnement complet est consigné ici plutôt
+que supprimé, pour qu'un futur lecteur ne les reprenne pas pour un oubli.
 
-```sql
-CREATE TABLE public.broadcast_campaigns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  salon_id UUID NOT NULL REFERENCES public.salons(id),
-  created_by UUID NOT NULL REFERENCES public.users(id),
-  title TEXT NOT NULL,
-  body TEXT NOT NULL,
-  attachment JSONB,
-  audience_filter JSONB NOT NULL DEFAULT '{"segment":"all"}',
-  sent_at TIMESTAMPTZ,
-  recipient_count INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at TIMESTAMPTZ
-);
+**La coupure est nette, pas une mutilation du modèle de conversation.** `create-conversation` (§6)
+n'a **jamais** géré de cas broadcast, et le `CHECK` de `conversations.type` (§5.2) n'a **jamais**
+contenu de valeur broadcast — vérifié par relecture complète de ces deux sections. La catégorie 3
+n'a jamais été modélisée comme une conversation ; elle était un sous-système parallèle
+(`broadcast_campaigns`/`broadcast_recipients`) construit à côté de `conversations`/`messages`. Ce
+qui sort ici est donc ce sous-système adjacent tout entier, pas un membre du modèle de données de
+la messagerie proprement dite — `conversations`, `messages`, `device_tokens`, `message_reports`
+restent inchangés par ce retrait.
 
-CREATE TABLE public.broadcast_recipients (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  campaign_id UUID NOT NULL REFERENCES public.broadcast_campaigns(id),
-  client_id UUID NOT NULL REFERENCES public.users(id),
-  is_read BOOLEAN NOT NULL DEFAULT false,
-  read_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT uq_broadcast_recipient UNIQUE (campaign_id, client_id)
-);
-CREATE INDEX idx_broadcast_recipients_client
-  ON public.broadcast_recipients(client_id, created_at DESC);
-```
+**Carte cadeau (attachement `gift_card`, table `gift_cards`) — différée.** Une carte cadeau n'est
+pas qu'une table absente, c'est un **produit financier absent** : elle s'achète (avec quel moyen de
+paiement ?), porte un solde, expire, se consomme potentiellement en partie, entre dans le revenu du
+salon, peut se rembourser ou être contestée. Une rich card ne peut pas référencer une entité qui
+n'a jamais été conçue comme produit — la spec initiale ("bouton Utiliser") présupposait un système
+qui n'existe pas. Ce mandat est **financier/billing**, pas messagerie ; il rejoint §11
+(évolutivité) au même titre que PDF/vidéo/audio. Si/quand ce mandat s'ouvre, la rédemption devra
+suivre le pattern **"Shape B"** déjà documenté et déjà utilisé dans ce dépôt pour une réclamation à
+usage unique — `docs/adr/0002-two-shapes-of-atomic-claim.md` : un `UPDATE ... WHERE
+redeemed_at IS NULL AND expires_at > NOW() RETURNING ...`, sur le même modèle que
+`validate-qr/index.ts:34-42` pour `loyalty_qr_tokens`. **`AtomicClaimService`
+(`lib/core/services/atomic_claim_service.dart`) n'est pas ce pattern** : c'est un verrou
+client, en mémoire, intra-processus, qui protège uniquement contre des flushs concurrents du même
+outbox local — il ne protège rien côté serveur contre un double usage cross-device, et ne doit pas
+être invoqué comme s'il l'était.
 
-**RLS** :
+**Diffusion salon → N clients (catégorie 3, `broadcast_campaigns`/`broadcast_recipients`) —
+différée.** Le précédent **D2** (catégorie 4 : les notifications restent dans `notification_*`, la
+messagerie unifie seulement à l'affichage) s'applique symétriquement ici : le contenu, l'audience
+et les statistiques d'une campagne relèvent du domaine **marketing**, pas messagerie — la
+messagerie ne devrait en être que la **surface de rendu** dans l'inbox, pas la propriétaire. Or,
+vérifié par lecture complète de `lib/features/marketing/domain/repositories/marketing_repository.dart`
+et de son implémentation : le domaine marketing n'a aujourd'hui **aucune méthode d'envoi** (CRUD
+`client_contacts`, CRUD `promotions`, génération de lien de parrainage — point). Construire le
+moteur de diffusion est un mandat marketing séparé, pas une extension mineure de la messagerie.
+Ce mandat rejoint également §11.
 
-```sql
-ALTER TABLE public.broadcast_campaigns ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "broadcast_owner_manager_manage" ON public.broadcast_campaigns
-  FOR ALL USING (
-    public.has_role(auth.uid(), 'owner', salon_id)
-    OR public.has_role(auth.uid(), 'manager', salon_id)
-  );
-CREATE POLICY "broadcast_recipient_select_campaign" ON public.broadcast_campaigns
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.broadcast_recipients r
-            WHERE r.campaign_id = broadcast_campaigns.id AND r.client_id = auth.uid())
-  );
+**Deux décisions à trancher à l'ouverture du mandat marketing — consignées ici, non tranchées :**
+1. **Double consentement.** `client_contacts.opted_in` (consentement CRM du salon) et
+   `notification_preferences` (préférence app de l'utilisateur) coexisteront pour une même
+   personne. Une campagne devra honorer les deux ; lequel gouverne en cas de conflit n'est pas
+   décidé par ce document.
+2. **`event_type` générique vs catalogué.** Réutiliser `notification_logs` pour la trace par
+   destinataire d'une campagne (au lieu d'un `broadcast_recipients` dédié) est une piste
+   plausible — mais y faire passer un `event_type` générique (ex. `marketing_campaign`) avec un
+   contenu libre en `data` affaiblit l'invariant que `notification_templates` existe pour garantir
+   (messages pré-approuvés, catalogués, localisés `title_fr`/`body_fr`). Ce compromis doit être
+   nommé et décidé explicitement à l'ouverture du mandat marketing, pas glissé comme une évidence
+   technique.
 
-ALTER TABLE public.broadcast_recipients ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "broadcast_recipients_own_select" ON public.broadcast_recipients
-  FOR SELECT USING (client_id = auth.uid());
-CREATE POLICY "broadcast_recipients_own_mark_read" ON public.broadcast_recipients
-  FOR UPDATE USING (client_id = auth.uid()) WITH CHECK (client_id = auth.uid());
-CREATE POLICY "broadcast_recipients_owner_manager_select" ON public.broadcast_recipients
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.broadcast_campaigns c
-            WHERE c.id = broadcast_recipients.campaign_id
-              AND (public.has_role(auth.uid(), 'owner', c.salon_id)
-                   OR public.has_role(auth.uid(), 'manager', c.salon_id)))
-  );
--- Pas de policy INSERT pour authenticated : le fan-out (potentiellement des milliers de lignes)
--- est fait par l'Edge Function create-broadcast (service_role), comme create-booking.
-```
-
-### 5.6 `gift_cards`
-
-Aucune table de cartes-cadeaux n'existe (le module loyalty actuel est un système de tampons). Un
-schéma minimal est nécessaire dès le jour 1 pour que la rich card "Carte cadeau" du §7 du cahier
-des charges soit fonctionnelle (pas seulement un JSON flottant dans un message) :
-
-```sql
-CREATE TABLE public.gift_cards (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  salon_id UUID NOT NULL REFERENCES public.salons(id),
-  issued_by UUID NOT NULL REFERENCES public.users(id),
-  client_id UUID NOT NULL REFERENCES public.users(id),
-  amount_bif INT NOT NULL CHECK (amount_bif > 0),
-  code TEXT NOT NULL UNIQUE,
-  expires_at TIMESTAMPTZ NOT NULL,
-  redeemed_at TIMESTAMPTZ,
-  redeemed_booking_id UUID REFERENCES public.bookings(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at TIMESTAMPTZ
-);
-CREATE INDEX idx_gift_cards_client ON public.gift_cards(client_id) WHERE deleted_at IS NULL;
-
-ALTER TABLE public.gift_cards ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "gift_cards_owner_manager_manage" ON public.gift_cards
-  FOR ALL USING (
-    public.has_role(auth.uid(), 'owner', salon_id)
-    OR public.has_role(auth.uid(), 'manager', salon_id)
-  );
-CREATE POLICY "gift_cards_client_select_own" ON public.gift_cards
-  FOR SELECT USING (client_id = auth.uid());
--- Rédemption uniquement via l'Edge Function redeem-gift-card (service_role), même schéma de
--- protection que loyalty_qr_tokens (used_at/used_by) contre le double usage.
-```
-
-### 5.7 `device_tokens` (prérequis D3)
+### 5.6 `device_tokens` (prérequis D3)
 
 ```sql
 CREATE TABLE public.device_tokens (
@@ -581,7 +547,7 @@ prochain refresh de token de chaque utilisateur, où la plateforme réelle sera 
 document — décision à valider séparément une fois `device_tokens` éprouvée en production), mais
 `NotificationService.saveFcmToken` cesse de l'écrire au profit d'un upsert dans `device_tokens`.
 
-### 5.8 `message_reports` (modération — "Signaler")
+### 5.7 `message_reports` (modération — "Signaler")
 
 ```sql
 CREATE TABLE public.message_reports (
@@ -846,10 +812,11 @@ maintenant :
   à la plupart des tables existantes qui plafonnent avec le nombre de salons/clients. À
   instrumenter (taille de table, taux de croissance) dès les premières semaines de Phase 3, pas
   après coup.
-- **Edge Functions** : `create-conversation`, `send-message-push`, `create-broadcast`,
-  `redeem-gift-card` sont toutes de petite taille (même forme que `create-booking`/
-  `send-notification` existantes) — aucun risque anticipé par rapport à la marge documentée
-  (~209–220KB / marge 106KB), mais à vérifier au build réel de chacune, pas supposé ici.
+- **Edge Functions** : `create-conversation`, `send-message-push` (V1 — `create-broadcast`/
+  `redeem-gift-card` différées avec la catégorie 3 et la carte cadeau, voir §5.5) sont de petite
+  taille (même forme que `create-booking`/`send-notification` existantes) — aucun risque anticipé
+  par rapport à la marge documentée (~209–220KB / marge 106KB), mais à vérifier au build réel de
+  chacune, pas supposé ici.
 
 ---
 
@@ -857,9 +824,14 @@ maintenant :
 
 - **Filtres** `Tous · Non lus · Réservations · Promotions · KYNZA · Favoris` : tous calculables côté
   client par filtrage sur les champs déjà en place (`client_unread_count > 0`,
-  `kind = 'booking_confirmation'`/`'promotion'`/`'gift_card'`, source = notifications pour "KYNZA",
+  `kind = 'booking_confirmation'`/`'promotion'`, source = notifications pour "KYNZA",
   `client_pinned`/`salon_pinned` pour "Favoris") — aucune nouvelle colonne nécessaire au-delà de
-  celles déjà définies en §5.
+  celles déjà définies en §5. **Le filtre "Promotions" reste cohérent après le descope de §5.5** :
+  il porte sur `kind = 'promotion'` **au niveau du message individuel**, dans un fil déjà ouvert
+  (catégorie 1 ou 2) — un salon peut toujours joindre une promo à un message dans une conversation
+  existante, indépendamment du moteur de diffusion catégorie 3 qui, lui, est différé. Ce n'est donc
+  pas une incohérence à corriger : le filtre porte sur l'attachement d'un message, jamais sur un
+  mécanisme de diffusion.
 - **Recherche évolutive** (conversation · établissement · client · message) : jour 1, recherche sur
   `salons.name`/`users.full_name` déjà indexés (trigram, `services`/`salons` ont déjà un
   `search_vector` GIN — pattern existant à réutiliser) pour trouver une conversation par nom. La
@@ -881,6 +853,9 @@ maintenant :
 | Vocaux / vidéo / appels | Nouveaux `kind` dans le `CHECK` de `messages.kind` (migration additive) + nouveau discriminant dans `attachment` — déjà anticipé par le modèle discriminé (§5.3) |
 | Bots IA | Un `sender_id` peut déjà référencer n'importe quel `users.id` — un compte système dédié (comme pour KYNZA catégorie 4) fonctionne sans changement de schéma |
 | WhatsApp / SMS / Email | `users.whatsapp_phone`/`whatsapp_opt_in` existent déjà (module notifications) — un futur canal de sortie pourrait lire `conversations`/`messages` en source, écrire vers ces canaux, sans toucher au schéma messagerie lui-même |
+| Carte cadeau (`kind = 'gift_card'`) | **Différée — mandat produit financier séparé**, pas une simple extension de schéma (voir §5.5) : nécessite d'abord un produit "carte cadeau" réel (achat, solde, expiration, rédemption, revenu salon), qu'aucune table n'implémente aujourd'hui. Le modèle discriminé accueille le nouveau `kind` sans refonte le jour venu |
+| Coupon personnalisé à usage unique (`kind = 'coupon'`) | **Différé, distinct de `promotion`** : un vrai coupon (assigné à un destinataire précis, à usage unique) exige une entité d'assignation par destinataire qui n'existe pas — le même piège que la carte cadeau, en plus petit. **En V1, un besoin "coupon" se sert de `kind = 'promotion'`** (référence `promotions.promo_code`, partagé, pas personnalisé) ; retenu comme un seul `kind` day-one pour éviter deux valeurs d'enum pour une seule sémantique existante (voir §5.3) |
+| Diffusion salon → N clients (catégorie 3) | **Différée — mandat moteur marketing séparé** (voir §5.5) : le précédent D2 s'applique, la messagerie ne serait qu'une surface de rendu, pas la propriétaire ; `MarketingRepository` n'a aujourd'hui aucune méthode d'envoi à étendre |
 
 ---
 
@@ -950,16 +925,17 @@ conception Phase 0). De même, `docs/OFFLINE_STRATEGY.md` devra documenter l'ext
 ## 13. Sécurité — synthèse
 
 - **Tenant isolation** : chaque table nouvelle porte `salon_id` (direct ou via jointure
-  `conversations`/`broadcast_campaigns`), toutes les policies passent par `has_role()` — aucun
-  parsing JWT ad hoc introduit.
+  `conversations`), toutes les policies passent par `has_role()` — aucun parsing JWT ad hoc
+  introduit.
 - **Aucune confiance client** : `salon_id` n'est jamais accepté en entrée d'une Edge Function
   sans être re-dérivé/vérifié serveur (comme `create-booking` aujourd'hui) ; la création de
   conversation est intégralement serveur-autoritaire (§6).
 - **Soft delete only** : confirmé sur toutes les tables (`deleted_at`), avec la nuance §5.2 sur la
   distinction masquer/archiver/supprimer-pour-une-partie qui reste dans l'esprit "jamais de perte
   de données", juste au niveau de la visibilité par partie plutôt que de la ligne elle-même.
-- **Validation serveur** : anti-spam (§6), dédoublonnage (§5.3), rédemption de carte-cadeau
-  (§5.6) — tous côté serveur, jamais une vérification UI seule.
+- **Validation serveur** : anti-spam (§6), dédoublonnage (§5.3) — côté serveur, jamais une
+  vérification UI seule. (La rédemption de carte-cadeau n'est pas dans le périmètre V1 — voir §5.5
+  pour le pattern serveur qu'elle devra suivre le jour où ce mandat s'ouvre.)
 
 ---
 
@@ -970,16 +946,17 @@ conception Phase 0). De même, `docs/OFFLINE_STRATEGY.md` devra documenter l'ext
 | 0 | Ce document | Rapport d'écart (fait) |
 | 1 | D3 — `getInitialMessage()` cold-start, table `device_tokens` + migration, bascule `saveFcmToken` | Phase 0 validée |
 | 2 | D1 — Refactor `StatefulShellRoute` (4 rôles), comportement de nav préservé, gap §12.1 tranché | Phase 1 |
-| 3a | Migrations DB : `conversations`, `messages`, triggers compteurs, `device_tokens` déjà en Phase 1 | Phase 2 |
-| 3b | `broadcast_campaigns`/`broadcast_recipients`, `gift_cards`, `message_reports` + Edge Functions `create-conversation`/`create-broadcast`/`redeem-gift-card`/`send-message-push` | 3a |
+| 3a | Migrations DB : `conversations`, `messages`, triggers compteurs, `message_reports`, `device_tokens` déjà en Phase 1 | Phase 2 |
+| 3b | Edge Functions `create-conversation`/`send-message-push` | 3a |
 | 3c | `lib/features/messaging/` — domain/data/application (repositories, modèles freezed, providers Riverpod classiques, calqués sur `reviews/`) | 3b |
-| 3d | Widgets réutilisables : `KynzaMessageBubble`, rich cards (gift card / promo / confirmation) sur `KynzaCard` | 3c |
+| 3d | Widgets réutilisables : `KynzaMessageBubble`, rich card promotion (référence `promotions`, cas expirée/désactivée/épuisée, §5.3) sur `KynzaCard` | 3c |
 | 3e | Écrans : inbox, thread, recherche, détails, états vide/hors-ligne/erreur/chargement (`KynzaSkeleton`) | 3d |
 | 3f | Realtime borné (§7.2) | 3e |
 | 3g | FCM/deep-link cold-start déjà fait en Phase 1 ; câblage `send-message-push` + `DeepLinkHandler` cas `conversation` | 3f |
 | 3h | Offline : extension backoff `MutationOutboxService` (§8.1), cache Hive (§8.3) | 3g |
 | 3i | Recherche/filtres/favoris (§10) | 3h |
-| 3j | Modération : Signaler/Bloquer/Masquer/Supprimer/Archiver (§5.8, déjà modélisées, câblage UI) | 3i |
+| 3j | Modération : Signaler/Bloquer/Masquer/Supprimer/Archiver (§5.7, déjà modélisées, câblage UI) | 3i |
+| — | **Hors mandat, non planifié ici** : mandat produit carte cadeau (achat/solde/rédemption, débloque `kind = 'gift_card'`) · mandat moteur marketing (audience/envoi/stats, débloque la catégorie 3 et `broadcast_campaigns`/`broadcast_recipients`) — voir §5.5, §11 | — |
 
 Chaque item de chaque phase passe par Rule 8 individuellement (annonce → preuve avant → validation
 → application → preuve après → commit) — ce tableau est un découpage de portée, pas un engagement
@@ -998,5 +975,8 @@ d'implémentation en bloc.
 - [x] Plan de navigation (§12) — refonte D1 puis insertion Messages, gap staff/owner signalé explicitement
 - [x] Plan de développement par phases (§14)
 - [x] Doc canonique `docs/KYNZA_MESSAGING_ARCHITECTURE.md` (ce fichier)
-- [ ] `flutter analyze` = 0 · `flutter test` inchangé N/N · zéro régression — à exécuter après écriture (aucun code de production ajouté par ce document)
-- [ ] Commit unique de documentation — après preuve verte ci-dessus
+- [x] Amendement post-audit anti-inflation appliqué — schéma V1 descopé à 4 tables (`conversations`,
+      `messages`, `device_tokens`, `message_reports`) ; `gift_cards`/`broadcast_campaigns`/
+      `broadcast_recipients` et les `kind` `gift_card`/`coupon` différés avec leur raison en §5.5/§11
+- [x] `flutter analyze` = 0 · `flutter test` 440/440 inchangés · zéro régression (aucun code de production touché par cet amendement)
+- [x] Commit unique de documentation — après preuve verte ci-dessus
