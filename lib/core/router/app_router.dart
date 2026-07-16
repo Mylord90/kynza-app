@@ -108,96 +108,133 @@ import 'route_names.dart';
 /// the current [BuildContext] without threading it through every callback.
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// The router's whole redirect decision — same 3-branch/7-state logic as
+/// always, only extracted out of `appRouterProvider`'s `GoRouter(redirect:
+/// ...)` closure so it's directly testable: a `ProviderContainer` with
+/// overridden providers plus a throwaway `GoRouter` (for [router]'s
+/// `.configuration`) exercises this exact function, with no widget pumped
+/// and no real Hive/Supabase I/O — `redirect` callbacks normally require a
+/// `BuildContext` sourced from a mounted `Router` widget (go_router's
+/// `parseRouteInformationWithDependencies` needs one), which is why this
+/// wasn't testable in isolation before; nothing here still needs one.
+String? computeAppRedirect({
+  required Ref ref,
+  required GoRouterState state,
+  required GoRouter router,
+}) {
+  // Incoming com.kynza.app:// deep links always carry a URI host
+  // (in-app context.go/push navigation never does) — rewrite them to
+  // the real route before any path-based matching below.
+  if (state.uri.host.isNotEmpty) {
+    final rewritten = DeepLinkHandler.parseRoute(state.uri);
+    if (rewritten != null) return rewritten;
+  }
+
+  final path = state.matchedLocation;
+  final isAuthRoute = path.startsWith('/auth');
+  final isSplash = path == RouteNames.splash;
+  final isOnboarding = path.startsWith('/onboarding');
+  final isAcceptInvitation =
+      path == RouteNames.acceptInvitation ||
+      path == RouteNames.acceptReferral;
+  final isGuestRoute =
+      path == RouteNames.login ||
+      path == RouteNames.register ||
+      path == RouteNames.forgotPassword;
+
+  final authValue = ref.read(authNotifierProvider);
+  if (authValue.isLoading) return null;
+
+  final authState = authValue.valueOrNull;
+  if (authState == null) return null;
+
+  return authState.when(
+    initial: () => null,
+    loading: () => null,
+    error: (_) => null,
+    // The splash screen owns its own minimum-display-time transition
+    // (see SplashScreen) — the generic guard never touches '/'.
+    unauthenticated: () {
+      if (isAuthRoute || isSplash || isOnboarding || isAcceptInvitation) {
+        return null;
+      }
+      return RouteNames.login;
+    },
+    authenticated: (user) {
+      if (isGuestRoute) return redirectAfterAuth(user);
+
+      // Force-update gate — blocks all navigation when the installed
+      // version is below the minimum required (checked once on login,
+      // re-checked when the user taps "Vérifier à nouveau").
+      if (path != RouteNames.forceUpdate) {
+        final versionAsync = ref.read(appVersionCheckProvider);
+        if (versionAsync is AsyncData<AppVersionCheckModel?> &&
+            versionAsync.value?.updateRequired == true) {
+          return RouteNames.forceUpdate;
+        }
+      }
+
+      // Maintenance gate — blocks all navigation during an active window.
+      // MaintenanceScreen polls every 30 s and invalidates the provider
+      // when maintenance ends, which triggers a fresh redirect evaluation.
+      if (path != RouteNames.maintenance) {
+        final maintenanceAsync = ref.read(maintenanceStatusProvider);
+        if (maintenanceAsync is AsyncData<MaintenanceWindowModel?> &&
+            maintenanceAsync.value?.isActive == true) {
+          return RouteNames.maintenance;
+        }
+      }
+
+      // Cold-start FCM deep link replay (D3). A pending invitation/
+      // referral token (SessionService — see resolvePostAuthRoute) is a
+      // deliberate action and always wins: the push intent is left armed
+      // for the next redirect() evaluation instead of being consumed and
+      // discarded here, so it isn't silently lost to a race with
+      // whichever navigation call happens to reach this branch first.
+      final sessionService = ref.read(sessionServiceProvider);
+      final hasPendingDeliberateIntent =
+          sessionService.getPendingInvitationToken() != null ||
+          sessionService.getPendingReferralToken() != null;
+      if (!hasPendingDeliberateIntent) {
+        final pendingDeepLink = DeepLinkHandler.consumePendingIntent(
+          router.configuration,
+        );
+        if (pendingDeepLink != null) return pendingDeepLink;
+      }
+
+      return null;
+    },
+    emailNotVerified: (email, userId) {
+      if (path == RouteNames.verifyEmail || path == RouteNames.callback) {
+        return null;
+      }
+      return RouteNames.verifyEmail;
+    },
+    profileIncomplete: (userId) {
+      if (path == RouteNames.completeProfile || path == RouteNames.callback) {
+        return null;
+      }
+      return RouteNames.completeProfile;
+    },
+  );
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _AuthRefreshNotifier(ref);
   ref.onDispose(refreshNotifier.dispose);
 
-  String? redirect(BuildContext context, GoRouterState state) {
-    // Incoming com.kynza.app:// deep links always carry a URI host
-    // (in-app context.go/push navigation never does) — rewrite them to
-    // the real route before any path-based matching below.
-    if (state.uri.host.isNotEmpty) {
-      final rewritten = DeepLinkHandler.parseRoute(state.uri);
-      if (rewritten != null) return rewritten;
-    }
+  // Forward reference: computeAppRedirect needs the router's own
+  // RouteConfiguration but is itself passed into GoRouter's constructor —
+  // assigned below, read only once redirect is actually invoked, always
+  // after construction completes.
+  late final GoRouter router;
 
-    final path = state.matchedLocation;
-    final isAuthRoute = path.startsWith('/auth');
-    final isSplash = path == RouteNames.splash;
-    final isOnboarding = path.startsWith('/onboarding');
-    final isAcceptInvitation =
-        path == RouteNames.acceptInvitation ||
-        path == RouteNames.acceptReferral;
-    final isGuestRoute =
-        path == RouteNames.login ||
-        path == RouteNames.register ||
-        path == RouteNames.forgotPassword;
-
-    final authValue = ref.read(authNotifierProvider);
-    if (authValue.isLoading) return null;
-
-    final authState = authValue.valueOrNull;
-    if (authState == null) return null;
-
-    return authState.when(
-      initial: () => null,
-      loading: () => null,
-      error: (_) => null,
-      // The splash screen owns its own minimum-display-time transition
-      // (see SplashScreen) — the generic guard never touches '/'.
-      unauthenticated: () {
-        if (isAuthRoute || isSplash || isOnboarding || isAcceptInvitation) {
-          return null;
-        }
-        return RouteNames.login;
-      },
-      authenticated: (user) {
-        if (isGuestRoute) return redirectAfterAuth(user);
-
-        // Force-update gate — blocks all navigation when the installed
-        // version is below the minimum required (checked once on login,
-        // re-checked when the user taps "Vérifier à nouveau").
-        if (path != RouteNames.forceUpdate) {
-          final versionAsync = ref.read(appVersionCheckProvider);
-          if (versionAsync is AsyncData<AppVersionCheckModel?> &&
-              versionAsync.value?.updateRequired == true) {
-            return RouteNames.forceUpdate;
-          }
-        }
-
-        // Maintenance gate — blocks all navigation during an active window.
-        // MaintenanceScreen polls every 30 s and invalidates the provider
-        // when maintenance ends, which triggers a fresh redirect evaluation.
-        if (path != RouteNames.maintenance) {
-          final maintenanceAsync = ref.read(maintenanceStatusProvider);
-          if (maintenanceAsync is AsyncData<MaintenanceWindowModel?> &&
-              maintenanceAsync.value?.isActive == true) {
-            return RouteNames.maintenance;
-          }
-        }
-
-        return null;
-      },
-      emailNotVerified: (email, userId) {
-        if (path == RouteNames.verifyEmail || path == RouteNames.callback) {
-          return null;
-        }
-        return RouteNames.verifyEmail;
-      },
-      profileIncomplete: (userId) {
-        if (path == RouteNames.completeProfile || path == RouteNames.callback) {
-          return null;
-        }
-        return RouteNames.completeProfile;
-      },
-    );
-  }
-
-  return GoRouter(
+  router = GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: RouteNames.splash,
     refreshListenable: refreshNotifier,
-    redirect: redirect,
+    redirect: (context, state) =>
+        computeAppRedirect(ref: ref, state: state, router: router),
     routes: [
       _fadeRoute(RouteNames.splash, (context, state) => const SplashScreen()),
       _fadeRoute(
@@ -720,6 +757,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  return router;
 });
 
 /// Premium push transition — fade + a short rightward settle, decelerating

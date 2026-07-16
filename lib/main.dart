@@ -13,6 +13,7 @@ import 'core/permissions/permission_cache.dart';
 import 'core/security/certificate_pinning_service.dart';
 import 'core/providers/app_providers.dart';
 import 'core/router/app_router.dart';
+import 'core/router/deep_link_handler.dart';
 import 'core/services/crash_reporting_service.dart';
 import 'core/services/firebase_init_failure_log.dart';
 import 'core/services/hive_encryption_key_service.dart';
@@ -112,6 +113,23 @@ Future<void> _bootstrap() async {
     await CrashReportingService.reportPendingInitFailure();
     await PerformanceMonitoringService.startColdStartTrace();
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    // D3 — the third FCM entry point (foreground/background were already
+    // wired via NotificationService/AuthBootGate): the notification that
+    // launched the app from a terminated state. Captured here, consumed
+    // once auth resolves by app_router.dart's redirect via
+    // DeepLinkHandler.consumePendingIntent. Best-effort like the rest of
+    // this block — a failure here degrades to "no cold-start deep link
+    // this session", never blocks app launch.
+    try {
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
+      DeepLinkHandler.capturePendingIntent(
+        initialMessage?.data['deepLink'] as String?,
+      );
+    } catch (e, st) {
+      CrashReportingService.recordError(e, st);
+    }
   }
 
   assert(
