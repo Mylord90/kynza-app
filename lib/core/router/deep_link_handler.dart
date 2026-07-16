@@ -32,24 +32,40 @@ abstract class DeepLinkHandler {
   /// Returns and clears the captured intent in one call — the single call
   /// site (app_router.dart's redirect) is what makes the replay one-time by
   /// construction, not a separate "already consumed" flag to keep in sync.
-  ///
-  /// Validates [route] against [configuration] — the router's own
-  /// registered route table (`RouteConfiguration.findMatch`, the same check
-  /// go_router uses internally to decide whether to show its error screen)
-  /// instead of a hand-maintained allowlist, so the routes declared in
-  /// app_router.dart stay the single source of truth. Takes the
-  /// `RouteConfiguration` directly rather than a `BuildContext` +
-  /// `GoRouter.of(context)`: `GoRouter.configuration` is built synchronously
-  /// in the constructor (not lazily on first widget build), so this stays
-  /// testable in plain Dart against a throwaway `GoRouter`, no widget pump
-  /// required. An unknown path (e.g. a stale payload from an older app
-  /// version, or a route renamed since) is discarded silently: a missed
-  /// notification is a non-event, a GoRouter error screen at cold start is
-  /// an incident.
+  /// Validated the same way as any other deep-link entry point — see
+  /// [validate].
   static String? consumePendingIntent(RouteConfiguration configuration) {
     final route = _pendingIntent;
     if (route == null) return null;
     _pendingIntent = null;
+    return validate(configuration, route);
+  }
+
+  /// Returns [route] if it resolves to a real route registered in
+  /// [configuration], `null` otherwise (including for `route == ''`, which
+  /// never matches any registered path — all of them start with `/`).
+  ///
+  /// This is the **one** validator for **all three** places a deep link can
+  /// enter the app — cold start (via [consumePendingIntent]), foreground
+  /// (`auth_boot_gate.dart`'s notification-banner tap), and background
+  /// (`auth_boot_gate.dart`'s `tapHandler`) — so an unknown or empty path is
+  /// discarded silently at every entry point, not just cold start. Before
+  /// this, only cold start validated; the other two called `ctx.go(deepLink)`
+  /// directly, so e.g. a background tap on a booking notification (whose
+  /// payload targets an unregistered path) hit GoRouter's error screen.
+  ///
+  /// Uses `RouteConfiguration.findMatch` — the same check go_router uses
+  /// internally to decide whether to show its own error screen — instead of
+  /// a hand-maintained allowlist, so the routes declared in app_router.dart
+  /// stay the single source of truth. Takes the `RouteConfiguration`
+  /// directly rather than a `BuildContext` + `GoRouter.of(context)`:
+  /// `GoRouter.configuration` is built synchronously in the constructor (not
+  /// lazily on first widget build), so this stays testable in plain Dart
+  /// against a throwaway `GoRouter`, no widget pump required. An unknown
+  /// path (e.g. a stale payload from an older app version, or a route
+  /// renamed since) is discarded silently: a missed notification is a
+  /// non-event, a GoRouter error screen is an incident.
+  static String? validate(RouteConfiguration configuration, String route) {
     try {
       final match = configuration.findMatch(Uri.parse(route));
       return match.isError ? null : route;

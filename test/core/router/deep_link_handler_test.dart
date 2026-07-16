@@ -90,4 +90,60 @@ void main() {
       );
     });
   });
+
+  group('DeepLinkHandler.validate — the one validator, all 3 entry points', () {
+    final router = _routerWith([RouteNames.splash, RouteNames.notifications]);
+    final config = router.configuration;
+
+    tearDownAll(router.dispose);
+
+    test('a known route is returned as-is', () {
+      expect(
+        DeepLinkHandler.validate(config, RouteNames.notifications),
+        RouteNames.notifications,
+      );
+    });
+
+    test(
+      'an unknown route is rejected — the real send-notification bug '
+      '(deepLink: "/booking/:id", no such route registered anywhere)',
+      () {
+        expect(DeepLinkHandler.validate(config, '/booking/abc123'), isNull);
+      },
+    );
+
+    test(
+      'an empty string is rejected — Item 2 precondition: findMatch(Uri.parse'
+      '(\'\')) never matches, since every registered route starts with "/", '
+      'so the empty-string guard lives here and callers never need to '
+      "check isNotEmpty themselves",
+      () {
+        expect(DeepLinkHandler.validate(config, ''), isNull);
+      },
+    );
+
+    test('a malformed path never throws — rejected, not crashed', () {
+      expect(
+        () => DeepLinkHandler.validate(config, 'not a valid ::: uri %'),
+        returnsNormally,
+      );
+      expect(DeepLinkHandler.validate(config, 'not a valid ::: uri %'), isNull);
+    });
+
+    test(
+      'consumePendingIntent delegates to validate — same rejection for an '
+      'unknown path, proving there is exactly one validator, not two',
+      () {
+        DeepLinkHandler.capturePendingIntent('/booking/abc123');
+        final viaConsume = DeepLinkHandler.consumePendingIntent(config);
+        final viaValidateDirectly = DeepLinkHandler.validate(
+          config,
+          '/booking/abc123',
+        );
+
+        expect(viaConsume, viaValidateDirectly);
+        expect(viaConsume, isNull);
+      },
+    );
+  });
 }
