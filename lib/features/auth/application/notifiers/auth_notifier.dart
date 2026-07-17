@@ -159,10 +159,13 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
   }
 
   Future<void> signOut() async {
-    // Must log before signOut() invalidates the session — activity_logs'
-    // RLS policy needs auth.uid() to still resolve to this user.
+    // Must run before _repository.signOut() invalidates the session — both
+    // the audit log (activity_logs' RLS) and the device token revocation
+    // below (device_tokens' own-row UPDATE policy, Phase 1b Étape 1) need
+    // auth.uid() to still resolve to this user.
     final salonId = ref.read(currentUserProfileProvider).valueOrNull?.salonId;
     if (salonId != null) await AuditLogger.authLogout(salonId);
+    await ref.read(notificationServiceProvider).revokeDeviceToken();
 
     await _repository.signOut();
     await ref.read(sessionServiceProvider).clearSession();

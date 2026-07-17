@@ -69,6 +69,48 @@ class NotificationService {
     );
   }
 
+  /// Phase 1b Étape 2, Item B — the other half of the leak Étape 1's
+  /// upsert_device_token() closes on sign-*in*: without this, a signed-out
+  /// device keeps showing the departing user's notifications until someone
+  /// else signs in on it and triggers reassignment. Called from
+  /// AuthNotifier.signOut() *before* the Supabase session is invalidated —
+  /// the device_tokens own-row UPDATE policy (Étape 1) needs auth.uid() to
+  /// still resolve to this user, same ordering requirement already
+  /// documented there for the audit log call.
+  ///
+  /// Soft-delete only, scoped to this device's own token+user_id — no
+  /// SECURITY DEFINER, no RPC: this is exactly the case ordinary RLS
+  /// already handles correctly (Voie 2, Étape 1's design), unlike the
+  /// cross-user reassignment upsert_device_token() exists for.
+  ///
+  /// Best-effort by design, same two circuit breakers already used above
+  /// for the same two operations (FCM token fetch, Supabase write) — a
+  /// failure here must never block sign-out itself; trapping a user
+  /// mid-logout over a token cleanup would be worse than the leak this
+  /// closes. A failed soft-delete just leaves this device's leak open for
+  /// this session, exactly today's baseline, not worse — closed later by
+  /// the next reassignment instead of by this cleanup.
+  Future<void> revokeDeviceToken() async {
+    final token = await DependencyCircuitBreakers.fcm.run<String?>(
+      () => _messaging.getToken(),
+      () async => null,
+    );
+    if (token == null) return;
+    final userId = SupabaseService.auth.currentUser?.id;
+    if (userId == null) return;
+    await DependencyCircuitBreakers.supabase.run<void>(
+      () => SupabaseService.from('device_tokens')
+          .update({'deleted_at': DateTime.now().toIso8601String()})
+          .eq('token', token)
+          .eq('user_id', userId),
+      () async {
+        // Best-effort: if this fails, the token stays active on this
+        // device until someone else signs in and reassigns it (Étape 1) —
+        // the same leak that existed before this item, not a new one.
+      },
+    );
+  }
+
   /// Overridden per-app via [onForegroundMessage] to surface
   /// KynzaNotificationBanner — kept here only for the FCM wiring itself.
   void Function(RemoteMessage message)? onForegroundMessage;
