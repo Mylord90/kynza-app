@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_router/go_router.dart';
+import '../constants/app_version.dart';
 import 'circuit_breaker.dart';
 import 'crash_reporting_service.dart';
 import 'supabase_service.dart';
@@ -37,13 +38,29 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_onNotificationTap);
   }
 
+  /// Phase 1b Étape 2 — writes to device_tokens (multi-device) via the
+  /// SECURITY DEFINER upsert_device_token RPC instead of the old
+  /// users.fcm_token column, which this stops writing entirely (it's
+  /// deprecated, not dropped — Étape 3). kAppPlatform is real, measured
+  /// (Platform.isAndroid/isIOS), never fabricated — device_tokens.platform
+  /// is nullable specifically so a backfilled/never-measured row (NULL)
+  /// stays distinguishable from a real one; writing a guessed value here
+  /// would have destroyed that distinction on its very first use.
+  ///
+  /// Same best-effort shape as before — failures are still swallowed here,
+  /// not fixed by this change. One new failure class exists that couldn't
+  /// happen with a plain table UPDATE: the RPC itself being missing or
+  /// signature-mismatched (e.g. an environment where this migration wasn't
+  /// applied) surfaces as a distinct PostgREST error — still absorbed by
+  /// the same fallback below, not surfaced to the user either way.
   Future<void> saveFcmToken(String token) async {
     final userId = SupabaseService.auth.currentUser?.id;
     if (userId == null) return;
     await DependencyCircuitBreakers.supabase.run<void>(
-      () => SupabaseService.from(
-        'users',
-      ).update({'fcm_token': token}).eq('id', userId),
+      () => SupabaseService.client.rpc(
+        'upsert_device_token',
+        params: {'_token': token, '_platform': kAppPlatform},
+      ),
       () async {
         // Best-effort: Supabase down/erroring right now just means this
         // token save doesn't happen — the next onTokenRefresh or the next

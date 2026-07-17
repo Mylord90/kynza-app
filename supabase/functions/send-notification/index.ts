@@ -100,39 +100,68 @@ Deno.serve(async (req) => {
 
     const { data: user } = await supabase
       .from("users")
-      .select("fcm_token, whatsapp_phone, whatsapp_opt_in")
+      .select("whatsapp_phone, whatsapp_opt_in")
       .eq("id", userId)
       .single();
+
+    // device_tokens, not users.fcm_token (Phase 1b Étape 2): a user can
+    // have N devices now, not just one.
+    const { data: deviceTokens } = await supabase
+      .from("device_tokens")
+      .select("token")
+      .eq("user_id", userId)
+      .is("deleted_at", null);
 
     const pushOk = prefs?.push_enabled ?? true;
     const whatsappOk = prefs?.whatsapp_enabled ?? true;
 
-    if (pushOk && channels.includes("push") && user?.fcm_token) {
-      let delivered = true;
+    if (pushOk && channels.includes("push") && deviceTokens && deviceTokens.length > 0) {
+      // Same payload for every device — computed once, not per token.
+      const pushPayload = {
+        title,
+        body,
+        data: {
+          event_type: payload.event,
+          booking_id: relatedBookingId ?? "",
+          // relatedBookingId here only gates WHETHER this is a
+          // booking-related event — the target below doesn't use the id
+          // itself. Do not "simplify" this ternary to a plain string:
+          // dropping the check would make every non-booking event (e.g.
+          // staff_joined) deep-link into the bookings list too. No
+          // client-side booking detail screen exists yet (a separate,
+          // future product ticket) so the list is the target that's
+          // never wrong — paid, cancelled, or upcoming, the booking is
+          // findable there — unlike /client/payment/:id, a live payment
+          // tunnel that no booking past pending_payment should reopen.
+          deepLink: relatedBookingId ? "/client/bookings" : "",
+        },
+      };
+
+      // Aggregate policy (deliberate, not a schema gap): one
+      // notification_logs row per notification per user, not per device —
+      // delivered = true if at least one of the user's devices succeeded.
+      // The product question is "was the user notified", not "which of
+      // their N phones got it". Zero schema change needed for this.
+      //
+      // Honest caveat, not the wished-for semantics: sendFcmPush()
+      // (_shared/fcm.ts) swallows every error internally and never reads
+      // the fetch() response body, so it never actually throws for a
+      // rejected/invalid token today. In practice `delivered` here
+      // currently means "we called fetch N times without a JS-level
+      // exception", not "FCM confirmed delivery to at least one device".
+      // Fixing that is a separate ticket (_shared/fcm.ts needs to read
+      // FCM's response and propagate NOT_REGISTERED/INVALID_ARGUMENT) —
+      // this aggregate is already the right shape for the day that ships,
+      // so it won't need a second logic change then.
+      let delivered = false;
       let deliveryError: string | null = null;
-      try {
-        await sendFcmPush(user.fcm_token, {
-          title,
-          body,
-          data: {
-            event_type: payload.event,
-            booking_id: relatedBookingId ?? "",
-            // relatedBookingId here only gates WHETHER this is a
-            // booking-related event — the target below doesn't use the id
-            // itself. Do not "simplify" this ternary to a plain string:
-            // dropping the check would make every non-booking event (e.g.
-            // staff_joined) deep-link into the bookings list too. No
-            // client-side booking detail screen exists yet (a separate,
-            // future product ticket) so the list is the target that's
-            // never wrong — paid, cancelled, or upcoming, the booking is
-            // findable there — unlike /client/payment/:id, a live payment
-            // tunnel that no booking past pending_payment should reopen.
-            deepLink: relatedBookingId ? "/client/bookings" : "",
-          },
-        });
-      } catch (e) {
-        delivered = false;
-        deliveryError = e instanceof Error ? e.message : "fcm_send_failed";
+      for (const { token } of deviceTokens) {
+        try {
+          await sendFcmPush(token, pushPayload);
+          delivered = true;
+        } catch (e) {
+          deliveryError ??= e instanceof Error ? e.message : "fcm_send_failed";
+        }
       }
       await supabase.from("notification_logs").insert({
         user_id: userId,
@@ -144,7 +173,7 @@ Deno.serve(async (req) => {
         data: vars,
         related_booking_id: relatedBookingId ?? null,
         delivered,
-        delivery_error: deliveryError,
+        delivery_error: delivered ? null : deliveryError,
       });
     }
 
