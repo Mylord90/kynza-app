@@ -181,6 +181,7 @@
 
   "homeStaffScanLoyaltyTooltip": "Scan loyalty",
   "homeStaffAvailabilityTooltip": "My availability",
+  "homeStaffAccountTooltip": "My account",
   "homeStaffConfirmArrivalButton": "Confirm arrival",
 
   "homeClientGreeting": "Hello {firstName} 👋",

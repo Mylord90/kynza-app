@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/localization/extensions/build_context_l10n_extension.dart';
+import '../../../../core/providers/auth_providers.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -13,6 +14,7 @@ import '../../../../core/services/supabase_service.dart';
 import '../../../../shared/navigation/kynza_bottom_nav.dart';
 import '../../../../shared/navigation/kynza_nav_item.dart';
 import '../../../../shared/widgets/kynza_widgets.dart';
+import '../../../auth/application/providers/auth_notifier_provider.dart';
 import '../../../booking/application/providers/booking_providers.dart';
 import '../../../booking/presentation/widgets/booking_list_card.dart';
 import '../../../staff/application/providers/staff_providers.dart';
@@ -67,6 +69,14 @@ class _HomeStaffScreenState extends ConsumerState<HomeStaffScreen> {
             onPressed: () => context.push(RouteNames.staffAvailability),
           ),
           const UnreadCountBadge(),
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: context.l10n.homeStaffAccountTooltip,
+            onPressed: () => showKynzaBottomSheet(
+              context,
+              builder: (_) => const StaffAccountSheet(),
+            ),
+          ),
         ],
       ),
       body: staffAsync.when(
@@ -386,6 +396,84 @@ class _MyClientsTab extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Minimal account entry point for staff — deliberately not a full profile
+/// screen (client/owner have those; staff doesn't need one until a real
+/// need surfaces from the field, not just because this file was open).
+/// Just enough to know who's signed in before signing out, which matters
+/// on a salon's shared device: without this, the next person to pick up
+/// the phone inherits whatever staff member was last logged in.
+///
+/// Public (not the usual private-widget-per-screen convention) so it's
+/// directly testable in isolation — pumping the full HomeStaffScreen would
+/// drag in myStaffProfileProvider and real Supabase-backed booking queries
+/// for no extra proof of what's actually new here.
+class StaffAccountSheet extends ConsumerWidget {
+  const StaffAccountSheet({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final profile = ref.watch(currentUserProfileProvider).valueOrNull;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              KynzaAvatar(
+                fullName: profile?.fullName ?? '',
+                avatarUrl: profile?.avatarUrl,
+                size: AvatarSize.lg,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        profile?.fullName ?? '',
+                        style: AppTypography.h3,
+                      ),
+                    ),
+                    if (profile?.email != null)
+                      Text(profile!.email!, style: AppTypography.bodySmall),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          KynzaButton(
+            label: l10n.authLogout,
+            variant: KynzaButtonVariant.destructive,
+            onPressed: () async {
+              final confirmed = await showKynzaConfirmDialog(
+                context,
+                title: l10n.homeClientProfileLogoutTitle,
+                message: l10n.homeClientProfileLogoutMessage,
+                confirmLabel: l10n.homeClientProfileLogoutButton,
+              );
+              if (confirmed) {
+                await ref.read(authNotifierProvider.notifier).signOut();
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -80,6 +80,13 @@ class _AcceptInvitationScreenState extends ConsumerState<AcceptInvitationScreen>
       await SupabaseService.auth.refreshSession();
       ref.invalidate(currentUserProfileProvider);
       await ref.read(authNotifierProvider.notifier).refreshProfile();
+      // This detour (register -> here, see the class doc above) never
+      // touches the onboarding carousel, so without this a staff member
+      // who signs up this way has isOnboardingDone() stuck at false
+      // forever — SplashScreen would send them back to Onboarding, not
+      // Login, the first time they sign out. Same fix shape as
+      // app_router.dart's two existing markOnboardingDone() call sites.
+      await ref.read(sessionServiceProvider).markOnboardingDone();
 
       if (!mounted) return;
       setState(() => _status = _InvitationStatus.success);

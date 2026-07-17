@@ -527,6 +527,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeStaffAvailabilityTooltip => 'Mes disponibilités';
 
   @override
+  String get homeStaffAccountTooltip => 'Mon compte';
+
+  @override
   String get homeStaffConfirmArrivalButton => 'Confirmer arrivée';
 
   @override

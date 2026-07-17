@@ -201,6 +201,7 @@
 
   "homeStaffScanLoyaltyTooltip": "Scanner fidélité",
   "homeStaffAvailabilityTooltip": "Mes disponibilités",
+  "homeStaffAccountTooltip": "Mon compte",
   "homeStaffConfirmArrivalButton": "Confirmer arrivée",
 
   "homeClientGreeting": "Bonjour {firstName} 👋",

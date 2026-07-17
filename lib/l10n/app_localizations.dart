@@ -1070,6 +1070,12 @@ abstract class AppLocalizations {
   /// **'Mes disponibilités'**
   String get homeStaffAvailabilityTooltip;
 
+  /// No description provided for @homeStaffAccountTooltip.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte'**
+  String get homeStaffAccountTooltip;
+
   /// No description provided for @homeStaffConfirmArrivalButton.
   ///
   /// In fr, this message translates to:

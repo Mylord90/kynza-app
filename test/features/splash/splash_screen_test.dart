@@ -147,5 +147,24 @@ void main() {
         expect(find.text('LOGIN_STAND_IN'), findsNothing);
       },
     );
+
+    testWidgets(
+      'Item 3: a staff member who signed up via accept-invitation (never '
+      'touched the onboarding carousel) lands on Login after signing out, '
+      'not Onboarding — accept_invitation_screen.dart now calls '
+      'markOnboardingDone() on success, so isOnboardingDone() is true here '
+      'exactly like any other completed signup',
+      (tester) async {
+        final sessionService = _FakeSessionService()..markOnboardingDone();
+        await tester.pumpWidget(
+          _wrap(const AuthUiState.unauthenticated(), sessionService),
+        );
+        addTearDown(() => tester.pumpWidget(const SizedBox()));
+        await _pumpPastMinDisplay(tester);
+
+        expect(find.text('LOGIN_STAND_IN'), findsOneWidget);
+        expect(find.text('ONBOARDING_STAND_IN'), findsNothing);
+      },
+    );
   });
 }

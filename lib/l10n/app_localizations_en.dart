@@ -523,6 +523,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeStaffAvailabilityTooltip => 'My availability';
 
   @override
+  String get homeStaffAccountTooltip => 'My account';
+
+  @override
   String get homeStaffConfirmArrivalButton => 'Confirm arrival';
 
   @override
