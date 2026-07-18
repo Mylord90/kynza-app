@@ -163,6 +163,19 @@ class AuthNotifier extends AsyncNotifier<AuthUiState> {
     // the audit log (activity_logs' RLS) and the device token revocation
     // below (device_tokens' own-row UPDATE policy, Phase 1b Étape 1) need
     // auth.uid() to still resolve to this user.
+    //
+    // ⚠️ DO NOT reorder this, even for a plausible-sounding reason like
+    // "sign out first so the UI responds faster, clean up after" — if
+    // revokeDeviceToken() ever ran after the session is gone, auth.uid()
+    // would resolve to nothing, the device_tokens UPDATE policy would
+    // reject it, and NotificationService's circuit breaker (deliberately
+    // best-effort, Étape 2 Item B) would swallow that failure silently.
+    // Sign-out would still succeed — but this device's token would stay
+    // active, reopening the exact leak Phase 1b closed, with no error, no
+    // log, nothing to notice. Not covered by a test: AuthNotifier's
+    // _repository/NotificationService dependencies are hardcoded, not
+    // injected, so asserting this order at runtime would need a DI
+    // refactor bigger than this fix — this comment is the only guard.
     final salonId = ref.read(currentUserProfileProvider).valueOrNull?.salonId;
     if (salonId != null) await AuditLogger.authLogout(salonId);
     await ref.read(notificationServiceProvider).revokeDeviceToken();
