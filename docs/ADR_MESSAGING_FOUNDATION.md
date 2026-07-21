@@ -193,6 +193,14 @@ les deux FK de façon symétrique et prévisible — aucune autre convention nou
 
 ---
 
+## Notes ouvertes
+
+| Statut | Note |
+|---|---|
+| `OPEN` | §6, pattern squelette `protect_user_columns` : la mention "aucun GRANT" est une propriété du cas TRIGGER, pas du squelette `SECURITY DEFINER` en général — une fonction RPC `SECURITY DEFINER` (ex. `upsert_device_token`, `GRANT EXECUTE TO authenticated`) fait exception. Préciser le jour où le §6 servira de modèle à une fonction RPC. Non traité ici. |
+
+---
+
 ## §3 — Catalogue des invariants (1 à 9)
 
 | # | Énoncé | Mécanisme réel | Test | SQLSTATE attendu | Résultat réel |
@@ -200,18 +208,21 @@ les deux FK de façon symétrique et prévisible — aucune autre convention nou
 | **1** | `client_staff` requiert `related_booking_id IS NOT NULL` | CHECK `chk_staff_requires_booking` | T3 | `23514` | **Obtenu** — `violates check constraint "chk_staff_requires_booking"` |
 | 2 | tuple `(client_id)` de la conversation cohérent avec la réservation citée | FK composite (partie 1/3) | T4 | `23503` | **Obtenu** — `violates foreign key constraint "fk_conversations_related_booking_composite"` |
 | 3 | tuple `(staff_id)` cohérent avec `practitioner_id` du booking | FK composite (partie 2/3) | T4 | `23503` | **Obtenu** (même test que #2, un seul mécanisme couvre les trois) |
-| 4 | tuple `(salon_id)` cohérent avec `salon_id` du booking | FK composite (partie 3/3) | non isolé séparément — voir §"Non prouvé" | `23503` | **NON ISOLÉ** — logiquement couvert par le même mécanisme que #2/#3, non testé avec un champ `salon_id` seul en faute |
+| 4 | tuple `(salon_id)` cohérent avec `salon_id` du booking | FK composite (partie 3/3) | T-inv4 (isolé, 2026-07-21) | `23503` | **Obtenu** — `violates foreign key constraint "fk_conversations_related_booking_composite"`. Test isolé : `client_id`/`staff_id`/`related_booking_id` strictement identiques à un booking réel existant, seul `salon_id` diffère (un second salon réel, actif, distinct) ; exécuté dans une transaction `BEGIN...ROLLBACK`, aucune persistance. |
 | 5 | `related_booking_id`, quand renseigné sur `client_salon`, pointe une réservation réelle | FK simple | T5 | `23503` | **Obtenu** — `violates foreign key constraint "fk_conversations_related_booking_simple"` |
 | **6** | cohérence staff↔salon (le staff cité appartient bien au salon cité) | **hérité de `bookings` via la FK composite** — non ré-implémenté indépendamment | aucun test dédié sur `conversations` | — | Garanti transitivement, jamais vérifié en double ici (voir DEC-005) |
 | **7** | une conversation ne peut être ouverte contre un salon soft-deleted | Trigger `BEFORE INSERT` inconditionnel | T6a, T6b | `P0001` | **Obtenu**, sous `postgres` et sous `service_role` |
-| 8 | une paire `(salon_id, client_id)` `client_salon` ne peut exister deux fois | Index UNIQUE `uq_conversations_client_salon` | non testé séparément (T7/T8 couvrent `client_staff`) | `23505` | **NON TESTÉ SÉPARÉMENT** — mécanisme identique à T7/T8, symétrique, non rejoué sur la branche `client_salon` |
+| 8 | une paire `(salon_id, client_id)` `client_salon` ne peut exister deux fois | Index UNIQUE `uq_conversations_client_salon` | T-inv8 (isolé, 2026-07-21) | `23505` | **Obtenu** — `duplicate key value violates unique constraint "uq_conversations_client_salon"`. Test isolé : 1ʳᵉ insertion `client_salon` acceptée, 2ᵈᵉ insertion même paire `(salon_id, client_id)` rejetée ; exécuté dans une transaction `BEGIN...ROLLBACK`, aucune persistance. |
 | **9** | aucune contrainte/trigger n'est contournée par un rôle `BYPASSRLS` (`service_role` compris) | Propriété structurelle des contraintes/triggers Postgres — pas un mécanisme dédié | T6b | `P0001` | **Obtenu** — preuve directe |
 
-**Marquage explicite** : les invariants 3, 4 et 8 sont couverts par le même mécanisme que les
-invariants testés (2 et 7 respectivement) mais n'ont pas été isolés par un test dédié en Migration
-1 — ils sont donc `NON PROUVÉ INDIVIDUELLEMENT`, bien que le mécanisme sous-jacent (une contrainte
-unique de table, pas trois mécanismes séparés) rende la distinction largement théorique. Ne pas
-présenter cela comme une lacune de couverture réelle sans le qualifier ainsi.
+**Marquage explicite** : l'invariant 3 est couvert par le même mécanisme que l'invariant 2 (test
+T4) mais n'a pas été isolé par un test dédié variant `staff_id` seul — il reste donc
+`NON PROUVÉ INDIVIDUELLEMENT`, bien que le mécanisme sous-jacent (une contrainte unique de table,
+pas des mécanismes séparés) rende la distinction largement théorique. Ne pas présenter cela comme
+une lacune de couverture réelle sans le qualifier ainsi.
+Les invariants 4 et 8, précédemment dans cette même situation, ont depuis été isolés par un test
+dédié (2026-07-21, transactions `BEGIN...ROLLBACK`, aucune persistance) — voir leurs lignes
+ci-dessus.
 
 ---
 
