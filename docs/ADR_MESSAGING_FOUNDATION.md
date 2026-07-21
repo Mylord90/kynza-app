@@ -566,3 +566,77 @@ façon indépendante dans cette session.
 
 Aucun problème bloquant ni majeur trouvé. Le résidu est purement clérical (voir corrections
 ci-dessus). **VERDICT : LOCK APPROVED.**
+
+---
+
+## Addendum post-lock — non normatif, traçabilité (revue du 2026-07-21)
+
+Cet addendum est additif et ne modifie aucune décision, aucun statut, aucune preuve du corps
+verrouillé ci-dessus (§1–§10, ledger §2). Il documente la provenance de chaque preuve et referme,
+par re-sondage live contre le projet lié (`hhdkjfpgaklhrhfoxlhj`, rôle `postgres`, requêtes en
+lecture seule ou transactions explicitement terminées par `ROLLBACK`, zéro ligne persistée —
+`conversations` vérifiée à 0 avant et après), l'unique résidu de vérification laissé ouvert par le
+rapport de verrouillage ci-dessus.
+
+### Matrice de provenance des preuves
+
+Légende : (a) test exécuté à la Migration 1 (`28a269c`) ; (b) test isolé rejoué à la finalisation
+(`7c4f65e`) ; (c) sondage PostgreSQL live ; (d) lecture directe du DDL/dépôt committé ; (e)
+précédent du dépôt appliqué ; (f) démonstration logique sans test.
+
+| DEC | Preuve citée | Provenance | Rejouée au LOCK (`a6e3aee`) ? | Résidu de re-vérification |
+|---|---|---|---|---|
+| DEC-001 | `:147-148,211-212` · test T5 (`23503`) · précédent `notification_logs` | (a)+(d)+(e) | Non | Non — corroborable par lecture directe du DDL |
+| DEC-002 | `:149-151,214-215` · tests T4/T9 | (a)+(d) | Non | Non — corroborable par DDL |
+| DEC-003 | `pg_constraint.confmatchtype='s'` (sondage scratch) | (c)+(d) | Non | Non — **re-sondée live 2026-07-21** : `confmatchtype='s'` reconfirmé sur les deux FK (`fk_conversations_related_booking_simple`/`_composite`) ; corroborable en plus par l'absence de clause `MATCH` dans le DDL |
+| DEC-004 | `:140-143,226-227` · tests T1/T2 (`23514`) | (a)+(d) | Non | Non — corroborable par DDL (CHECK biconditionnelle lisible telle quelle) |
+| DEC-005 | `:144-146,229-230` · test T3 (`23514`) | (a)+(d) | Non | Non — corroborable par DDL |
+| DEC-006 | `:165-179,223-224` · tests T6a/T6b (`P0001`) · précédent | (a)+(d)+(e) | Non | Non — **re-sondée live 2026-07-21** : `INSERT` sous `SET ROLE service_role` contre le salon soft-deleted réel `27db89d3-4590-4c4c-be45-b6dad01706a8` (toujours `deleted_at IS NOT NULL`) → `P0001`, message identique caractère pour caractère à celui cité ; transaction terminée sans persistance |
+| DEC-007 | `pg_roles.rolbypassrls` · test T6b | (a)+(c) | Non | Non — **re-sondée live 2026-07-21** : `rolbypassrls=true` reconfirmé pour `postgres` et `service_role`, `false` pour `authenticated`/`anon` ; comportement T6b rejoué (voir DEC-006) |
+| DEC-008 | `:106-107` | (d)+(f) | N/A (démonstration logique) | Non — preuve mathématique (sur-ensemble d'une PK), pas une exécution à rejouer |
+| DEC-009 | `:154-157,217-221` · tests T7/T8 (`23505`) | (a)+(d) | Non | Non — **re-sondée live 2026-07-21** : `23505` reconfirmé sur les DEUX index — `uq_conversations_client_salon` (paire `salon_id`/`client_id` dupliquée) ET `uq_conversations_client_staff` (paire `staff_id`/`client_id` dupliquée, avec un booking réel satisfaisant la FK composite) ; transactions terminées sans persistance |
+| DEC-010 | `:68-78,114-117,133,147-151` · `foundation.sql:37` | (d)+(e) | N/A | Non — absence de clause `ON DELETE`/`ON UPDATE` vérifiable par lecture |
+| DEC-011 | `:211-230` (7 `COMMENT ON`) | (d) | N/A | Non — comptage vérifiable par lecture/recherche textuelle |
+| DEC-012 | `:80-87` · précédents · recherche repo-wide | (d)+(e) | Non — mais **re-vérifiée par recherche textuelle 2026-07-21** (`CONSTRAINT fk_` : zéro autre résultat dans `supabase/migrations/`) | Non |
+| DEC-013 | — (TO-DESIGN, non implémentée) | n/a | n/a | n/a — aucune preuve à rejouer, décision non prise |
+| DEC-014 | — (TO-DESIGN, non implémentée) | n/a | n/a | n/a |
+| DEC-015 | doc canonique §5.2 (non tranché) | (d) partielle — le doc canonique ne tranche pas la règle | n/a | n/a — statut `À CONFIRMER` correct en l'état |
+| DEC-016 | idiome RLS précédent (`bookings_schema.sql:95`) | (e) | n/a (pas encore implémentée) | n/a |
+| DEC-017 | doc canonique `:466-520` | (d) | n/a | Non |
+| DEC-018 | doc canonique `:482-496,856` | (d) | n/a | Non |
+| DEC-019 | doc canonique `:857` | (d) | n/a | Non |
+| DEC-020 | doc canonique `:604-617` | (d) | n/a | Non |
+| DEC-021 | `:200-205` (absence de restriction de colonnes) | (d) — preuve par absence | n/a (créée au lock, aucun test requis) | Non |
+
+### Re-sondage — méthode et requêtes
+
+Exécuté via `supabase db query --linked` (API de gestion, rôle `postgres`), aucune requête
+destructive, chaque `INSERT` de test dans une transaction explicitement close par `ROLLBACK` (ou
+avortée server-side par l'erreur attendue, ce qui a le même effet — aucune commande `COMMIT`
+n'a été émise). `SELECT count(*) FROM public.conversations` confirmé à `0` avant le premier test
+et après le dernier.
+
+1. **DEC-003** : `SELECT conname, confmatchtype FROM pg_constraint WHERE conname LIKE
+   'fk_conversations_related_booking%'` → `s` pour les deux contraintes.
+2. **DEC-007** (sondage) : `SELECT rolname, rolbypassrls FROM pg_roles WHERE rolname IN
+   ('service_role','postgres','authenticated','anon')` → `true`/`true`/`false`/`false`.
+3. **DEC-006/007** (comportement) : `BEGIN; SET ROLE service_role; INSERT INTO
+   public.conversations (salon_id, type, client_id) VALUES
+   ('27db89d3-4590-4c4c-be45-b6dad01706a8', 'client_salon', <client réel>); ROLLBACK;` →
+   `P0001: conversations.salon_id 27db89d3-4590-4c4c-be45-b6dad01706a8 is soft-deleted (invariant
+   7): cannot open a conversation against an inactive salon`.
+4. **DEC-009** (`uq_conversations_client_salon`) : deux `INSERT` identiques (même `salon_id`/
+   `client_id`, `type='client_salon'`) dans une transaction → 2ᵉ rejeté, `23505`,
+   `duplicate key value violates unique constraint "uq_conversations_client_salon"`.
+5. **DEC-009** (`uq_conversations_client_staff`) : deux `INSERT` identiques référençant un booking
+   réel existant (satisfaisant la FK composite DEC-002) dans une transaction → 2ᵉ rejeté, `23505`,
+   `duplicate key value violates unique constraint "uq_conversations_client_staff"`.
+
+### Conclusion de l'addendum
+
+Les 4 décisions dont la preuve reposait sur un sondage/test de Migration 1 non rejoué au commit de
+verrouillage (`a6e3aee`) — DEC-003, DEC-006, DEC-007, DEC-009 — sont désormais corroborées par une
+exécution live indépendante, datée de cette revue, en plus de leur preuve d'origine. Aucune
+divergence trouvée entre le comportement attendu (cité dans le corps verrouillé) et le comportement
+observé. Aucune décision `LOCKED` n'est affectée ; cet addendum ne re-verrouille rien et n'ouvre
+aucune nouvelle décision.
