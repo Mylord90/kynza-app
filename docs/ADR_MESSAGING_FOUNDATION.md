@@ -1,11 +1,11 @@
 # ADR — Fondation de la messagerie KYNZA
 
-**Statut : `DRAFT — en attente de relecture, non contraignant`.**
+**Statut : `LOCKED — verrouillé le 2026-07-21 après audit final pré-verrouillage`.**
 
-Ce document ne gouverne rien tant que ce statut n'a pas été basculé en `LOCKED` par une relecture
-explicite. Une fois `LOCKED`, il devient la référence unique pour toute décision d'architecture
+Ce document est désormais la référence unique et contraignante pour toute décision d'architecture
 touchant la messagerie — aucune revue de conception ne doit être rejouée depuis zéro pour une
-fonctionnalité déjà couverte ici : on lit l'ADR.
+fonctionnalité déjà couverte ici : on lit l'ADR. Voir « Verrouillage — audit final » en fin de
+document pour le détail des 22 vérifications et des corrections cléricales appliquées à ce tour.
 
 Toute affirmation de ce document est adossée à une preuve réelle : `fichier:ligne` du dépôt, la
 migration réellement appliquée (`20260721160000_conversations_schema.sql`, commit `28a269c`,
@@ -146,7 +146,8 @@ premier flux construit. Voir ledger `DEC-010`, statut « ticket ouvert ».
 ### DEC-011 — Commentaires protecteurs obligatoires
 **Énoncé** : chaque décision à risque de simplification future porte un `COMMENT ON ...` dans le
 SQL lui-même, pas seulement dans la documentation.
-**Preuve** : les 6 `COMMENT ON` réellement committés — `20260721160000_conversations_schema.sql:
+**Preuve** : les 7 `COMMENT ON` réellement committés (compte vérifié par recherche exhaustive du
+fichier, 2026-07-21) — `20260721160000_conversations_schema.sql:
 211-212` (FK simple), `:214-215` (FK composite), `:217-218` (index client_salon), `:220-221`
 (index client_staff, par renvoi), `:223-224` (fonction trigger invariant 7), `:226-227`
 (`chk_staff_type`), `:229-230` (`chk_staff_requires_booking`).
@@ -163,6 +164,26 @@ dépôt — auto-nommage Postgres `<table>_<colonne>_fkey`).
 recherche exhaustive du dépôt lors de la revue du 2026-07-21, zéro résultat.
 **Conséquence** : justifié uniquement pour que `COMMENT ON CONSTRAINT` (DEC-011) puisse cibler
 les deux FK de façon symétrique et prévisible — aucune autre convention nouvelle n'est introduite.
+
+### DEC-021 — Gap RLS Migration 1 : policies `UPDATE` sans restriction de colonnes
+**Énoncé** : `conversations_client_update_own_state`/`conversations_staff_update_own_state`
+bornent la LIGNE affectée (`client_id = auth.uid()` / `staff_id IN (...)`) mais aucune COLONNE —
+un client ou un membre du staff peut aujourd'hui muter via un `UPDATE` direct n'importe quelle
+colonne de sa propre ligne, y compris `salon_pinned`/`client_pinned` du côté adverse au sens
+large, `blocked_by`/`blocked_at`, `last_message_at`/`last_message_preview`,
+`client_unread_count`/`salon_unread_count`.
+**Raison** : une policy RLS `WITH CHECK` borne des lignes, jamais des colonnes individuelles — ce
+n'est pas un défaut de Migration 1 (son périmètre verrouillé ne couvrait pas la protection de
+colonnes, signalé dès le commit `28a269c`) mais une dette de sécurité réelle et déjà active tant
+que DEC-013 n'est pas implémentée.
+**Preuve** : absence de toute restriction de colonnes dans les deux policies `UPDATE`,
+`20260721160000_conversations_schema.sql:200-205`.
+**Statut** : `OPEN` — dette de sécurité tracée, non bloquante pour ce verrouillage (elle ne
+contredit aucune décision `LOCKED` de Migration 1), fermée par DEC-013
+(`protect_conversation_columns`) avant Migration 2.
+**Conséquence** : ne pas commencer Migration 2 tant que DEC-013 n'a pas fermé ce gap — un message
+inséré dans une conversation dont l'état a été manipulé via ce gap (ex. `blocked_by` auto-effacé)
+serait une régression de sécurité, pas seulement de schéma.
 
 ---
 
@@ -190,6 +211,7 @@ les deux FK de façon symétrique et prévisible — aucune autre convention nou
 | DEC-018 | `gift_cards`, attachement `gift_card` | **OUT-OF-SCOPE** | — | mandat produit financier séparé | `docs/KYNZA_MESSAGING_ARCHITECTURE.md:482-496,856` |
 | DEC-019 | Attachement `coupon` | **OUT-OF-SCOPE** | — | différé, cf. §11 doc canonique | `docs/KYNZA_MESSAGING_ARCHITECTURE.md:857` |
 | DEC-020 | `conversation_requests` (contact pré-réservation) | **OUT-OF-SCOPE** | — | mandat produit futur, priorité haute | `docs/KYNZA_MESSAGING_ARCHITECTURE.md:604-617` |
+| DEC-021 | Gap RLS Migration 1 (policies `UPDATE` sans restriction de colonnes) | **OPEN** (dette sécurité) | 2026-07-21 | Migration 1 (gap) — fermeture avant Migration 2 | `...conversations_schema.sql:200-205` · lié à DEC-013 |
 
 ---
 
@@ -463,6 +485,12 @@ volée en RLS : `status NOT IN ('cancelled','no_show')` (idiome déjà présent 
 | Attachement `coupon` | Exige une entité d'assignation par destinataire non existante — même piège que la carte cadeau, en plus petit (`docs/KYNZA_MESSAGING_ARCHITECTURE.md:857`) |
 | `conversation_requests` (contact pré-réservation, "salon répond à une demande") | Aucune entité de demande/inquiry n'existe dans le dépôt actuel — mandat produit futur, priorité haute mais non défini au niveau modèle de données (`docs/KYNZA_MESSAGING_ARCHITECTURE.md:604-617`) |
 
+### OPEN (dette tracée, non bloquante pour ce verrouillage)
+
+**DEC-021 — Gap RLS Migration 1.** Policies `UPDATE` sans restriction de colonnes
+(`...conversations_schema.sql:200-205`). Ne contredit aucune décision `LOCKED` — fermeture prévue
+par DEC-013, avant Migration 2. Voir §1/DEC-021 et ledger §2.
+
 ---
 
 ## Points spécifiques à ne pas perdre
@@ -476,9 +504,9 @@ volée en RLS : `status NOT IN ('cancelled','no_show')` (idiome déjà présent 
 - **Gap RLS de Migration 1** : les policies `UPDATE` actuelles
   (`conversations_client_update_own_state`/`conversations_staff_update_own_state`,
   `...conversations_schema.sql:200-205`) ne restreignent aucune colonne — c'est précisément ce que
-  DEC-013 (TO-DESIGN) fermera. Inscrit au ledger comme dette ouverte reliée à la revue de
-  conception, pas comme un défaut de Migration 1 en soi (Migration 1 a implémenté exactement son
-  périmètre verrouillé, ce gap était signalé dès son commit).
+  DEC-013 (TO-DESIGN) fermera. Inscrit au ledger comme **DEC-021, statut `OPEN`**, dette de
+  sécurité reliée à DEC-013, pas comme un défaut de Migration 1 en soi (Migration 1 a implémenté
+  exactement son périmètre verrouillé, ce gap était signalé dès son commit).
 
 ---
 
@@ -489,3 +517,52 @@ Toute nouvelle décision d'architecture prise lors d'une migration future met à
 unique pour Claude Code et pour un futur développeur humain travaillant sur la messagerie KYNZA :
 aucune de ces revues ne doit être rejouée depuis zéro pour une nouvelle fonctionnalité déjà
 couverte ici — on lit l'ADR, on ne redébat pas une décision `LOCKED`.
+
+---
+
+## Verrouillage — audit final pré-verrouillage (2026-07-21)
+
+Audit de falsification (22 vérifications : complétude vs dépôt, intégrité des preuves, cohérence
+des statuts, ledger, invariants/contradictions, périmètre de verrouillage, autoportance) mené
+contre le dépôt réel : migration `20260721160000_conversations_schema.sql`, les 5 fichiers de
+précédent cités (`20260623120000_users_schema_rls_hardening.sql`,
+`20260623240000_bookings_schema.sql`, `20260624060000_notifications_schema.sql`,
+`20260717140000_device_tokens.sql`, `20260622182007_foundation.sql`), `20260630110100_phase4_maintenance.sql`,
+et `docs/KYNZA_MESSAGING_ARCHITECTURE.md`.
+
+**Résultat** : toutes les citations `fichier:ligne` vérifiées exactes (contenu réel à la ligne
+citée conforme à ce que l'ADR affirme) ; tous les SQLSTATE cités sont sémantiquement corrects pour
+le type de contrainte concerné et les noms de contrainte/index cités dans les messages d'erreur
+correspondent exactement aux objets réellement committés ; DEC-012 (« zéro précédent de FK simple
+nommée ») re-vérifié par recherche exhaustive du dépôt — confirmé, `CONSTRAINT fk_` n'apparaît nulle
+part ailleurs dans `supabase/migrations/`. Aucune décision `LOCKED` trouvée fausse ou non prouvée.
+Aucun `TO-DESIGN` trouvé déjà tranché ailleurs dans le dépôt (aucune migration postérieure au
+21/07 n'existe). Aucune contradiction non expliquée entre ADR / Migration 1 / doc canonique — les
+écarts entre le schéma esquissé en `docs/KYNZA_MESSAGING_ARCHITECTURE.md` §5.2 (FK unique, CHECK
+unidirectionnelle, pas de trigger invariant 7) et le schéma réellement appliqué sont chacun
+justifiés explicitement dans §1 (DEC-001 à DEC-006), pas un oubli.
+
+**Corrections cléricales appliquées** :
+1. **DEC-021 créée** (§1 + ledger §2 + `Partition de statut` + `Points spécifiques`) pour le gap
+   RLS de Migration 1, qui n'avait qu'une mention narrative — statut `OPEN`, preuve
+   `...conversations_schema.sql:200-205`, relié à DEC-013.
+2. **DEC-011 corrigée** : « les 6 `COMMENT ON` » → « les 7 `COMMENT ON` » (compte réel vérifié par
+   recherche exhaustive du fichier : 7 blocs `COMMENT ON`, lignes 211-230).
+3. **Note GRANT différée** (`Notes ouvertes`) : déjà consignée depuis le commit `7c4f65e` — aucune
+   action nécessaire, présence confirmée.
+4. Aucun numéro de ligne périmé trouvé au-delà du point 2 — toutes les autres citations
+   `fichier:ligne` du document correspondent exactement au contenu réel à ce tour.
+
+**Résidu explicitement non re-vérifié dans cet audit** : les sondages en direct contre le projet
+lié (`pg_constraint.confmatchtype='s'` pour DEC-003, `pg_roles.rolbypassrls` pour DEC-007) et
+l'exécution effective des 12 tests (T1–T9, T6a/T6b, T-inv4, T-inv8) n'ont pas été rejoués dans cette
+session (aucun accès direct à la base liée disponible ici). DEC-003 reste toutefois corroborée
+indépendamment par le DDL lui-même : la FK composite (`...conversations_schema.sql:149-151`) ne
+porte aucune clause `MATCH`, donc MATCH SIMPLE par défaut Postgres, sans besoin de sondage — la
+preuve citée (sondage live) est donc surabondante, pas manquante. Les SQLSTATE/messages
+d'erreur/noms de contrainte cités sont, eux, intégralement cohérents avec les objets réellement
+committés (voir ci-dessus), ce qui corrobore fortement une exécution réelle sans la prouver de
+façon indépendante dans cette session.
+
+Aucun problème bloquant ni majeur trouvé. Le résidu est purement clérical (voir corrections
+ci-dessus). **VERDICT : LOCK APPROVED.**
