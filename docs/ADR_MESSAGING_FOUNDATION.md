@@ -1744,3 +1744,129 @@ Reste `OPEN`, non couvert par ce commit, avant que Migration 2 ne commence : l'a
 `conversations` à `supabase_realtime` (résidu #5, exclu de Migration 1.5 par choix de granularité —
 voir en-tête de la migration), et bien entendu tout ce qui est Migration 2 elle-même (schéma
 `messages`, DEC-016 en RLS, `client_message_id`, triggers de compteurs DEC-014).
+
+---
+
+# Feuille de route à 5 phases — plan d'exécution verrouillé (2026-07-23)
+
+**Aucun SQL dans cette section.** Cette feuille de route remplace, en la détaillant, l'esquisse §J
+(2026-07-22) — elle n'invalide rien de §J, elle explicite le contenu de chaque phase avec la liste
+exhaustive demandée. Elle sert de **référence pour les prochains cycles Rule 8**, pas d'engagement
+d'exécution automatique : chaque item de chaque phase, au moment où il sera implémenté, suivra
+individuellement le cycle complet (annonce → preuves avant → écriture → tests → rollback → cleanup →
+commit unique → documentation → PORTE), exactement comme Migration 1 et Migration 1.5 l'ont fait.
+Aucune phase n'est commencée par la production de cette feuille de route.
+
+## Phase 1 — Infrastructure des messages
+
+**Objet** : Migration 2 (`messages`), la seule table restant à créer pour la fondation transactionnelle
+(après elle : Migration 3 `message_reports`, Migration 4 raccord `device_tokens`).
+
+- **Tables** : `public.messages` (schéma déjà esquissé, doc canonique `KYNZA_MESSAGING_ARCHITECTURE.md:269-292`) — colonnes d'identité (`id`, `conversation_id`, `sender_id`, `created_at`), contenu (`body`, `attachment JSONB` discriminé), état (`status`, `client_message_id` pour la dédup offline), soft-delete par partie (miroir du patron déjà en place sur `conversations`).
+- **Contraintes** : FK `conversation_id → conversations(id)` (`NO ACTION`, cohérent avec DEC-010) ; FK `sender_id → users(id)` ; `CHECK` sur `status` ; `UNIQUE` sur `client_message_id` scé par conversation (`uq_message_client_dedup`, dédup offline — voir Partie B.1 de la revue de finalisation, `is_local`).
+- **Déclencheurs** : `bump_conversation_on_message`/`reset_unread_on_read` (DEC-014, `SECURITY DEFINER`, garde `pg_trigger_depth()`/`auth.role()` combiné — voir Correction 4 pour l'arbitrage déjà tranché) ; commentaire protecteur explicite sur le couplage à `messages_participant_insert` (revue de finalisation, Partie B.2, Application 2).
+- **Index** : sur `(conversation_id, created_at DESC)` pour le stream borné (ADR-0004), sur `client_message_id` pour la dédup.
+- **Politiques** : `messages_participant_select`/`_insert`/`_recipient_mark_read` — DEC-016 (booking actif) intégré **dès l'écriture**, jamais ajouté après coup ; filtre `is_active`/`deleted_at` sur toute sous-requête `staff_id IN (...)` **dès le départ** (ne jamais reproduire le patron non filtré de Migration 1, voir le commentaire protecteur déjà posé sur `conversations_staff_select`, Migration 1.5).
+- **Temps réel** : `ALTER PUBLICATION supabase_realtime ADD TABLE public.messages` (et, si pas encore fait à ce stade, `public.conversations` — résidu #5) ; stream borné (`.order('created_at', ascending: false).limit(N)`, ADR-0004) dès l'écriture du repository Flutter, jamais découvert après coup.
+- **Compteurs** : `client_unread_count`/`salon_unread_count`/`last_message_at`/`last_message_preview` sur `conversations`, déjà protégés par catégorie B de `protect_conversation_columns` (Migration 1.5) — le trigger de compteurs de `messages` est le seul écrivain légitime (imbriqué), déjà anticipé par `nested` dans la fonction existante.
+
+## Phase 2 — Logique métier backend (Edge Functions)
+
+Chaque fonction est un **orchestrateur**, jamais une garantie d'intégrité (§5 de cet ADR) — toute
+règle exprimable en CHECK/FK/RLS/Trigger doit déjà être portée par la base avant que la fonction ne
+soit écrite ; la fonction ne revérifie jamais ce que la base garantit déjà (tableau "qui garantit
+quoi", §4).
+
+| Fonction | Rôle | Garantie déjà portée par la base (ne pas dupliquer) | Ce que la fonction ajoute réellement |
+|---|---|---|---|
+| `créer_une_conversation` (`create-conversation`) | Ouvre une conversation | Invariant 7 (salon actif), chk_staff_type/chk_staff_requires_booking, FK simple/composite, index uniques anti-doublon | Éligibilité anti-spam (historique de réservation) — seule logique non modélisable en contrainte (§4, unique croix "Edge Function" jusqu'à Migration 1.5) |
+| `envoyer_message` (`send-message`, ou RLS directe si aucune orchestration nécessaire) | Insère un message | RLS `messages_participant_insert` (appartenance + DEC-016 booking actif), dédup `client_message_id` | Notification push (voir ligne notifications), potentiellement rien d'autre si l'`INSERT` peut être direct côté client sous RLS |
+| `modifier_message` | Édite un message existant | RLS propriétaire (`sender_id = auth.uid()`), fenêtre d'édition si le produit en définit une (à trancher au design de Migration 2, pas ici) | Logique de fenêtre temporelle si retenue |
+| `supprimer_message` | Soft-delete d'un message par son auteur | RLS propriétaire, colonnes de suppression par partie (miroir `conversations`) | Rien si un simple `UPDATE` sous RLS suffit — à confirmer au design |
+| `marquer_comme_lu` (`mark-read`) | Reset des compteurs non lus | RLS `messages_recipient_mark_read` (doc canonique `:376-386`) | Probablement rien — RLS directe suffit, pas d'Edge Function dédiée (cohérent avec §J existant) |
+| `archive`/`épingle`/`cache` (pin/archive/hide) | Bascule d'état UX par partie | RLS `conversations_*_update_own_state` + `protect_conversation_columns` Catégories C/C'/D/D' (déjà en production, Migration 1.5) | Rien — écriture directe sous RLS, déjà entièrement couverte |
+| `bloc` (`toggle-conversation-block`) | Bascule `blocked_by`/`blocked_at` | Colonnes en Catégorie E (`service_role` uniquement, Migration 1.5) | **Toute** la logique d'autorité (DEC-015 §B.3 : autorité actuelle, jamais figée), lecture de `salon_id` depuis la ligne ciblée (jamais depuis l'appelant, §D.6), écriture `activity_logs` (§C) |
+| `rapport` (`report-message`) | Signale un message | RLS insertion `message_reports` (Migration 3) par participant | Peut-être rien de plus que l'`INSERT` sous RLS — à confirmer au design de Migration 3 |
+| `télécharger` (pièces jointes) | Upload/accès Supabase Storage | Policies Storage à calquer sur l'existant | Génération d'URL signée si nécessaire, validation de type/taille |
+| `notifications` | Push à l'envoi d'un message | `notification_templates`/`_shared/fcm.ts` déjà en production (D2 — jamais dupliquer `notification_logs`) | Le seul contenu réellement nouveau : le template et le routage propres à la messagerie |
+
+## Phase 3 — Temps réel
+
+- **Temps réel (transport)** : Postgres Changes sur `conversations`/`messages`, bornage ADR-0004,
+  vérifié empiriquement (pas seulement par lecture de `pg_publication_tables`) — voir Correction 5 du
+  DoD pour le scénario complet (`T-realtime-softdelete-rls`), qui couvre spécifiquement la RLS des
+  événements `UPDATE` de suppression logicielle, pas seulement le `SELECT` initial.
+- **Dactylographie (typing indicator)** : mécanisme Realtime Broadcast (pas Postgres Changes — aucune
+  colonne DB dédiée, état éphémère non persisté) ; à spécifier au design de Phase 3, aucune décision
+  prise ici.
+- **Présence** : Realtime Presence (en ligne/hors ligne par utilisateur dans une conversation) — même
+  remarque, éphémère, pas de colonne DB.
+- **Ack (accusé de réception)** : distinct de "lu" (`marquer_comme_lu`) — à définir si le produit exige
+  un état "livré" séparé de "lu" ; sinon, `status` de `messages` suffit (pas de nouvelle colonne sans
+  besoin prouvé, cohérent avec la discipline anti-inflation déjà appliquée à ce domaine).
+- **Non lu** : badge agrégé `SUM(*_unread_count)` déjà décidé (anti-inflation, pas de nouvelle table
+  `user_message_badges`) — aucune décision à reprendre ici.
+- **Synchronisation** : `MutationOutboxService`/`OfflineSyncCoordinator` (précédent réel du dépôt,
+  `lib/core/services/mutation_outbox_service.dart`), backoff déjà planifié (doc canonique `:116`).
+- **Résolution de conflits** : dédup serveur par `client_message_id` (jamais par correspondance de
+  contenu) est le mécanisme déjà retenu (Partie B.1 de la revue de finalisation) — pas de résolution
+  de conflit bidirectionnelle nécessaire pour de simples envois de message (pas d'édition concurrente
+  multi-auteur sur la même ligne, `sender_id` est fixe).
+
+## Phase 4 — Interface utilisateur Flutter
+
+`lib/features/messaging/` (domain/data/application/presentation, calqué sur `reviews/` — précédent
+déjà établi dans ce dépôt) :
+
+- **Liste des conversations** : Inbox client, Inbox salon (boîte partagée owner/manager + staff, déjà
+  rendue accessible en écriture par DEC-023).
+- **Chat** : écran de fil, stream borné (ADR-0004).
+- **Compositeur** : saisie + pièces jointes, `is_local` pour l'écho optimiste (Partie B.1) — jamais une
+  source de vérité pour `status`, jamais compté dans les badges non lus, remplacé (jamais dupliqué) par
+  la ligne serveur via `client_message_id`.
+- **Images / Documents / Audio** : Supabase Storage, modèle `attachment JSONB` discriminé, re-fetch
+  séparé de `promotions` à l'affichage (jamais une jointure SQL sur le stream, doc canonique
+  `:314-333`).
+- **Recherche** : à spécifier (full-text sur `messages.body` ou délégué à un service externe — aucune
+  décision prise ici).
+- **Archives** : état `*_archived` déjà en base (Migration 1), écriture déjà couverte RLS+trigger.
+- **Blocage** : UX de bascule appelant `toggle-conversation-block`, affichage asymétrique (le salon ne
+  voit jamais l'option de lever un blocage posé par le client, §C).
+- **Signalement** : UX appelant `report-message`.
+- **Notifications** : badge agrégé, pas de `NavBadgeNotifier` global (cohérent avec l'avertissement déjà
+  en place dans ce dépôt).
+- **Sensible** *(contenu à traiter avec prudence UX — pas de modération automatique par IA, contrainte
+  déjà actée §C : "aucune modération automatique... le blocage est une action humaine")* : écrans de
+  confirmation pour bloquer/signaler, jamais de détection automatique de contenu.
+- **Mode sombre** : cohérence avec le design system existant du dépôt, aucune décision spécifique à la
+  messagerie.
+
+## Phase 5 — Validation finale
+
+- **Audit de sécurité** : rejeu intégral de l'ADR §D (revue de sécurité adversariale) contre
+  l'implémentation **réelle** de Migration 2/3/4 — pas seulement la conception, comme cela a été fait
+  pour Migration 1.5 dans cette même session (voir « Découverte critique pendant l'audit adversarial »
+  : un rejeu sérieux trouve des défauts réels, ce n'est pas un échec du processus).
+- **Audit RLS** : chaque policy testée sous chaque rôle concerné, positif ET négatif, y compris les cas
+  cross-salon et les cas de rotation de personnel (patron déjà établi par DEC-022/023).
+- **Audit en temps réel** : `T-realtime-softdelete-rls` (Correction 5, DoD) exécuté réellement contre le
+  service Realtime, pas simulé.
+- **Performance d'audit** : différée à l'échelle réelle (ADR §10) — à exécuter une fois des données de
+  production significatives accumulées, jamais comme prématuré sur des tables quasi vides.
+- **Tests de charge** : idem, différés à l'échelle réelle.
+- **Tests fonctionnels** : golden path ET cas limites dans l'app réelle (règle générale déjà en place
+  pour tout changement UI/frontend de ce projet).
+- **RGPD** : le ticket déjà ouvert (DEC-010) — purge `conversations`/`messages` avant toute cascade
+  `auth.users` — doit être fermé par le premier flux d'effacement construit, pas oublié parce que
+  "aucun flux RGPD n'existe encore".
+- **Définition de la fin** : `docs/MESSAGING_DEFINITION_OF_DONE.md` satisfaite pour chaque feature,
+  `docs/MESSAGING_TRACEABILITY_MATRIX.md` à jour, aucun résidu de sévérité "Élevée" encore `OPEN` dans
+  la section Résidus de cet ADR.
+- **Production de validation** : manuels d'exploitation rédigés (litige bloqué/débloqué, signalement),
+  monitoring/alertes en place (volume de messages, taux de blocage, latence Realtime) — avant, jamais
+  après, le lancement.
+
+**Rappel de gouvernance** : chaque item ci-dessus, au moment de son implémentation, met à jour cet ADR
+(§1 + ledger §2) **dans le même commit** que le SQL/code concerné — la règle de gouvernance permanente
+déjà énoncée en fin du corps verrouillé de ce document s'applique identiquement à cette feuille de
+route.
