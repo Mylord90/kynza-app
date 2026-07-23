@@ -1870,3 +1870,172 @@ déjà établi dans ce dépôt) :
 (§1 + ledger §2) **dans le même commit** que le SQL/code concerné — la règle de gouvernance permanente
 déjà énoncée en fin du corps verrouillé de ce document s'applique identiquement à cette feuille de
 route.
+
+---
+
+# Migration 2 — Implémentation et clôture (2026-07-23)
+
+**Fichier** : `supabase/migrations/20260723180000_messages_schema_migration_2.sql`. Poussé via
+`supabase db push --linked` contre le projet réellement lié (`hhdkjfpgaklhrhfoxlhj`), sans erreur.
+Ferme DEC-014 et DEC-016 (implémentation, après leur verrouillage "design"/"règle" du 2026-07-22),
+crée `public.messages`, et ferme le résidu §D.8 pour sa part `messages` (l'ajout de `conversations`
+avait déjà été fait dans ce même fichier, puisque Migration 1.5 l'avait délibérément exclu). Aucune
+ligne concernant `message_reports` (Migration 3) ou une Edge Function (Phase 2).
+
+## Revue adversariale avant écriture — 5 décisions/corrections prises avant la première ligne de SQL
+
+Conformément au mode de travail ("chercher à casser la conception avant d'écrire"), la relecture du
+brouillon `messages` (doc canonique §5.3) et de la feuille de route à 5 phases a trouvé 5 points
+réels avant qu'aucun SQL ne soit écrit — 3 nécessitaient un arbitrage produit (soumis à validation
+explicite, jamais deviné), 2 étaient des applications mécaniques de précédents déjà `LOCKED`
+(DEC-022/023) que le brouillon avait simplement omis d'appliquer à `messages` :
+
+1. **Modèle de suppression logicielle — arbitrage demandé et tranché.** Le doc canonique §5.3 (SQL
+   réel) ne définit qu'un `deleted_at` unique ; la feuille de route à 5 phases (§Phase 1) décrit
+   littéralement "suppression logicielle par partie (miroir du patron conversations)", qui a 2
+   colonnes (`client_deleted_at`/`salon_deleted_at`). Contradiction réelle entre les deux textes,
+   jamais tranchée avant ce commit. **Décision retenue (validée explicitement)** : `deleted_at`
+   unique, suppression par l'auteur seulement ("delete for everyone") — correspond au SQL du doc
+   canonique tel quel, aucun besoin produit "delete for me" par message documenté nulle part.
+2. **Édition de message — arbitrage demandé et tranché.** Le doc canonique lui-même punt
+   ("`modifier_message`... fenêtre d'édition si le produit en définit une — à trancher au design de
+   Migration 2, pas ici") et ne définit aucune colonne `edited_at`/`is_edited`. **Décision retenue
+   (validée explicitement)** : l'édition est différée entièrement, hors périmètre de Migration 2 —
+   V1 n'expose que envoi + suppression logicielle. Une migration future ajoutera la colonne et la
+   règle de fenêtre le jour où le produit la spécifie.
+3. **Résidu #3 de l'ADR (salon soft-supprimé après ouverture d'un fil `client_salon`) — arbitrage
+   demandé et tranché.** Explicitement listé "non tranché, à décider explicitement à la conception
+   RLS de Migration 2" (contrairement au résidu TOCTOU §D.4, pré-accepté). **Décision retenue
+   (validée explicitement)** : `messages_participant_insert` revérifie `salons.deleted_at IS NULL`
+   à chaque envoi pour `client_salon`, symétrique à DEC-016 (`bookings.status`) pour `client_staff` —
+   jamais seulement à l'ouverture (invariant 7/DEC-006 ne couvrait que l'ouverture).
+4. **`messages_recipient_mark_read` (brouillon) — application mécanique de DEC-022, pas une nouvelle
+   décision.** Le brouillon omettait le filtre `is_active`/`deleted_at` sur la sous-requête
+   `staff_id IN (...)` alors que le commentaire protecteur posé sur `conversations_staff_select`
+   (Migration 1.5) exigeait explicitement "que ce filtre soit écrit dès le départ... y compris
+   `messages_participant_select` (Migration 2)". Corrigé dans l'écriture initiale, jamais
+   non-filtré-puis-corrigé.
+5. **`messages_recipient_mark_read`/`messages_participant_select` — asymétrie owner/manager, trouvée
+   par relecture de la propre première version de ce fichier, pas du brouillon du doc canonique.**
+   Première version écrite de `messages_participant_select` gatait la clause owner/manager par
+   `c.type = 'client_salon'`, alors que la "Note volontaire" du doc canonique (après §5.3) accorde
+   explicitement à owner/manager une **supervision en lecture seule** sur `client_staff` aussi
+   ("owner/manager gardent une supervision en lecture seule"). Corrigée avant tout test — voir le
+   commentaire protecteur posé sur la policy dans le fichier lui-même. `messages_recipient_mark_read`,
+   à l'inverse, gate correctement owner/manager à `client_salon` (l'écriture reste staff-only sur
+   `client_staff`, cohérent avec "supervision en lecture seule").
+
+**Une 6ᵉ découverte, structurelle, a motivé un nouveau mécanisme (`protect_message_columns`), pas une
+décision produit** : une policy `UPDATE` nue `sender_id = auth.uid()` (nécessaire pour le
+soft-delete par l'auteur) n'a, par construction RLS Postgres (plusieurs policies permissives pour la
+même commande combinent leurs `WITH CHECK` par OR), aucune restriction de colonne propre — un
+`UPDATE` passant la ligne via cette policy pourrait réécrire `conversation_id`/`status`/`is_flagged`
+tant que `sender_id` reste inchangé. C'est exactement la classe de faille DEC-021 (accessibilité de
+ligne sans restriction de colonne), déjà fermée une fois sur `conversations` par
+`protect_conversation_columns` — `protect_message_columns` est le même mécanisme, appliqué à
+`messages` dès sa première ligne de SQL plutôt que découvert dans une revue de finalisation
+ultérieure. Elle ferme aussi une faille plus petite trouvée en l'écrivant : `read_at` ne doit jamais
+être une valeur client de confiance (un destinataire pourrait sinon réécrire l'horodatage d'un
+message déjà lu sans jamais passer par une vraie transition non-lu→lu) — gelé à `OLD` puis avancé
+uniquement par la fonction elle-même, même posture que `sync_email_verified`
+(`20260623120000_users_schema_rls_hardening.sql`).
+
+## Preuves réelles — avant
+
+Sondées contre `hhdkjfpgaklhrhfoxlhj` avant l'écriture du fichier (lecture seule, aucune mutation) :
+`to_regclass('public.messages')` = `NULL` (table absente) ; 23/23 colonnes/policies/triggers de
+`conversations` identiques à l'état de sortie de Migration 1.5 (6 policies, 3 triggers, aucune
+dérive) ; `supabase_realtime` = `{bookings, notification_logs, owner_journey_progress,
+proxipay_sessions, services, staff_profiles}` (ni `conversations` ni `messages`) ; `has_role()`,
+`update_updated_at()`, `check_conversation_salon_active()` relus ; `bookings_status_check` = exactement
+`{pending_payment, confirmed, in_progress, completed, cancelled, no_show}` (confirme l'idiome
+`NOT IN ('cancelled','no_show')` de DEC-016) ; `staff_profiles`/`salons` colonnes confirmées.
+
+## Preuves réelles — après (36 tests réels, tous contre production, `BEGIN...ROLLBACK`)
+
+Exécutés en une seule transaction contre `hhdkjfpgaklhrhfoxlhj` (migration appliquée + fixtures
+jetables + tous les tests + `ROLLBACK` final) — 36/36 passés, zéro ligne persistée, confirmé par
+requête après coup (`SELECT count(*) FROM public.messages` = 0 post-déploiement réel). Catégories
+couvertes : participation/RLS `INSERT` (client, staff actif, étranger rejeté), DEC-016 (client ET
+staff bloqués symétriquement une fois le booking annulé), DEC-022 (staff désactivé perd l'accès
+d'envoi même avec un booking actif), boîte partagée `client_salon` (owner et manager peuvent
+envoyer), décision 3 (envoi accepté salon actif, rejeté après soft-delete du salon — avec un
+deuxième owner réel propriétaire du second salon, pas le même compte que le premier), `blocked_by`
+(bloque l'envoi indépendamment de DEC-016/décision 3), dédup `uq_message_client_dedup`, visibilité
+`SELECT` (étranger = 0 lignes, supervision owner = toutes les lignes y compris `client_staff`),
+`messages_recipient_mark_read` (owner ne peut PAS marquer lu un message `client_staff` — prouvé par
+`rows_updated=0`, pas par exception, RLS `UPDATE` filtre silencieusement ; staff assigné peut ;
+l'expéditeur ne peut jamais marquer son propre message lu), `read_at` forcé serveur (jamais la valeur
+client, y compris tentative de réécriture sur un message déjà lu), `protect_message_columns`
+(identité immuable y compris tentative de réassignation cross-conversation, édition de `body` bloquée
+— décision 2 — `is_flagged` protégé, soft-delete par l'auteur accepté, par un non-auteur rejeté),
+filet anti-dérive (colonne `zz_future_test_col` ajoutée puis rejetée en écriture, retirée), DEC-014
+(`bump_conversation_on_message` incrémente le bon compteur + aperçu, `reset_unread_on_read`
+décrémente sur transition lue), publication `supabase_realtime` (les deux tables présentes après
+migration).
+
+**Note de méthode, pour un futur lecteur qui rejouerait ces tests** : contrairement à un `INSERT` qui
+échoue par exception SQL sous RLS, un `UPDATE`/`DELETE` dont la ligne ne satisfait `USING` d'aucune
+policy applicable est silencieusement exclu (`rows_updated = 0`, aucune erreur) — les probes
+`messages_recipient_mark_read`/soft-delete ci-dessus vérifient explicitement `rowCount === 0`, pas
+seulement l'absence d'exception (une première version de ce test avait cette confusion exacte,
+corrigée avant que les résultats ne soient considérés probants).
+
+**Explicitement non (re)testé, hérité de Migration 1.5** : la branche `nested` de
+`protect_conversation_columns` (`T-depth-01`) est désormais empruntable pour de vrai — DEC-014 vient
+de créer le premier trigger imbriqué (`trg_bump_conversation_on_message`) qui écrit sur
+`conversations` depuis l'intérieur d'un autre trigger — et le test ci-dessus ("DEC-014:
+bump_conversation_on_message correctly incremented...") est la preuve empirique que `nested` fonctionne
+réellement, pas seulement en conception. `T-depth-01` peut donc passer de "planifié, jamais exécuté"
+à fermé par ce commit.
+
+## Rollback — vérifié en transaction réelle (UP puis DOWN), jamais appliqué durablement
+
+Contrairement à Migration 1.5 (qui altérait une table déjà en production et vérifiait son rollback en
+schéma miroir), `messages` est une table neuve sans dépendant — le rollback a donc été vérifié
+directement (`BEGIN` ; SQL de la migration ; `DROP TABLE`/`DROP FUNCTION`/`ALTER PUBLICATION ... DROP
+TABLE` en ordre inverse ; `ROLLBACK` final, jamais de `COMMIT`) : `to_regclass('public.messages')` →
+`NULL`, les 3 fonctions (`protect_message_columns`, `bump_conversation_on_message`,
+`reset_unread_on_read`) → `to_regprocedure(...)` `NULL`, publication sans `conversations`/`messages`,
+`conversations` elle-même retrouvée avec ses 23 colonnes inchangées (aucune interaction). Script DOWN :
+
+```sql
+ALTER PUBLICATION supabase_realtime DROP TABLE public.messages;
+ALTER PUBLICATION supabase_realtime DROP TABLE public.conversations;
+DROP TABLE IF EXISTS public.messages;
+DROP FUNCTION IF EXISTS public.reset_unread_on_read();
+DROP FUNCTION IF EXISTS public.bump_conversation_on_message();
+DROP FUNCTION IF EXISTS public.protect_message_columns();
+```
+
+## Cleanup — vérifié à 0
+
+Les 36 tests + le test de rollback ont chacun tourné dans une transaction rendue à `ROLLBACK` —
+`SELECT count(*) FROM public.messages` = 0 confirmé après le déploiement réel (aucune ligne de test
+n'a fui dans la table de production). `public.users`/`public.salons`/`public.staff_profiles`/
+`public.bookings`/`public.services`/`public.conversations` inchangés (contraintes/triggers désactivés
+puis rétablis par le même `ROLLBACK`, jamais par une restauration manuelle).
+
+## Statuts mis à jour (DEC-014, DEC-016 → `LOCKED`)
+
+| ID | Ancien statut | Nouveau statut | Preuve réelle |
+|---|---|---|---|
+| DEC-014 | `LOCKED (design)` | **`LOCKED`** | `trg_bump_conversation_on_message`/`trg_reset_unread_on_read` (`SECURITY DEFINER`) ; test "DEC-014: bump_conversation_on_message correctly incremented..." + "reset_unread_on_read decremented..." ; `T-depth-01` fermé (voir note ci-dessus) |
+| DEC-016 | `LOCKED (règle)`, SQL en Migration 2 | **`LOCKED`** | `messages_participant_insert` (clause booking-actif) ; tests "DEC-016: client cannot send..."/"DEC-016: assigned staff cannot send... (symmetric)" |
+
+**Nouvelles décisions verrouillées par ce commit** (hors ledger DEC — décisions de conception locales
+à `messages`, pas des `DEC-XXX` du corps verrouillé) : modèle de suppression (deleted_at unique,
+point 1 ci-dessus), édition différée (point 2), garde salon-actif pour `client_salon` (point 3,
+symétrique à DEC-016), `protect_message_columns` (mécanisme, point 6).
+
+**Aucune autre ligne du ledger n'est modifiée.** DEC-015 reste `LOCKED` (Migration 1.5 pour les
+colonnes, Edge Function `toggle-conversation-block` toujours Phase 2, non commencée).
+
+## Condition de passage à Phase 2 (Edge Functions) — pas encore ouverte par ce commit
+
+Ce commit ferme intégralement la Phase 1 de la feuille de route à 5 phases (Migration 2). Rien dans
+Phase 2 (Edge Functions), Phase 3 (temps réel applicatif), Phase 4 (Flutter) ou Phase 5 (validation
+globale) n'est commencé — conformément à la Règle 8 ("ne jamais fusionner deux phases, ne jamais
+anticiper une phase suivante"). Le prochain tour, gated sur l'accord explicite de l'utilisateur,
+ouvrira soit Migration 3 (`message_reports`), soit directement Phase 2 (Edge Functions) — à trancher
+au moment venu, pas anticipé ici.
