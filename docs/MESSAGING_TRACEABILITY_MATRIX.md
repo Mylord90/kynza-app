@@ -1,0 +1,69 @@
+# KYNZA Messaging — Traceability Matrix
+
+Relie chaque décision d'architecture verrouillée (ADR) à son implémentation de bout en bout :
+Migration → Trigger → Policy → Edge Function → Realtime → Tests. Source normative :
+`docs/ADR_MESSAGING_FOUNDATION.md`. Toute ligne dont une colonne est vide et n'est pas légitimement
+`—` (non applicable) est une trace incomplète — à corriger avant que la ligne concernée ne puisse
+être marquée "Prêt pour la production" dans la checklist.
+
+**Dernière mise à jour** : 2026-07-23 (Migration 1.5 committée).
+
+---
+
+## Legend
+
+- **Statut** : `LOCKED` (prouvé, appliqué) · `LOCKED (design)` (spec verrouillée, SQL non écrit) ·
+  `OPEN` (gap tracé) · `PLANNED` (non commencé)
+- `—` = non applicable à cette décision (ex. une CHECK n'a pas d'Edge Function)
+
+| DEC | Décision | ADR §/Statut | Migration | Trigger | Policy RLS | Edge Function | Realtime | Tests |
+|---|---|---|---|---|---|---|---|---|
+| DEC-001 | FK simple `related_booking_id` | §1, `LOCKED` | Migration 1 (`28a269c`) | — | — | — | — | T5 (`23503`) |
+| DEC-002 | FK composite (identité booking) | §1, `LOCKED` | Migration 1 | — | — | — | — | T4, T9 |
+| DEC-003 | MATCH SIMPLE | §1, `LOCKED` | Migration 1 | — | — | — | — | sondage `pg_constraint` |
+| DEC-004 | `chk_staff_type` biconditionnelle | §1, `LOCKED` | Migration 1 | — | — | — | — | T1, T2 (`23514`) |
+| DEC-005 | `chk_staff_requires_booking` (inv. 1) | §1, `LOCKED` | Migration 1 | — | — | — | — | T3 (`23514`) |
+| DEC-006 | Trigger invariant 7 (salon actif) | §1, `LOCKED` | Migration 1 | `trg_check_conversation_salon_active` | — | — | — | T6a, T6b (`P0001`) |
+| DEC-007 | Invariant 9 (aucun bypass) | §1, `LOCKED` | Migration 1 | (propriété transversale) | — | — | — | T6b, sondage `pg_roles` |
+| DEC-008 | UNIQUE additif `bookings` | §1, `LOCKED` | Migration 1 | — | — | — | — | preuve logique (sur-ensemble PK) |
+| DEC-009 | Index uniques TOTAUX | §1, `LOCKED` | Migration 1 | — | — | — | — | T7, T8 (`23505`) |
+| DEC-010 | `NO ACTION` sur toutes FK | §1, `LOCKED` (ticket RGPD ouvert) | Migration 1 | — | — | — | — | lecture DDL |
+| DEC-011 | Commentaires protecteurs | §1, `LOCKED` | Migration 1 | — | — | — | — | recherche exhaustive (7 `COMMENT ON`) |
+| DEC-012 | Convention de nommage FK | §1, `LOCKED` | Migration 1 | — | — | — | — | recherche repo-wide |
+| DEC-013 | `protect_conversation_columns` (7 catégories, refus par défaut) | §A, **`LOCKED`** | **Migration 1.5** (`20260723120000_conversations_hardening_1_5.sql`) | `trg_protect_conversation_columns` (appliqué, `is_system` version 3 finale après 2 versions rejetées en cours de revue — voir ADR « Découverte critique pendant l'audit adversarial ») | `conversations_client_update_own_state`/`_staff_update_own_state`/`_owner_manager_update_own_state` (DEC-023) | — | — | `T-cols`, `T-upd-forge-01`, `T-drift-09`, `T-cat-A/B/C/D/E/F`, `T-cat-null-context` (tous réels, voir ADR "Migration 1.5" + "Découverte critique") |
+| DEC-014 | Trigger de compteurs (`SECURITY DEFINER` + `pg_trigger_depth()`) | §A.4, `LOCKED (design)` | Migration 2 (planifiée) | `bump_conversation_on_message`/`reset_unread_on_read` (planifiés) | — (contourne RLS via `SECURITY DEFINER`, bloqué uniquement par DEC-013) | — | — | `T-depth-01` (planifié, non testable avant Migration 2 — branche `nested` inerte), D.5 (concurrence). Arbitrage drapeau `current_setting()` vs `pg_trigger_depth()` documenté (ADR, Correction 4). |
+| DEC-015 | Règle de blocage (autorité actuelle) | §B/§C, `LOCKED` | Migration 1.5 (colonnes déjà en Migration 1) | protégé par `trg_protect_conversation_columns` (Catégorie E, **appliqué et testé** — `T-cat-E-neg`/`T-cat-E-pos`) | `messages_participant_insert` (`blocked_by IS NULL`, planifiée Migration 2) | **`toggle-conversation-block`** (planifiée, Phase 2) | — | cas rotation manager, cas cross-salon (D.6), planifiés ; protection de colonne désormais réelle |
+| DEC-016 | Éligibilité catégorie 2 (booking actif) | §B.3, `LOCKED (règle)` | Migration 2 (planifiée) | — | `messages_participant_insert` (clause `bookings.status`, planifiée) | — (distinct de `create-conversation`, voir §B.3) | — | test positif (booking actif) / négatif (`cancelled`/`no_show`), planifiés |
+| DEC-017 | Catégorie 3 (diffusion) | `OUT-OF-SCOPE` | — | — | — | — | — | — |
+| DEC-018 | `gift_cards` | `OUT-OF-SCOPE` | — | — | — | — | — | — |
+| DEC-019 | Attachement `coupon` | `OUT-OF-SCOPE` | — | — | — | — | — | — |
+| DEC-020 | `conversation_requests` | `OUT-OF-SCOPE` | — | — | — | — | — | — |
+| DEC-021 | Gap RLS Migration 1 (UPDATE sans restriction colonnes) | §1, **`LOCKED` (fermé)** | Migration 1.5 | fermé par `trg_protect_conversation_columns` | `conversations_client_update_own_state`/`_staff_update_own_state` (inchangées, désormais bornées par le trigger) | — | — | tests DEC-013 (ci-dessus), en particulier `T-cat-E-neg` (rang CRITIQUE matrice de criticité) |
+| DEC-022 | `staff_id IN (...)` sans `is_active`/`deleted_at` | §D.3, **`LOCKED` (fermé)** | Migration 1.5 | — | `conversations_staff_select`/`_staff_update_own_state` (**corrigées, `DROP`+`CREATE POLICY`**), `messages_participant_*` (à écrire correctement dès le départ, Migration 2) | — | — | `T-dec022-neg-select` (0 rows), `T-dec022-neg-update` (0 rows), `T-dec022-pos` (régression, 1 row) — tous réels |
+| DEC-023 | Aucune policy UPDATE owner/manager | §D.2, **`LOCKED` (fermé)** | Migration 1.5 | — | **`conversations_owner_manager_update_own_state`** (appliquée) | — | — | `T-dec023-pos` (même salon, accepté), `T-dec023-neg` (salon différent, 0 rows — aucune fuite cross-salon) |
+
+---
+
+## Traçabilité transversale — invariants métier (catalogue ADR §3)
+
+| Invariant | Mécanisme | Table | Statut |
+|---|---|---|---|
+| 1 — `client_staff` requiert booking | CHECK `chk_staff_requires_booking` | `conversations` | `LOCKED` |
+| 2/3/4 — tuple cohérent avec booking | FK composite | `conversations` | `LOCKED` |
+| 5 — booking existe (`client_salon`) | FK simple | `conversations` | `LOCKED` |
+| 6 — staff↔salon cohérent | Hérité de `bookings` via FK composite | `conversations` | `LOCKED` |
+| 7 — salon actif à l'ouverture | Trigger `BEFORE INSERT` | `conversations` | `LOCKED` |
+| 7bis — salon actif à l'envoi (fil déjà ouvert) | **Non tranché** | `messages` (futur) | `OPEN` — résidu §3 ADR |
+| 8 — paire unique | Index UNIQUE | `conversations` | `LOCKED` |
+| 9 — aucun bypass (`service_role` compris) | Propriété structurelle | toutes | `LOCKED` |
+| 10 (nouveau) — booking actif pour message `client_staff` (DEC-016) | RLS à la volée | `messages` (futur) | `LOCKED (règle)`, SQL planifié |
+| 11 (nouveau) — colonnes protégées par catégorie (DEC-013) | Trigger + filet `to_jsonb` | `conversations` | `LOCKED`, appliqué et testé (Migration 1.5) |
+| 12 (nouveau) — autorité de déblocage actuelle, pas figée (DEC-015) | Edge Function `service_role` | `conversations` | `LOCKED`, colonne protégée (Migration 1.5) ; Edge Function `toggle-conversation-block` toujours planifiée (Phase 2) |
+
+## Traçabilité — publication Realtime (ADR §D.8)
+
+| Table | Dans `supabase_realtime` ? | Action requise |
+|---|---|---|
+| `services`, `bookings`, `staff_profiles` | Oui (`20260624040000_enable_realtime_publication.sql`) | — |
+| `conversations` | **Non** | `ALTER PUBLICATION ... ADD TABLE public.conversations` — Migration 1.5 |
+| `messages` | **Non** (table n'existe pas encore) | idem — Migration 2 |
