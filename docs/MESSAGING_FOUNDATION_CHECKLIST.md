@@ -5,8 +5,9 @@ Document de suivi de progression du chantier Messaging. Source normative pour le
 suit l'avancement. Mise à jour obligatoire à chaque commit qui ferme un item (Rule 8, étape
 « Documentation »).
 
-**Dernière mise à jour** : 2026-07-23 (Migration 1.5 committée — DEC-013/021/022/023 fermées avec
-preuve réelle).
+**Dernière mise à jour** : 2026-07-23 (Migration 2 committée — DEC-014/016 fermées avec preuve réelle ;
+voir aussi `docs/MESSAGING_ROADMAP.md`/`docs/MESSAGING_EXECUTION_PLAN.md` pour la suite de la
+livraison par phases/lots, et `docs/MESSAGING_API_CONTRACT.md` pour le contrat Backend↔Flutter).
 
 ---
 
@@ -46,44 +47,61 @@ preuve réelle).
 - [x] Rollback vérifié en schéma miroir isolé `zz_conv15_rollback_check` (jamais en production),
       qualifié explicitement comme non-neutre en sécurité (Correction 2)
 - [x] Cleanup vérifié à 0 (lignes de test, fixture staff réactivée, schéma miroir détruit)
-- [ ] `T-depth-01` (branche `nested`/`pg_trigger_depth()>1`) — **non testable avant Migration 2**
-      (aucun trigger imbriqué n'existe encore), explicitement non fermé, pas silencieusement oublié
-      (voir ADR, Correction 4 et Migration 1.5 §"Explicitement non testé")
-- [ ] Ajout de `conversations` à `supabase_realtime` — **délibérément hors périmètre de Migration
-      1.5** (résidu #5, pas une `DEC`), reste `OPEN`, à fermer par son propre commit avant que
-      Migration 2 ne s'appuie sur le Realtime de `messages`
+- [x] `T-depth-01` (branche `nested`/`pg_trigger_depth()>1`) — **fermé par Migration 2** :
+      `trg_bump_conversation_on_message` est le premier trigger imbriqué réel sur `conversations`,
+      test "DEC-014: bump_conversation_on_message correctly incremented..." en est la preuve empirique
+      (voir ADR §"Migration 2 — Implémentation et clôture")
+- [x] Ajout de `conversations` à `supabase_realtime` — fermé par Migration 2 (même fichier que
+      l'ajout de `messages`, résidu #5 clos)
 
-## Messages
+## Migration 2 — `messages`
 
-- [ ] Migration 2 écrite (schéma, doc canonique `KYNZA_MESSAGING_ARCHITECTURE.md:269-292`)
-- [ ] RLS `messages_participant_select`/`_insert`/`_recipient_mark_read`
-- [ ] DEC-016 intégré dès l'écriture de la RLS d'`INSERT` (booking actif, catégorie `client_staff`)
-- [ ] `client_message_id` + `uq_message_client_dedup` (dédup offline)
-- [ ] `bump_conversation_on_message`/`reset_unread_on_read` — `SECURITY DEFINER`, garde
-      `pg_trigger_depth()` vérifié empiriquement contre `protect_conversation_columns`
-- [ ] Ajout de `messages` à `supabase_realtime`
-- [ ] Tests réels (positif + négatif), rollback vérifié, cleanup, commit unique
+- [x] Schéma appliqué en production (`20260723180000_messages_schema_migration_2.sql`, commit `d3c1d0f`) — 14 colonnes
+- [x] RLS `messages_participant_select`/`_insert`/`_recipient_mark_read`/`_sender_soft_delete`
+- [x] DEC-016 intégré dès l'écriture de la RLS d'`INSERT` (booking actif, `client_staff`) **+**
+      décision 3 (garde salon-actif symétrique pour `client_salon`, confirmée avant écriture)
+- [x] `client_message_id` + `uq_message_client_dedup` (dédup offline)
+- [x] `bump_conversation_on_message`/`reset_unread_on_read` — `SECURITY DEFINER`, garde
+      `pg_trigger_depth()` vérifiée empiriquement (voir `T-depth-01` ci-dessus)
+- [x] `protect_message_columns` (nouveau mécanisme, mirroring DEC-013) — colonne-par-colonne,
+      `read_at` forcé serveur, filet anti-dérive
+- [x] Ajout de `messages` (et `conversations`) à `supabase_realtime`
+- [x] 36 tests réels (`BEGIN...ROLLBACK` contre production), rollback vérifié UP→DOWN en transaction
+      dédiée, cleanup vérifié à 0, commit unique (`d3c1d0f`)
+- [x] 3 décisions pré-écriture confirmées explicitement (soft-delete auteur seul, édition différée,
+      garde salon-actif) + 2 corrections mécaniques (filtre DEC-022, supervision owner/manager) — voir
+      ADR §"Migration 2 — Implémentation et clôture"
+- [ ] Édition de message (`edited_at`/fenêtre) — **différée par décision, pas un oubli** ; reprise en
+      Phase 2/Lot 2.4 (`docs/MESSAGING_EXECUTION_PLAN.md`)
 
-## Rapports (`message_reports`)
+## Rapports (`message_reports`) — Phase 4 (`docs/MESSAGING_ROADMAP.md`)
 
-- [ ] Migration 3 écrite
-- [ ] RLS (signalement par participant, lecture owner/manager)
-- [ ] Trigger `flag_message_on_report` (doc canonique, si retenu tel quel)
-- [ ] Tests réels, rollback vérifié, cleanup, commit unique
+- [ ] 5 points de conception tranchés (Lot 4.1) avant toute ligne SQL : conflit `protect_message_columns`
+      (trigger `flag_message_on_report`), UNIQUE anti-doublon, conflit d'intérêt `FOR ALL`
+      owner/manager, traçabilité `activity_logs`, DEC-XXX à assigner
+- [ ] Migration 3 écrite (Lot 4.2)
+- [ ] RLS (signalement par participant, lecture/résolution selon décision Lot 4.1)
+- [ ] Trigger `flag_message_on_report` — `SECURITY DEFINER` ou garde `nested`, selon décision Lot 4.1
+- [ ] Rate limiting — réutilisation `checkRateLimit()`/`check_rate_limit()` (ADR-0001, déjà en
+      production sur ~15 Edge Functions), pas un nouveau mécanisme (Lot 4.3)
+- [ ] Tests réels (y compris non-régression `protect_message_columns`), rollback vérifié, cleanup,
+      commit unique
 
 ## Jetons d'appareil (`device_tokens`)
 
 - [x] Table déjà en production (`20260717140000_device_tokens.sql`)
-- [ ] Migration 4 — raccordement applicatif à la messagerie (pas de nouvelle table)
+- [ ] Raccordement applicatif à la messagerie (push au message) — Phase 3 (Notifications),
+      `docs/MESSAGING_EXECUTION_PLAN.md` Lot 3.1
 
-## Fonctions de bord (Edge Functions)
+## Fonctions de bord (Edge Functions) — voir `docs/MESSAGING_API_CONTRACT.md` pour le contrat complet
 
-- [ ] `create-conversation` (règle anti-spam, éligibilité historique de réservation)
-- [ ] `send-message-push` (miroir `_shared/fcm.ts`)
-- [ ] `toggle-conversation-block` (**nouvelle**, DEC-015 — autorité actuelle, écrit `activity_logs`,
-      lit `salon_id` depuis la ligne ciblée, jamais depuis l'appelant — voir ADR §D.6)
-- [ ] `report-message` (écrit `message_reports`)
-- [ ] Cas cross-salon testé et rejeté (`toggle-conversation-block`)
+- [ ] `create-conversation` (règle anti-spam, éligibilité historique de réservation) — Phase 1/Lot 1.1
+- [ ] `send-message` — chemin (Edge Function ou RLS directe) **non tranché**, décision requise Lot 1.2
+- [ ] `sendMessagePush` (miroir `_shared/fcm.ts`) — Phase 3/Lot 3.1
+- [ ] `toggle-conversation-block` (DEC-015 — autorité actuelle, écrit `activity_logs`, lit `salon_id`
+      depuis la ligne ciblée, jamais depuis l'appelant — voir ADR §D.6) — Phase 2/Lot 2.5
+- [ ] `report-message` (écrit `message_reports`) — Phase 4/Lot 4.2
+- [ ] Cas cross-salon testé et rejeté (`toggle-conversation-block`, `report-message`)
 
 ## Temps réel
 

@@ -1749,6 +1749,13 @@ voir en-tête de la migration), et bien entendu tout ce qui est Migration 2 elle
 
 # Feuille de route à 5 phases — plan d'exécution verrouillé (2026-07-23)
 
+> **SUPERSEDED (2026-07-23) PAR `docs/MESSAGING_ROADMAP.md`.** Cette section reste dans l'ADR pour
+> l'historique (elle a réellement gouverné Migration 2) mais n'est plus la référence d'exécution :
+> `docs/MESSAGING_ROADMAP.md` la remplace avec 6 phases (une phase "Notifications" a été isolée de
+> l'ancienne Phase 2/Sécurité, pour la raison documentée dans ce nouveau fichier) et
+> `docs/MESSAGING_EXECUTION_PLAN.md` la détaille en lots. Aucune décision `DEC-XXX` de cette section
+> n'est invalidée par ce remplacement — seul l'**ordonnancement d'exécution** change de document.
+
 **Aucun SQL dans cette section.** Cette feuille de route remplace, en la détaillant, l'esquisse §J
 (2026-07-22) — elle n'invalide rien de §J, elle explicite le contenu de chaque phase avec la liste
 exhaustive demandée. Elle sert de **référence pour les prochains cycles Rule 8**, pas d'engagement
@@ -2039,3 +2046,47 @@ globale) n'est commencé — conformément à la Règle 8 ("ne jamais fusionner 
 anticiper une phase suivante"). Le prochain tour, gated sur l'accord explicite de l'utilisateur,
 ouvrira soit Migration 3 (`message_reports`), soit directement Phase 2 (Edge Functions) — à trancher
 au moment venu, pas anticipé ici.
+
+> **Note (2026-07-23, post-réorganisation)** : la numérotation "Phase 2/3/4/5" ci-dessus est celle de
+> l'ancienne feuille de route (désormais `SUPERSEDED`, voir plus haut). La suite réelle des travaux
+> suit désormais `docs/MESSAGING_ROADMAP.md` (6 phases) et `docs/MESSAGING_EXECUTION_PLAN.md` (lots).
+> Ce paragraphe reste inchangé comme trace historique de l'état au moment du commit `d3c1d0f`.
+
+---
+
+# Gouvernance d'exécution post-fondation (2026-07-23)
+
+**Contexte** : à partir de ce point, la fondation transactionnelle du domaine Messaging
+(Migrations 1, 1.5, 2 — DEC-001 à DEC-023) est considérée **stabilisée**. Le travail entre dans une
+phase de **Product Delivery** (`docs/MESSAGING_ROADMAP.md`, `docs/MESSAGING_EXECUTION_PLAN.md`,
+`docs/MESSAGING_API_CONTRACT.md`) — livraison incrémentale phase par phase, lot par lot, chacun fermé
+par son propre cycle Rule 8.
+
+**Règle normative, permanente à partir de cette date** :
+
+1. **Plus aucune revue générale d'architecture n'est ouverte par défaut.** Le socle (structure des
+   tables `conversations`/`messages`, RLS de base, triggers de garde de colonnes, ledger DEC-001 à
+   DEC-023) n'est plus remis en question à l'occasion de chaque nouveau lot.
+2. **Seules 4 revues restent autorisées pendant l'exécution des phases** (détail et checklist dans
+   `docs/MESSAGING_DEFINITION_OF_DONE.md`, section "Gouvernance de revue") :
+   - revue du lot/phase courante (périmètre respecté, pas de dérive vers un domaine voisin) ;
+   - revue sécurité (checklist §D de cet ADR, rejouée contre ce qui est réellement écrit) ;
+   - revue performance (mesure contre du trafic réel, jamais anticipation — §10) ;
+   - revue rollback (DOWN testé pour toute migration/Edge Function du lot).
+3. **Une revue d'architecture générale ne se rouvre que sur preuve réelle d'une contradiction
+   démontrée** — le même standard déjà appliqué pour fermer DEC-022/DEC-023 (lecture directe du SQL
+   réellement en production, jamais une supposition ni une préférence de conception). Concrètement :
+   un test qui casse un invariant documenté, ou un comportement Postgres/Supabase mesuré différent de
+   ce que cet ADR affirme, justifie une réouverture ciblée sur le point précis en contradiction —
+   jamais une remise à plat générale du domaine.
+4. **Toute nouvelle décision prise à l'intérieur d'un lot** (ex. fenêtre d'édition, schéma de mute,
+   clé de rate-limiting) reste documentée au même endroit et avec la même rigueur que Migration 2 —
+   preuve avant, jamais par supposition — mais **n'est pas** une "décision LOCKED du corps de l'ADR"
+   au sens où DEC-001 à DEC-023 le sont : c'est une décision de lot, versionnée dans
+   `docs/MESSAGING_EXECUTION_PLAN.md`/`docs/MESSAGING_API_CONTRACT.md`, qui suit le cycle Rule 8 du
+   lot qui la contient.
+
+**Ce que cette règle ne change pas** : le cycle Rule 8 complet (annonce → preuves avant → écriture →
+tests → rollback → cleanup → commit unique → documentation → PORTE) reste obligatoire pour **chaque**
+lot — cette section restreint la **portée** des revues (plus de revue générale), pas leur
+**rigueur** (preuves réelles toujours exigées).

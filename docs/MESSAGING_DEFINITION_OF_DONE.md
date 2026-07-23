@@ -6,6 +6,13 @@ doit satisfaire **tous** les points ci-dessous applicables à son type, avec pre
 déclaration. Cohérent avec le cycle Rule 8 (`docs/ADR_MESSAGING_FOUNDATION.md` §7) : preuves avant →
 écriture → tests → rollback → cleanup → commit → documentation → validation → PORTE.
 
+**Rattachement (2026-07-23)** : la livraison est désormais organisée en phases/lots —
+`docs/MESSAGING_ROADMAP.md` (phases), `docs/MESSAGING_EXECUTION_PLAN.md` (lots + section
+"Monitoring précoce", qui avance l'instrumentation dès Phase 1 plutôt que de l'attendre en fin de
+projet), `docs/MESSAGING_API_CONTRACT.md` (contrat Backend↔Flutter, gelé avant tout développement
+Flutter d'une phase). Ce document reste la source des critères de qualité par type d'artefact ;
+il ne redéfinit pas l'ordre de livraison.
+
 ---
 
 ## Pour toute migration SQL (table, trigger, policy, contrainte)
@@ -79,10 +86,13 @@ vérifiés séparément, empiriquement, contre le service Realtime réel (pas se
 policy).
 
 - [ ] **`T-realtime-softdelete-rls`** (scénario complet, obligatoire dès Migration 2/`messages`,
-      avant toute UI Flutter ne s'appuyant sur le stream) : les événements `UPDATE` utilisés pour la
-      suppression logicielle d'un message (ex. `messages.client_deleted_at`/`salon_deleted_at`, futur
-      pattern par-partie miroir de `conversations`) continuent-ils à respecter la RLS dans Postgres
-      Changes, pas seulement dans un `SELECT` direct ?
+      avant toute UI Flutter ne s'appuyant sur le stream ; **toujours non exécuté au 2026-07-23** —
+      priorité Lot 1.4, `docs/MESSAGING_EXECUTION_PLAN.md`) : les événements `UPDATE` utilisés pour
+      la suppression logicielle d'un message (`messages.deleted_at` — colonne unique, décision 1 de
+      Migration 2 : auteur seul, "delete for everyone", **pas** de pattern par-partie comme
+      `conversations` — voir `docs/ADR_MESSAGING_FOUNDATION.md`, section "Migration 2 —
+      Implémentation et clôture") continuent-ils à respecter la RLS dans Postgres Changes, pas
+      seulement dans un `SELECT` direct ?
       **Scénario, entièrement décrit** :
       1. Une conversation existe entre un client C et un salon/staff S, avec au moins un message M
          envoyé par C.
@@ -138,3 +148,23 @@ production")
 - [ ] Monitoring/alertes en place pour : volume de messages, taux de blocage, latence Realtime.
 - [ ] Revue de sécurité (ADR §D) rejouée contre l'implémentation **réelle**, pas seulement la
       conception — chaque finding fermé ou explicitement accepté comme résidu documenté.
+
+## Gouvernance de revue (2026-07-23 — voir ADR §"Gouvernance d'exécution post-fondation")
+
+À partir de Migration 2, la fondation (Migrations 1/1.5/2, DEC-001 à DEC-023) est stabilisée. Une
+"revue" au sens de ce document ne signifie plus jamais "revue générale d'architecture" — seules 4
+revues restent ouvertes par défaut pendant l'exécution des phases/lots :
+
+1. **Revue du lot/phase courante** — le lot en cours respecte-t-il son propre périmètre
+   (`docs/MESSAGING_EXECUTION_PLAN.md`), sans dérive vers un domaine voisin ?
+2. **Revue sécurité** — la checklist ADR §D reste applicable item par item à ce qui est réellement
+   écrit dans ce lot.
+3. **Revue performance** — mesure, jamais anticipation (voir ADR §10, principe déjà verrouillé).
+4. **Revue rollback** — chaque migration/Edge Function du lot a son DOWN testé.
+
+Une revue d'architecture générale (remise en cause de DEC-001 à DEC-023, ou de la structure des 6
+phases de `docs/MESSAGING_ROADMAP.md`) ne se rouvre que sur **preuve réelle d'une contradiction
+démontrée** — le même standard que celui déjà appliqué pour fermer DEC-022/DEC-023 (constat direct
+contre le SQL réellement en production, jamais une supposition). Une hypothèse ou une préférence de
+conception ne justifie pas une réouverture ; une preuve empirique contradictoire (test qui casse un
+invariant documenté, comportement Postgres/Supabase différent de ce que l'ADR affirme) le justifie.
