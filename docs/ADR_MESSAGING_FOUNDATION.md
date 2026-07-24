@@ -2090,3 +2090,63 @@ par son propre cycle Rule 8.
 tests → rollback → cleanup → commit unique → documentation → PORTE) reste obligatoire pour **chaque**
 lot — cette section restreint la **portée** des revues (plus de revue générale), pas leur
 **rigueur** (preuves réelles toujours exigées).
+
+---
+
+## Amendement — Mécanique de réouverture (DEC-009), préparation Lot 1.1
+
+**Protocole d'amendement** : aucune substance de DEC-009 n'est modifiée ici — le principe reste
+exactement "réouverture, pas recréation" (`ADR:120`), preuves T7/T8 inchangées. Ce qui suit rend
+explicite la **mécanique d'exécution** que DEC-009 énonçait au niveau du principe mais ne décrivait
+pas au niveau du comportement de `create-conversation` — trou trouvé, pas deviné, lors de la
+préparation du dossier technique Lot 1.1 (DEC-009 ne parle que du `deleted_at` **global**,
+"réservé à un effacement administratif/RGPD futur", et dit explicitement que le retrait par partie
+`client_deleted_at`/`salon_deleted_at` est "hors du prédicat de ces index" — donc hors de ce que
+DEC-009 tranche).
+
+**Comportement officiel de `create-conversation` en cas de conflit `23505`** :
+- La fonction renvoie toujours la conversation existante — jamais une nouvelle ligne (DEC-009).
+- Elle remet à `NULL`, **côté appelant uniquement** (le client — seul appelant autorisé en V1, voir
+  `docs/MESSAGING_API_CONTRACT.md` §1.1 "Périmètre V1") :
+  - `client_deleted_at`
+  - `client_hidden_at`
+- Elle ne touche **jamais** :
+  - `salon_deleted_at`
+  - `salon_hidden_at`
+
+**Propriétés de cette remise à `NULL`, faisant partie intégrante du comportement officiel** (pas une
+amélioration optionnelle — son absence laisserait une conversation "réouverte" au sens de l'unicité
+mais invisible pour le client dans toute liste filtrant sur ces colonnes) :
+- **Idempotente** : rejouée N fois, même état final, jamais d'erreur si déjà `NULL`.
+- **Limitée au côté appelant** : jamais le côté salon — cohérent avec l'asymétrie déjà établie
+  ailleurs dans ce domaine (DEC-015 §C, asymétrie du blocage).
+- **Indépendante de l'état précédent** : `UPDATE` inconditionnel de ces deux colonnes vers `NULL`,
+  pas une lecture-puis-décision conditionnelle.
+
+**Mécanisme technique déjà en place, aucune nouvelle protection requise** : `client_deleted_at`
+(Catégorie C) et `client_hidden_at` (Catégorie C') de `protect_conversation_columns`
+(`20260723120000_conversations_hardening_1_5.sql:146-155`) acceptent déjà une écriture `is_system`
+(`service_role`) — le chemin que `create-conversation` emprunte par construction. Aucune modification
+de `protect_conversation_columns` n'est nécessaire pour ce comportement.
+
+## Règle d'architecture — Séparation DEC-016 / éligibilité `create-conversation`, préparation Lot 1.1
+
+**Rappel, déjà verrouillé, non modifié ici** (§B.3, `ADR:1055-1061`) : DEC-016 gate l'envoi de
+**nouveaux messages** dans un fil `client_staff` déjà ouvert ; `create-conversation` gate uniquement
+l'**ouverture** du fil, sur l'historique de réservation, sans filtre de statut. Ces deux contrôles
+sont intentionnellement disjoints et ne doivent **jamais** être fusionnés. Cette section l'élève
+explicitement au rang de règle d'architecture (pas seulement une clarification technique) parce que
+le risque concret dépasse la seule confusion backend : c'est une **régression d'UX Flutter** si
+l'écran de fil, une fois construit, ne respecte pas la même séparation.
+
+**Règle contraignante pour toute future implémentation Flutter de ce domaine** :
+- Flutter ne doit **jamais** proposer une action d'ouverture de conversation ("Contacter ce
+  praticien" ou équivalent) à partir d'un booking dont le statut est `cancelled` ou `no_show` — ce
+  filtre est une responsabilité de **présentation** (le CTA ne doit pas exister pour un booking déjà
+  annulé), **distincte** de DEC-016 (protège l'envoi dans un fil déjà ouvert) et distincte de
+  l'éligibilité de `create-conversation` (qui n'exclut pas les bookings annulés pour l'**ouverture**
+  — booking existant, peu importe le statut).
+- `create-conversation` ne revérifie **volontairement jamais** DEC-016 — confirmé §B.3, non modifié.
+- Trois niveaux disjoints et intentionnels : filtre de présentation Flutter (CTA) / éligibilité
+  d'ouverture `create-conversation` / éligibilité d'envoi `messages_participant_insert` (DEC-016).
+  **Aucun développeur futur, backend ou Flutter, ne doit fusionner ces trois contrôles en un seul.**

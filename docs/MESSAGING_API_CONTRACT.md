@@ -22,17 +22,30 @@ contrat ne redéfinit aucune règle métier, il les rend consultables sans lire 
 
 | Champ | Valeur |
 |---|---|
-| Responsabilité | Ouvrir une conversation `client_staff` ou `client_salon`, en appliquant l'éligibilité anti-spam (historique de réservation) — la seule règle non exprimable en contrainte SQL |
+| Responsabilité | Ouvrir une conversation `client_staff` ou `client_salon`, en appliquant l'éligibilité anti-spam (historique de réservation) — la seule règle non exprimable en contrainte SQL. Si la paire (client, salon) ou (client, staff) existe déjà, **réouvre** la ligne existante plutôt que d'en créer une nouvelle (DEC-009 ; mécanique précisée dans `ADR_MESSAGING_FOUNDATION.md`, "Amendement — Mécanique de réouverture") |
 | Edge Function | `create-conversation` (service_role) — **PLANNED**, non encore codée (Lot 1.1) |
 | Paramètres | `type: 'client_staff' | 'client_salon'`, `salon_id: uuid`, `staff_id?: uuid` (requis si `client_staff`), `related_booking_id?: uuid` (requis si `client_staff`) |
-| Réponse | `{ conversation_id: uuid, created_at: timestamptz }` |
-| Erreurs | `403 not_eligible` (pas d'historique de réservation qualifiant), `409 already_exists` (index unique déjà satisfait — `uq_conversations_client_staff`/`uq_conversations_client_salon`, à vérifier noms exacts avant implémentation), `422 invalid_type` |
-| Contraintes métier | Éligibilité anti-spam exacte : **DÉCISION REQUISE** (Lot 1.1) — l'ADR ne fixe que le principe |
+| Réponse | `200 { conversationId: uuid, created_at?: timestamptz, event: 'conversation_created' | 'conversation_reopened' }` — `created_at` présent seulement si nouvelle ligne. **Jamais un `409` sur conflit d'unicité** — voir "Comportement de réouverture" ci-dessous |
+| Erreurs | `403 not_eligible` (pas d'historique de réservation qualifiant), `422 invalid_type` |
+| Contraintes métier | Éligibilité : booking existant entre ce client et ce salon/staff, **peu importe son statut** (`docs/KYNZA_MESSAGING_ARCHITECTURE.md:607-611`) — **ne revérifie jamais DEC-016** (règle d'architecture dédiée, `ADR_MESSAGING_FOUNDATION.md`, "Séparation DEC-016 / éligibilité `create-conversation`") |
 | RLS impliquée | Aucune policy `INSERT` authenticated sur `conversations` (Migration 1 : "création uniquement via l'Edge Function `create-conversation`, service_role") |
-| Triggers exécutés | `trg_check_conversation_salon_active` (BEFORE INSERT, invariant 7/DEC-006 — salon actif), `conversations_updated_at` |
+| Triggers exécutés | `trg_check_conversation_salon_active` (BEFORE INSERT, invariant 7/DEC-006 — salon actif), `conversations_updated_at` ; `trg_protect_conversation_columns` (catégories C/C', si réouverture) |
 | Événements Realtime | Aucun à la création (le client crée puis s'abonne) |
-| Tests obligatoires | Positif (historique valide), négatif (aucun historique), cross-salon rejeté, salon soft-supprimé rejeté (invariant 7) |
+| Événements produit (logging/métriques) | `conversation_created` (nouvelle ligne) et `conversation_reopened` (ligne existante retrouvée, `client_deleted_at`/`client_hidden_at` éventuellement remis à `NULL`) — **documentés ici comme événements fonctionnels distincts, mécanisme de log/métriques non choisi à ce stade, aucune implémentation proposée** |
+| Tests obligatoires | Positif (historique valide, `conversation_created`), négatif (aucun historique), cross-salon rejeté, salon soft-supprimé rejeté (invariant 7), réouverture (`conversation_reopened`, marqueurs remis à `NULL` côté client uniquement, jamais côté salon) |
 | Flutter Repository attendu | `ConversationRepository.create({type, salonId, staffId?, relatedBookingId?}) → Future<Conversation>` |
+
+**Comportement de réouverture** : sur conflit d'unicité (`uq_conversations_client_staff`/
+`uq_conversations_client_salon`), la fonction ne renvoie jamais une erreur — elle retrouve la ligne
+existante, remet `client_deleted_at`/`client_hidden_at` à `NULL` (jamais `salon_deleted_at`/
+`salon_hidden_at`), et répond `200` avec `event: 'conversation_reopened'`. Détail complet et preuve :
+`ADR_MESSAGING_FOUNDATION.md`, section "Amendement — Mécanique de réouverture (DEC-009)".
+
+**Périmètre V1** : seul le client authentifié peut appeler `create-conversation` — `client_id`
+provient exclusivement du JWT (`getAuthenticatedUser`), jamais du body. Aucun paramètre
+`targetClientId` n'existe. Les appels initiés par owner/manager/staff (ouvrir une conversation au nom
+d'un client) sont **hors périmètre V1** — limitation volontaire de cette première version, pas une
+impossibilité définitive. Conséquence : `has_role()` n'est pas nécessaire dans ce lot.
 
 ### 1.2 `listConversations` — **SHIPPED**
 
