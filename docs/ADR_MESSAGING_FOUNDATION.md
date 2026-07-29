@@ -187,6 +187,34 @@ serait une régression de sécurité, pas seulement de schéma.
 
 ---
 
+## Convention — Statuts backend (documentaire, aucun DEC)
+
+Cette convention verrouille le sens de chaque statut employé dans ce document et dans
+`MESSAGING_API_CONTRACT.md`, pour empêcher qu'un futur lot n'emploie `SHIPPED` pour désigner du code
+simplement écrit ou committé. Purement documentaire — ne crée, ne modifie, ne rouvre aucun DEC.
+
+- **DRAFT** : code écrit, non revu, potentiellement incomplet.
+- **MERGED** (ou "committé") : le code existe dans l'historique Git (`git log -- <chemin>` retourne au
+  moins un commit) sur la branche de référence — ne garantit ni exécution ni accessibilité en
+  production.
+- **DEPLOYED** : en plus d'être `MERGED`, le code est actif sur l'infrastructure cible et invocable —
+  pour une Edge Function, présente dans `supabase functions list` avec `status: ACTIVE` ; pour une
+  migration SQL, présente dans `supabase migration list --linked` avec un timestamp distant identique
+  au local.
+- **SHIPPED** : réservé aux éléments à la fois `MERGED` **et** `DEPLOYED` **et** dont le comportement a
+  été vérifié par une preuve d'exécution réelle (test réel contre production, ou trafic réel observé).
+
+**Règle d'application, contraignante** : aucun document de ce domaine ne doit employer `SHIPPED` sans
+que les trois conditions ci-dessus soient simultanément vraies et vérifiables par une commande, jamais
+par une déclaration. En cas de doute sur le statut réel d'un élément, le statut le plus bas parmi les
+preuves disponibles doit être affiché, jamais le plus favorable.
+
+**Origine** : convention ajoutée après constat réel — `create-conversation` était étiqueté `SHIPPED`
+dans `MESSAGING_API_CONTRACT.md` alors qu'il n'était ni committé (`git log --all -- supabase/functions/
+create-conversation` vide avant ce commit) ni déployé (absent de `supabase functions list`).
+
+---
+
 ## §2 — Decision Ledger
 
 | ID | Décision | Statut | Date | Migration | Preuve |
@@ -203,10 +231,10 @@ serait une régression de sécurité, pas seulement de schéma.
 | DEC-010 | `NO ACTION` sur toutes les FK — **ticket RGPD ouvert** | **LOCKED** (ticket ouvert) | 2026-07-21 | Migration 1 | `...conversations_schema.sql:68-78` · `foundation.sql:37` |
 | DEC-011 | Commentaires protecteurs | **LOCKED** | 2026-07-21 | Migration 1 | `...conversations_schema.sql:211-230` |
 | DEC-012 | Convention de nommage FK | **LOCKED** | 2026-07-21 | Migration 1 | `...conversations_schema.sql:80-87` |
-| DEC-013 | `protect_conversation_columns` (garde par colonne, 7 catégories, refus par défaut) | **LOCKED (design)** | 2026-07-22 | Migration 1.5 | §"Revue de finalisation" §A |
-| DEC-014 | Trigger de compteurs `*_unread_count`/`last_message_*` (`SECURITY DEFINER` + `pg_trigger_depth()`) | **LOCKED (design)** | 2026-07-22 | Migration 2 (`messages`) | §"Revue de finalisation" §A.4 |
+| DEC-013 | `protect_conversation_columns` (garde par colonne, 7 catégories, refus par défaut) | **LOCKED, appliqué** | 2026-07-22 (design) / 2026-07-23 (implémenté, Migration 1.5) | Migration 1.5 (`20260723120000_conversations_hardening_1_5.sql`) | §"Revue de finalisation" §A ; preuve d'exécution `MESSAGING_TRACEABILITY_MATRIX.md:36` |
+| DEC-014 | Trigger de compteurs `*_unread_count`/`last_message_*` (`SECURITY DEFINER` + `pg_trigger_depth()`) | **LOCKED, appliqué** | 2026-07-22 (design) / 2026-07-23 (implémenté, Migration 2, commit `d3c1d0f`) | Migration 2 (`20260723180000_messages_schema_migration_2.sql:338-364`) | §"Revue de finalisation" §A.4 ; preuve d'exécution `MESSAGING_TRACEABILITY_MATRIX.md:37` |
 | DEC-015 | Règle de blocage (`blocked_by`/`blocked_at`) — autorité actuelle, pas identité figée | **LOCKED** | 2026-07-22 | Migration 1.5 (colonnes) + Edge Function Phase 2 | §"Revue de finalisation" §B/§C |
-| DEC-016 | Éligibilité dérivée catégorie 2 (booking actif) | **LOCKED (règle)**, SQL en Migration 2 | 2026-07-22 | Migration 2 (`messages`) | §"Revue de finalisation" §B.3 |
+| DEC-016 | Éligibilité dérivée catégorie 2 (booking actif) | **LOCKED, appliqué** | 2026-07-22 (design) / 2026-07-23 (implémenté, Migration 2, commit `d3c1d0f`) | Migration 2 (`20260723180000_messages_schema_migration_2.sql:144-174`) | §"Revue de finalisation" §B.3 ; preuve d'exécution `MESSAGING_TRACEABILITY_MATRIX.md:39` |
 | DEC-022 | Sous-requêtes `staff_id IN (...)` sans filtre `is_active`/`deleted_at` | **OPEN** | 2026-07-22 | Migration 1.5 | §"Revue de finalisation" §D.3 |
 | DEC-023 | Aucune policy `UPDATE` owner/manager sur `conversations` | **OPEN** | 2026-07-22 | Migration 1.5 | §"Revue de finalisation" §D.2 |
 | DEC-017 | Catégorie 3 (diffusion salon→N), `broadcast_*` | **OUT-OF-SCOPE** | — | mandat marketing séparé | `docs/KYNZA_MESSAGING_ARCHITECTURE.md:466-520` |
@@ -214,6 +242,7 @@ serait une régression de sécurité, pas seulement de schéma.
 | DEC-019 | Attachement `coupon` | **OUT-OF-SCOPE** | — | différé, cf. §11 doc canonique | `docs/KYNZA_MESSAGING_ARCHITECTURE.md:857` |
 | DEC-020 | `conversation_requests` (contact pré-réservation) | **OUT-OF-SCOPE** | — | mandat produit futur, priorité haute | `docs/KYNZA_MESSAGING_ARCHITECTURE.md:604-617` |
 | DEC-021 | Gap RLS Migration 1 (policies `UPDATE` sans restriction de colonnes) | **OPEN** (dette sécurité) | 2026-07-21 | Migration 1 (gap) — fermeture avant Migration 2 | `...conversations_schema.sql:200-205` · lié à DEC-013 |
+| DEC-024 | Réouverture face à `deleted_at` global — machine d'états `23505`→`UPDATE`→diagnostic, prédicat d'identité invariant — **portée étendue au chemin d'envoi (Lot 1.2)** | **LOCKED (design + amendement)** | 2026-07-28 | Lot 1.1 (`create-conversation`, MERGED, non déployé) + Lot 1.2 (`messages_participant_insert`, SQL en attente) | §"DEC-024 — Conversation administrativement supprimée" + §"Amendement — Extension de portée DEC-024" |
 
 ---
 
@@ -1284,16 +1313,17 @@ Migration 1.5.
 
 | # | Risque | Sévérité | Statut |
 |---|---|---|---|
-| 1 | DEC-022 (staff désactivé garde l'accès) | Élevée si non fermée avant Migration 2 | `OPEN`, fermeture planifiée Migration 1.5 |
-| 2 | DEC-023 (owner/manager sans policy UPDATE sur `conversations`) | Élevée (bloque un cas d'usage produit central) | `OPEN`, fermeture planifiée Migration 1.5 |
-| 3 | Salon soft-supprimé **après** ouverture d'un fil `client_salon` — invariant 7 ne couvre que l'ouverture, pas l'envoi continu (§B.3, gap connexe DEC-016) | Moyenne | **Non tranché**, à décider explicitement à la conception RLS de Migration 2 |
-| 4 | TOCTOU sur `blocked_by IS NULL` (§D.4) | Faible | Accepté, documenté, non bloquant |
-| 5 | Publication Realtime non mise à jour tant que Migration 1.5/2 ne l'ajoute pas explicitement (§D.8) | Élevée si oubliée (récidive d'un bug déjà vécu) | Action requise, ajoutée au DoD/checklist |
+| 1 | DEC-022 (staff désactivé garde l'accès) | Élevée si non fermée avant Migration 2 | **FERMÉ** — Migration 1.5 (`20260723120000_conversations_hardening_1_5.sql`) appliquée, revalidé `supabase migration list --linked` (timestamp distant identique au local) ; preuve `MESSAGING_TRACEABILITY_MATRIX.md:48` |
+| 2 | DEC-023 (owner/manager sans policy UPDATE sur `conversations`) | Élevée (bloque un cas d'usage produit central) | **FERMÉ** — même migration, même revalidation ; preuve `MESSAGING_TRACEABILITY_MATRIX.md:49` |
+| 3 | Salon soft-supprimé **après** ouverture d'un fil `client_salon` — invariant 7 ne couvre que l'ouverture, pas l'envoi continu (§B.3, gap connexe DEC-016) | Moyenne | **FERMÉ** — "décision 3", Migration 2 (`20260723180000_messages_schema_migration_2.sql:167-172`) |
+| 4 | TOCTOU sur `blocked_by IS NULL` (§D.4) | Faible | Accepté, documenté, non bloquant — inchangé |
+| 5 | Publication Realtime non mise à jour tant que Migration 1.5/2 ne l'ajoute pas explicitement (§D.8) | Élevée si oubliée (récidive d'un bug déjà vécu) | **FERMÉ** — Migration 2 (`:393-394`) |
 | 6 | Ticket RGPD déjà noté (DEC-010, hérité) — purge `conversations`/`messages` avant cascade `auth.users` | Moyenne, différée | Inchangé, hérité, non aggravé par cette revue |
+| 7 | `messages_participant_insert` n'exclut pas `conversations.deleted_at IS NOT NULL` — DEC-024 non étendu au chemin d'envoi | Moyenne — pas de fuite cross-tenant, contourne une érasure administrative déjà actée | **Gouvernance fermée** (amendement DEC-024 ci-dessous) — **SQL en attente**, Lot 1.2, prochain commit |
 
-Aucun de ces résidus ne bloque le **design** de Migration 2 ; les résidus 1, 2 et 5 **bloquent**
-l'implémentation avant que Migration 2 ne soit committée (ils doivent être fermés par Migration 1.5
-en premier, dans l'ordre du roadmap §J).
+Résidus 1, 2, 3 et 5 sont désormais fermés, prouvés par migration réellement appliquée (pas par
+déclaration documentaire). Résidus 4 et 6 restent ouverts sans changement. Résidu 7 est nouveau,
+sa gouvernance est close par cet amendement ; sa fermeture SQL reste un commit distinct (Rule 8).
 
 ---
 
@@ -2128,6 +2158,162 @@ mais invisible pour le client dans toute liste filtrant sur ces colonnes) :
 (`20260723120000_conversations_hardening_1_5.sql:146-155`) acceptent déjà une écriture `is_system`
 (`service_role`) — le chemin que `create-conversation` emprunte par construction. Aucune modification
 de `protect_conversation_columns` n'est nécessaire pour ce comportement.
+
+## DEC-024 — Conversation administrativement supprimée : machine d'états de réouverture
+
+**Énoncé** : une conversation portant `deleted_at IS NOT NULL` (global) est **définitivement
+irrécupérable** par `create-conversation`. La fonction ne la réouvre jamais, quelle que soit la paire
+identifiante fournie. La recherche/réouverture qui suit un conflit `23505` doit porter le prédicat
+`AND deleted_at IS NULL`, à la fois dans l'`UPDATE` de réouverture et dans le `SELECT` diagnostique
+qui le suit en cas de zéro ligne (voir machine d'états ci-dessous) — un seul et même prédicat
+d'identité partagé par les deux statements, jamais reconstruit indépendamment.
+
+**Raison** : `deleted_at` global est réservé à un effacement administratif/RGPD (Catégorie F,
+`protect_conversation_columns`, `20260723120000_conversations_hardening_1_5.sql:140-143`) — un acte
+d'autorité supérieure au client, jamais un geste utilisateur ordinaire (`client_deleted_at`/
+`client_hidden_at` couvrent déjà ce cas, hors du périmètre de ce DEC). La laisser réouvrable par un
+simple appel client contredirait la sémantique de l'effacement administratif et créerait un canal de
+contournement d'une future obligation légale, sans qu'aucun texte ne l'ait jamais autorisé.
+
+**Re-vérification (2026-07-28)** : aucun flux V1 ne peut écrire `conversations.deleted_at`.
+`grep -r "conversations" supabase/functions/` → zéro résultat, aucune Edge Function existante ne
+référence cette table. Aucune policy RLS `UPDATE`/`DELETE` `authenticated` ne peut passer la
+Catégorie F (`is_system` requis). Preuve empirique déjà rejouée : test **T-cat-F-neg**, un
+`authenticated` tentant `UPDATE ... SET deleted_at = now()` → `P0001` (`ADR:1615`). Le cas décrit par
+ce DEC reste donc théorique tant qu'aucun flux RGPD n'est codé — ce DEC ferme le comportement par
+avance, pas en réaction à un incident déjà survenu.
+
+**Décision HTTP** : `403 { error: "conversation_erased" }` — jamais `410`. Justifié par le contrat
+existant, pas par préférence : toutes les réponses déjà documentées pour cette opération
+(`403 not_eligible`, `422 invalid_type`) expriment un refus métier motivé (appelant authentifié,
+requête valide, action refusée) — famille HTTP `403 Forbidden`. `410 Gone` suppose un identifiant de
+ressource déjà connu de l'appelant devenu invalide ; ici l'appelant ne fournit jamais
+`conversationId`, seulement une paire d'identité — il ne redemande pas une ressource connue, il tente
+une action métier. `error` distinct de `not_eligible` : ce cas n'est pas une question d'éligibilité
+(le client a un historique de réservation valide) mais une érasure administrative déjà actée — un
+code distinct évite qu'un futur écran Flutter affiche le même message pour deux causes sans rapport.
+
+**Prédicat de diagnostic — règle d'identité invariante** (élevée en règle d'architecture, applicable
+à toute future opération de récupération après conflit d'unicité dans ce domaine, pas seulement
+`create-conversation`) : **toute opération de récupération après un `23505` doit reconstruire
+exactement le même prédicat métier que celui ayant provoqué le conflit** — même `type`, mêmes
+colonnes d'identité que l'index unique concerné (`salon_id`+`client_id` pour
+`uq_conversations_client_salon`, `staff_id`+`client_id` pour `uq_conversations_client_staff`), jamais
+un prédicat plus large, jamais un prédicat différent. Objectif : empêcher qu'un bug de reconstruction
+d'identité (ex. un `staff_id` dont le `salon_id` a divergé entre l'ouverture et la tentative
+courante, cf. tour d'analyse précédent) soit interprété à tort comme une conversation administrativement
+effacée. Le `SELECT` diagnostique ne sert **jamais** à décider d'une écriture — uniquement à
+classifier l'erreur une fois l'`UPDATE` déjà exécuté et retourné zéro ligne.
+
+**Machine d'états complète, `23505` → réponse HTTP** :
+
+```
+UPDATE conversations
+  SET client_deleted_at = NULL, client_hidden_at = NULL
+  WHERE <prédicat d'identité — même type, mêmes colonnes que l'index unique concerné>
+    AND deleted_at IS NULL
+  RETURNING *
+
+Cas A — 1 ligne retournée
+  → 200 { conversationId, event: "conversation_reopened" }
+
+Cas B, C, D — 0 ligne retournée
+  ↓
+  SELECT 1 FROM conversations
+    WHERE <EXACTEMENT le même prédicat d'identité que l'UPDATE ci-dessus, sans le filtre deleted_at>
+  (diagnostic seul — ne pilote jamais une écriture)
+  ↓
+  Cas B — ligne trouvée ET deleted_at IS NOT NULL
+    → 403 { error: "conversation_erased" }
+    (comportement officiel de ce DEC : irrécupérable, point final)
+
+  Cas C — ligne trouvée ET deleted_at IS NULL
+    → 500 { error: "unexpected_state" }
+    Justification : l'UPDATE aurait dû matcher cette ligne (même prédicat, deleted_at déjà NULL) —
+    sa non-sélection ne peut venir que d'un bug de reconstruction du prédicat d'identité entre
+    l'INSERT ayant provoqué le 23505 et cet UPDATE (ex. valeur mal recalculée, mismatch de type).
+    Ne jamais reclasser silencieusement en cas B : un mismatch d'identité n'est pas une érasure.
+
+  Cas D — aucune ligne trouvée
+    → 500 { error: "unexpected_state" }
+    Justification : le 23505 prouve qu'une ligne satisfaisant l'index unique existait quelques
+    millisecondes plus tôt ; son absence au diagnostic ne peut s'expliquer que par l'absence de tout
+    code émettant un DELETE physique sur cette table aujourd'hui (soft-delete only, aucune policy
+    DELETE) — donc une situation qui ne devrait jamais se produire avec le code actuel du dépôt,
+    logguée comme telle plutôt que supposée impossible sans preuve.
+```
+
+**Conséquence** : Test B de la matrice de tests (conversation `deleted_at IS NOT NULL` → tentative de
+réouverture) est désormais figeable sans branche alternative — issue unique : `403 conversation_erased`,
+aucune colonne modifiée, aucune réouverture. `MESSAGING_API_CONTRACT.md` §1.1 doit lister ce code et
+ce champ `error` (voir mise à jour du contrat, même commit).
+
+**Ticket QA différé (non exécuté, non implémenté — préparation de travail futur uniquement)** :
+staff transféré de salon entre l'ouverture et la réouverture d'un fil `client_staff`.
+- **Objectif** : prouver empiriquement, pas seulement par lecture du code, que la réouverture
+  `client_staff` continue de fonctionner après un changement de `staff_profiles.salon_id`.
+- **Justification** : `staff_profiles.salon_id` n'est pas gelé au niveau schéma (aucun trigger
+  d'immutabilité sur cette table — confirmé par grep lors du tour d'analyse précédant l'implémentation ;
+  voir aussi `20260704200000_cp2_fix_staff_profiles_salon_id_mass_assignment.sql`, qui documente un cas
+  réel de modification de cette colonne). Le prédicat d'identité de la branche `client_staff`
+  (`staff_id`+`client_id`+`type`, jamais `salon_id`) a été choisi précisément pour rester correct dans
+  ce scénario — ce ticket est la preuve d'exécution qui manque encore à ce choix.
+- **Scénario** : `client_staff` ouvert (staff au salon A) → `staff_profiles.salon_id` du praticien cité
+  passe du salon A à un salon B → tentative de réouverture de la même paire (même `staff_id`, même
+  `client_id`) → la réouverture doit toujours aboutir à `200 conversation_reopened`, sur la bonne ligne.
+- **Résultat attendu** : le prédicat `WHERE staff_id = :staff_id AND client_id = :client_id AND type =
+  'client_staff' AND deleted_at IS NULL` continue de matcher exactement 1 ligne — aucun filtre parasite
+  sur `salon_id` ne doit jamais être ajouté à ce prédicat, sous peine de zéro-ligne fantôme (`500
+  unexpected_state`, Cas C) alors que la conversation existe réellement.
+- **Lien avec DEC-024** : ce ticket teste la même mécanique de réouverture (`UPDATE` atomique, prédicat
+  d'identité invariant) que DEC-024 spécifie — un cas supplémentaire de sa matrice, pas une règle
+  nouvelle.
+- **Lien avec le risque historique du prédicat d'identité** : ce risque a été identifié (pas deviné)
+  lors du tour d'analyse précédant l'écriture de `create-conversation` — "Piège à ne PAS ajouter :
+  `AND salon_id = :salon_id` sur la branche `client_staff`... ce filtre supplémentaire produirait un
+  zéro-ligne fantôme". Le code livré respecte déjà cette règle (`identityColumn`/`identityValue` de
+  `supabase/functions/create-conversation/index.ts` n'utilisent jamais `salon_id` sur cette branche) ;
+  ce ticket est la preuve d'exécution encore manquante, pas une correction de code.
+
+## Amendement — Extension de portée DEC-024 (chemin d'envoi, préparation Lot 1.2)
+
+**Protocole d'amendement** : aucune substance de DEC-024 n'est modifiée ici — le principe reste
+exactement "une conversation `deleted_at IS NOT NULL` est définitivement irrécupérable", énoncé et
+machine d'états de réouverture inchangés. Ce qui suit étend le **périmètre d'application** de ce
+principe, jusqu'ici limité par l'énoncé original au seul mécanisme connu à l'époque de sa rédaction
+(`create-conversation`), à un second mécanisme d'écriture sur le même domaine
+(`messages_participant_insert`) — trou trouvé, pas deviné, lors de la préparation du dossier technique
+Lot 1.2 : `messages_participant_insert` (`20260723180000_messages_schema_migration_2.sql:144-174`) ne
+vérifie `conversations.deleted_at` nulle part ; absence prouvée de tout garde-fou indirect — aucun
+trigger `BEFORE INSERT` sur `messages`, la FK `conversation_id` ne vérifie que l'existence de la ligne
+jamais son état, aucun CHECK, aucune autre policy, aucune Edge Function.
+
+**Portée étendue, énoncée explicitement** : une conversation portant `conversations.deleted_at IS NOT
+NULL` est définitivement irrécupérable — **aussi bien à l'ouverture (`create-conversation`) qu'à
+l'envoi d'un nouveau message (`messages_participant_insert`)**. Aucun message ne doit pouvoir être
+inséré dans une conversation dont `deleted_at IS NOT NULL`, quel que soit par ailleurs le statut de
+participation, de blocage, ou d'éligibilité DEC-016/décision 3 de l'appelant.
+
+**Raison de l'extension** : le principe d'irrécupérabilité concerne l'état de la **conversation
+elle-même** (une érasure administrative/RGPD), pas un mécanisme d'écriture particulier. Le limiter au
+seul chemin d'ouverture laisserait le chemin d'envoi contourner silencieusement une érasure déjà
+actée — un participant légitime resterait libre d'écrire indéfiniment dans une conversation que
+l'autorité administrative a explicitement déclarée irrécupérable.
+
+**Ce que cette extension implique pour l'implémentation (spécification, SQL en attente d'un commit
+distinct — Rule 8)** : `messages_participant_insert` devra porter, au même titre que ses clauses
+DEC-016/décision 3/`blocked_by` déjà existantes, une clause supplémentaire `AND c.deleted_at IS NULL`
+— placée au même niveau que `c.blocked_by IS NULL`, inconditionnelle (s'applique aux deux types de
+conversation, contrairement aux clauses DEC-016/décision 3 qui sont chacune conditionnées à un seul
+type). Aucune autre policy, aucune autre table.
+
+**Conséquence sur le contrat** : `MESSAGING_API_CONTRACT.md` §2.1 énumère désormais cette contrainte
+parmi les "Contraintes métier" de `sendMessage`, au même rang que DEC-016/décision 3/`blocked_by`.
+
+**Pourquoi ceci est un amendement de portée et non un nouveau DEC** : un nouveau DEC répondrait à une
+question métier non tranchée. Ici, la question est déjà tranchée par DEC-024 lui-même — seule sa
+**couverture d'application** était incomplète. Précédent direct, même figure procédurale : l'amendement
+"Mécanique de réouverture (DEC-009)" n'a jamais créé de DEC-009bis.
 
 ## Règle d'architecture — Séparation DEC-016 / éligibilité `create-conversation`, préparation Lot 1.1
 

@@ -6,7 +6,10 @@ Migration → Trigger → Policy → Edge Function → Realtime → Tests. Sourc
 `—` (non applicable) est une trace incomplète — à corriger avant que la ligne concernée ne puisse
 être marquée "Prêt pour la production" dans la checklist.
 
-**Dernière mise à jour** : 2026-07-23 (Migration 2 committée, `d3c1d0f`). Voir aussi
+**Dernière mise à jour** : 2026-07-28 (correction de 2 incohérences internes trouvées lors de la
+préparation Lot 1.2 : invariant 7bis affiché `OPEN` alors que "décision 3" le ferme déjà en Migration
+2 ; publication Realtime affichée `Non` pour `conversations`/`messages` alors que la ligne DEC-014 du
+même document la disait déjà vérifiée). Voir aussi
 `docs/MESSAGING_ROADMAP.md`/`docs/MESSAGING_EXECUTION_PLAN.md` pour le découpage des phases/lots
 restants et `docs/MESSAGING_API_CONTRACT.md` pour le contrat Backend↔Flutter — ce document reste
 strictement la trace décision→preuve, il ne redéfinit pas l'ordre de livraison.
@@ -59,7 +62,7 @@ strictement la trace décision→preuve, il ne redéfinit pas l'ordre de livrais
 | 5 — booking existe (`client_salon`) | FK simple | `conversations` | `LOCKED` |
 | 6 — staff↔salon cohérent | Hérité de `bookings` via FK composite | `conversations` | `LOCKED` |
 | 7 — salon actif à l'ouverture | Trigger `BEFORE INSERT` | `conversations` | `LOCKED` |
-| 7bis — salon actif à l'envoi (fil déjà ouvert) | **Non tranché** | `messages` (futur) | `OPEN` — résidu §3 ADR |
+| 7bis — salon actif à l'envoi (fil déjà ouvert) | "décision 3", clause `messages_participant_insert` | `messages` | `LOCKED`, appliqué (Migration 2, `20260723180000_messages_schema_migration_2.sql:167-172`) — résidu §3 ADR fermé |
 | 8 — paire unique | Index UNIQUE | `conversations` | `LOCKED` |
 | 9 — aucun bypass (`service_role` compris) | Propriété structurelle | toutes | `LOCKED` |
 | 10 (nouveau) — booking actif pour message `client_staff` (DEC-016) | RLS à la volée | `messages` (futur) | `LOCKED (règle)`, SQL planifié |
@@ -71,5 +74,5 @@ strictement la trace décision→preuve, il ne redéfinit pas l'ordre de livrais
 | Table | Dans `supabase_realtime` ? | Action requise |
 |---|---|---|
 | `services`, `bookings`, `staff_profiles` | Oui (`20260624040000_enable_realtime_publication.sql`) | — |
-| `conversations` | **Non** | `ALTER PUBLICATION ... ADD TABLE public.conversations` — Migration 1.5 |
-| `messages` | **Non** (table n'existe pas encore) | idem — Migration 2 |
+| `conversations` | **Oui** (`20260723180000_messages_schema_migration_2.sql:393`) | — |
+| `messages` | **Oui** (`:394`) | — |

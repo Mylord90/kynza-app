@@ -95,8 +95,12 @@ livraison par phases/lots, et `docs/MESSAGING_API_CONTRACT.md` pour le contrat B
 
 ## Fonctions de bord (Edge Functions) — voir `docs/MESSAGING_API_CONTRACT.md` pour le contrat complet
 
-- [ ] `create-conversation` (règle anti-spam, éligibilité historique de réservation) — Phase 1/Lot 1.1
-- [ ] `send-message` — chemin (Edge Function ou RLS directe) **non tranché**, décision requise Lot 1.2
+- [ ] `create-conversation` (règle anti-spam, éligibilité historique de réservation) — code écrit,
+      testé (QA SQL 6/6 réels contre production), **MERGED, NON DÉPLOYÉ** (absent de `supabase
+      functions list` — voir convention de statuts, ADR) — Phase 1/Lot 1.1
+- [x] `send-message` — **décision prise : RLS direct** (`messages_participant_insert`), aucune Edge
+      Function — 36 tests réels Migration 2 couvrent la base ; reste ouvert : résidu #7 (clause
+      `deleted_at`, SQL en attente d'un commit distinct)
 - [ ] `sendMessagePush` (miroir `_shared/fcm.ts`) — Phase 3/Lot 3.1
 - [ ] `toggle-conversation-block` (DEC-015 — autorité actuelle, écrit `activity_logs`, lit `salon_id`
       depuis la ligne ciblée, jamais depuis l'appelant — voir ADR §D.6) — Phase 2/Lot 2.5
